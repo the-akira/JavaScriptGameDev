@@ -1,0 +1,31 @@
+@import url('https://fonts.googleapis.com/css2?family=Delius&family=Jersey+10+Charted&display=swap');
+
+body {
+    background: #1D3F5C;
+}
+
+canvas {
+    border: 3px solid #BCE8D5;
+    padding-left: 0;
+    padding-right: 0;
+    margin-left: auto;
+    margin-right: auto;
+    display: block;
+}
+
+p {
+    text-align: center;
+    font-family: "Delius", cursive;
+    font-style: normal;
+    font-size: 1.8rem;
+    color: #BCE8D5;
+    padding-right: 30px;
+    padding-left: 30px;
+}
+
+h1 {
+    font-family: "Delius", cursive;
+    font-size: 3rem;    
+    text-align: center;
+    color: #BCE8D5;
+}
