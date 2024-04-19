@@ -1,4 +1,4 @@
-# Desenvolvimento de Games com JavaScript
+# Desenvolvimento de Games 2D com JavaScript
 
 ![img](https://raw.githubusercontent.com/the-akira/JavaScriptGameDev/master/Avatar.png)
 
