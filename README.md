@@ -15,3 +15,4 @@ Projeto educativo que propõe o ensino da programação através da construção
 - [A Jornada de Ismael](https://github.com/the-akira/JavaScriptGameDev/tree/master/Games/A%20Jornada%20de%20Ismael)
 - [Elder Dragon](https://github.com/the-akira/JavaScriptGameDev/tree/master/Games/Elder%20Dragon)
 - [Snake](https://github.com/the-akira/JavaScriptGameDev/tree/master/Games/Snake)
+- [Shadow Templar](https://github.com/the-akira/JavaScriptGameDev/tree/master/Games/Shadow%20Templar)
