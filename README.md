@@ -2,7 +2,7 @@
 
 ![img](https://raw.githubusercontent.com/the-akira/JavaScriptGameDev/master/Avatar.png)
 
-Projeto educativo que propõe o ensino da programação através da construção de vídeo-games.
+Projeto educativo que propõe o ensino da programação através da construção de vídeo-games 2D.
 
 ## Tecnologias Usadas
 
