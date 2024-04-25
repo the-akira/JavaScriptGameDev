@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Closures em JavaScript</title>
+</head>
+<body>
+
+<div>
+  <p>O contador está em: <span id="contador">0</span></p>
+  <button id="botao-incrementar">Incrementar</button>
+</div>
+
+<script>
+  // Função que cria um incrementador
+  function criarIncrementador() {
+    let contador = 0; // Variável externa à função interna
+
+    // Função interna que incrementa o contador e atualiza o valor na página
+    function incrementarEAtualizar() {
+      contador++;
+      document.getElementById('contador').textContent = contador;
+    }
+
+    // Retorna a função interna
+    return incrementarEAtualizar;
+  }
+
+  // Chamando a função para criar um incrementador
+  const incrementarEAtualizarContador = criarIncrementador();
+
+  // Adicionando um evento de clique ao botão para incrementar o contador
+  document.getElementById('botao-incrementar').addEventListener('click', function() {
+    incrementarEAtualizarContador();
+  });
+</script>
+
+</body>
+</html>

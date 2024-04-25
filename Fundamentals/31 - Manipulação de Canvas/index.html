@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Exemplo de Manipulação de Canvas</title>
+  <style type="text/css">
+    body {
+      background: #F1F1F1;
+    }
+    canvas {
+      display: block;
+      margin: 0 auto;
+      background: white;
+    }
+    h1 {
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <h1>Exemplo</h1>
+  <canvas id="meuCanvas" width="400" height="400" style="border:1px solid black;"></canvas>
+
+  <script>
+    const canvas = document.getElementById('meuCanvas');
+    const ctx = canvas.getContext('2d');
+
+    let x = 0;
+    let direcao = 1; // Direção inicial do movimento
+
+    function animar() {
+      // Limpar o canvas
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Desenhar um retângulo animado
+      ctx.fillStyle = 'purple';
+      ctx.fillRect(x, 300, 50, 50);
+
+      // Atualizar a posição do retângulo
+      x += direcao;
+
+      // Verificar se o retângulo atingiu a borda direita ou esquerda do canvas
+      if (x >= canvas.width - 50 || x <= 0) {
+        direcao *= -1; // Inverter a direção
+      }
+
+      // Chamar a próxima animação
+      requestAnimationFrame(animar);
+    }
+
+    // Iniciar a animação
+    animar();
+  </script>
+</body>
+</html>
