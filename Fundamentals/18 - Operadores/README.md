@@ -74,10 +74,10 @@ if (idade >= 18 && possuiCarteira) {
 }
 
 let chove = true;
-let fazSol = false;
+let fazSol = !chove;
 
 // Verifica se está chovendo ou fazendo sol
-if (chove || fazSol) {
+if (chove || !fazSol) {
   console.log('O clima está instável.');
 } else {
   console.log('O clima está estável.');
