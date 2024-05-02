@@ -13,6 +13,7 @@ Projeto educativo que propõe o ensino da programação através da construção
 
 - [A Jornada de Ismael](https://github.com/the-akira/JavaScriptGameDev/tree/master/Games/A%20Jornada%20de%20Ismael)
 - [Alpha Wings](https://github.com/the-akira/JavaScriptGameDev/tree/master/Games/Alpha%20Wings)
+- [Conway's Game of Life](https://github.com/the-akira/JavaScriptGameDev/tree/master/Games/Game%20of%20Life)
 - [Elder Dragon](https://github.com/the-akira/JavaScriptGameDev/tree/master/Games/Elder%20Dragon)
 - [Shadow Templar](https://github.com/the-akira/JavaScriptGameDev/tree/master/Games/Shadow%20Templar)
 - [Snake](https://github.com/the-akira/JavaScriptGameDev/tree/master/Games/Snake)
