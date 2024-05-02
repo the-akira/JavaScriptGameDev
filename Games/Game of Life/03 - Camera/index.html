@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conway's Game of Life</title>
+    <link rel="stylesheet" type="text/css" href="style.css">
+</head>
+<body>
+    <h1>Conway's Game of Life</h1>
+    <div id="buttonsDiv">
+        <button id="playPause" onclick="toggleSimulation()">Pause</button>
+        <button id="clear">Clear</button>
+        <button id="randomize">Randomize</button>
+    </div>
+    <p id="coordinates">Coordinates (x: 0, y: 0)</p>
+    <canvas id="gameCanvas" width="660" height="660"></canvas>
+    <script src="game.js" type="text/javascript"></script>
+</body>
+</html>

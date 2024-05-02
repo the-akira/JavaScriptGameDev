@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conway's Game of Life</title>
+    <link rel="stylesheet" type="text/css" href="style.css">
+</head>
+<body>
+    <h1>Conway's Game of Life</h1>
+    <div id="buttonsDiv">
+        <button id="playPause" onclick="toggleSimulation()">Pause</button>
+        <button id="clear">Clear</button>
+        <button id="randomize">Randomize</button>
+    </div>
+    <p id="coordinates">Coordinates (x: 0, y: 0)</p>
+    <canvas id="gameCanvas" width="660" height="660"></canvas>
+    <div id="history">
+        <h1>História</h1>
+        <p>O <b>Game of Life</b> é um autômato celular desenvolvido pelo matemático <b>John Horton Conway</b> em 1970. É um jogo para zero jogadores, o que significa que sua evolução é determinada pelo seu estado inicial, não exigindo nenhuma entrada adicional. Interage-se com o <b>Game of Life</b> criando uma configuração inicial e observando como ela evolui. É <b>Turing completo</b> e pode simular um construtor universal ou qualquer outra máquina de Turing.</p>
+        <p>O Universo do <b>Game of Life</b> é uma grade ortogonal bidimensional infinita de células quadradas, cada uma das quais está em um dos dois estados possíveis, <b>viva</b> ou <b>morta</b>. Cada célula interage com seus oito vizinhos, que são as células adjacentes horizontalmente, verticalmente ou diagonalmente.</p>
+        <p>A cada passo no tempo, ocorrem as seguintes transições:</p>
+        <ol>
+            <li>Qualquer célula viva com menos de dois vizinhos vivos morre, como se fosse por subpopulação.</li>
+            <li>Qualquer célula viva com dois ou três vizinhos vivos sobrevive para a próxima geração.</li>
+            <li>Qualquer célula viva com mais de três vizinhos vivos morre, como se fosse por superpopulação.</li>
+            <li>Qualquer célula morta com exatamente três vizinhos vivos torna-se uma célula viva, como se fosse por reprodução.</li>
+        </ol>
+        <p>O padrão inicial constitui a <b>semente do sistema</b>. A primeira geração é criada aplicando as regras acima simultaneamente a todas as células da semente, vivas ou mortas; nascimentos e mortes ocorrem simultaneamente, e o momento discreto em que isso acontece às vezes é chamado de <b>tick</b>. Cada geração é uma pura função da anterior. As regras continuam a ser aplicadas repetidamente para criar novas gerações.</p>
+    </div>
+    <script src="game.js" type="text/javascript"></script>
+</body>
+</html>
