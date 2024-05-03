@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Renderização Condicional de UI</title>
+<style>
+  .mensagem {
+    font-size: 24px;
+    font-weight: bold;
+  }
+</style>
+</head>
+<body>
+
+<div class="mensagem" id="mensagemSaudacao"></div>
+<div id="horarioAtual"></div>
+
+<script>
+  // Função para obter a saudação com base no horário
+  function obterSaudacao() {
+    const hora = new Date().getHours();
+    if (hora >= 6 && hora < 12) {
+      return "Bom dia!";
+    } else if (hora >= 12 && hora < 18) {
+      return "Boa tarde!";
+    } else {
+      return "Boa noite!";
+    }
+  }
+
+  // Função para obter o horário atual formatado
+  function obterHorarioAtual() {
+    const agora = new Date();
+    const horas = agora.getHours().toString().padStart(2, '0');
+    const minutos = agora.getMinutes().toString().padStart(2, '0');
+    const segundos = agora.getSeconds().toString().padStart(2, '0');
+    return `${horas}:${minutos}:${segundos}`;
+  }
+
+  // Função para atualizar a mensagem de saudação na UI
+  function atualizarMensagemSaudacao() {
+    const mensagemSaudacao = document.getElementById('mensagemSaudacao');
+    mensagemSaudacao.textContent = obterSaudacao();
+  }
+
+  // Função para atualizar o horário atual na UI a cada segundo
+  function atualizarHorarioAtual() {
+    const horarioAtual = document.getElementById('horarioAtual');
+    horarioAtual.textContent = obterHorarioAtual();
+  }
+
+  // Atualizar a mensagem de saudação e o horário atual quando a página for carregada
+  window.onload = function() {
+    atualizarMensagemSaudacao();
+    atualizarHorarioAtual(); // Chamada inicial para exibir o horário atual imediatamente
+    setInterval(atualizarHorarioAtual, 1000); // Atualizar a cada segundo
+  };
+</script>
+
+</body>
+</html>

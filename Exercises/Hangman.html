@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jogo da Forca</title>
+    <style>
+        #main {
+            padding: 20px;
+        }
+        h1 {
+            margin-top: 0px;
+        }
+        #palavra {
+            margin-bottom: 20px;
+        }
+        input {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="main">
+        <h1>Jogo da Forca</h1>
+        <div id="palavra"></div>
+        <div id="tentativas"></div>
+        <div id="letras-utilizadas"></div>
+        <div id="mensagem"></div>
+        <input type="text" id="entrada-letra">
+        <button onclick="verificarLetra()">Enviar</button>
+    </div>
+
+    <script>
+    const palavras = ["javascript", "html", "css", "programacao", "web", "desenvolvimento"];
+    let palavraSecreta;
+    let palavraAtual;
+    let tentativasRestantes;
+    let letrasUtilizadas;
+
+    function iniciarJogo() {
+        // Escolher uma palavra aleatória
+        palavraSecreta = palavras[Math.floor(Math.random() * palavras.length)];
+        
+        // Inicializar a palavra atual com underscores e espaços
+        palavraAtual = "_".repeat(palavraSecreta.length * 2 - 1);
+        for (let i = 1; i < palavraAtual.length; i += 2) {
+            palavraAtual = palavraAtual.substring(0, i) + " " + palavraAtual.substring(i + 1);
+        }
+        
+        // Inicializar tentativas e letras utilizadas
+        tentativasRestantes = 6;
+        letrasUtilizadas = [];
+        
+        // Atualizar a interface
+        atualizarInterface();
+    }
+
+    function atualizarInterface() {
+        document.getElementById("palavra").textContent = palavraAtual;
+        document.getElementById("tentativas").textContent = `Tentativas Restantes: ${tentativasRestantes}`;
+        document.getElementById("letras-utilizadas").textContent = `Letras Utilizadas: ${letrasUtilizadas.join(", ")}`;
+        
+        // Verificar se o jogo terminou
+        if (palavraAtual === palavraSecreta.split("").join(" ")) {
+            document.getElementById("mensagem").textContent = "Parabéns! Você venceu!";
+        } else if (tentativasRestantes === 0) {
+            document.getElementById("mensagem").textContent = "Game Over. A palavra era: " + palavraSecreta;
+        } else {
+            document.getElementById("mensagem").textContent = "";
+        }
+    }
+
+    function verificarLetra() {
+        const letra = document.getElementById("entrada-letra").value.toLowerCase();
+
+        // Validações
+        if (!letra) {
+            alert("Você deve informar pelo menos uma letra.");
+            return;        
+        }
+
+        if (letra.length > 1) {
+            alert("Você deve informar apenas uma letra.");
+            return;        
+        }
+        
+        if (letrasUtilizadas.includes(letra)) {
+            alert("Esta letra já foi utilizada. Tente outra.");
+            return;
+        }
+        
+        // Adicionar letra às letras utilizadas
+        letrasUtilizadas.push(letra);
+        
+        // Verificar se a letra está na palavra
+        if (palavraSecreta.includes(letra)) {
+            // Atualizar a palavra atual com a letra correta
+            for (let i = 0; i < palavraSecreta.length; i++) {
+                if (palavraSecreta[i] === letra) {
+                    palavraAtual = palavraAtual.substring(0, i * 2) + letra + palavraAtual.substring(i * 2 + 1);
+                }
+            }
+        } else {
+            // Reduzir as tentativas restantes
+            tentativasRestantes--;
+        }
+        
+        // Atualizar a interface
+        atualizarInterface();
+        
+        // Limpar o campo de entrada
+        document.getElementById("entrada-letra").value = "";
+    }
+
+    // Iniciar o jogo quando a página carregar
+    window.onload = iniciarJogo;
+    </script>
+</body>
+</html>

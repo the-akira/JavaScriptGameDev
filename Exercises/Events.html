@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gerenciamento de Eventos - Desenhar</title>
+  <style>
+    body {
+      background: #bec9fa;
+    }
+    h1 {
+      text-align: center;
+      color: #3d0859;
+    }
+
+    #canvas {
+      border: 2px solid #3d0859;
+      cursor: crosshair;
+      display: block;
+      margin: 0 auto;
+      margin-top: 25px;
+      margin-bottom: 25px;
+      background: white;
+    }
+
+    input {
+      display: block;
+      margin: 0 auto;
+    }
+  </style>
+</head>
+<body>
+
+<h1>Painting</h1>
+<canvas id="canvas" width="800" height="600"></canvas>
+<input type="color" id="colorPicker" value="#000000">
+
+<script>
+  const canvas = document.getElementById('canvas');
+  const ctx = canvas.getContext('2d');
+  const colorPicker = document.getElementById('colorPicker');
+  let desenhando = false;
+  let xAnterior, yAnterior;
+
+  // Função para começar o desenho
+  function iniciarDesenho(event) {
+    desenhando = true;
+    xAnterior = event.clientX - canvas.offsetLeft;
+    yAnterior = event.clientY - canvas.offsetTop;
+  }
+
+  // Função para continuar o desenho
+  function continuarDesenho(event) {
+    if (desenhando) {
+      const xAtual = event.clientX - canvas.offsetLeft;
+      const yAtual = event.clientY - canvas.offsetTop;
+      ctx.beginPath();
+      ctx.moveTo(xAnterior, yAnterior);
+      ctx.lineTo(xAtual, yAtual);
+      ctx.strokeStyle = colorPicker.value; // Define a cor do pincel
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      xAnterior = xAtual;
+      yAnterior = yAtual;
+    }
+  }
+
+  // Função para finalizar o desenho
+  function finalizarDesenho() {
+    desenhando = false;
+  }
+
+  // Função para limpar o canvas
+  function limparCanvas() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+  }
+
+  // Adicionar ouvintes de eventos para começar e continuar o desenho
+  canvas.addEventListener('mousedown', iniciarDesenho);
+  canvas.addEventListener('mousemove', continuarDesenho);
+  canvas.addEventListener('mouseup', finalizarDesenho);
+  canvas.addEventListener('mouseout', finalizarDesenho); // Finalizar o desenho se o cursor sair da tela
+
+  // Adicionar um ouvinte de eventos para limpar o canvas quando a tecla "c" for pressionada
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'c') {
+      limparCanvas();
+    }
+  });
+</script>
+
+</body>
+</html>

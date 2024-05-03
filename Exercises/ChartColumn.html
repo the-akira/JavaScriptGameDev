@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Visualização de Dados - Gráfico de Barras</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style type="text/css">
+    canvas {
+        display: block;
+        margin: 0 auto;
+        margin-top: 20px;
+    }
+</style>
+</head>
+<body>
+
+<!-- Elemento canvas para renderizar o gráfico -->
+<canvas id="grafico" width="800" height="500"></canvas>
+
+<script>
+// Dados para o gráfico
+const dados = {
+    labels: ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho'],
+    datasets: [{
+        label: 'Vendas',
+        backgroundColor: 'rgba(54, 162, 235, 0.5)',
+        borderColor: 'rgba(54, 162, 235, 1)',
+        borderWidth: 1,
+        data: [50, 70, 65, 80, 85, 110]
+    }]
+};
+
+// Configurações do gráfico
+const configuracoes = {
+    type: 'bar',
+    data: dados,
+    options: {
+        responsive: false, // Desabilita a responsividade do gráfico
+        maintainAspectRatio: false, // Não mantém a proporção do gráfico
+        scales: {
+            yAxes: [{
+                ticks: {
+                    beginAtZero: true
+                }
+            }]
+        }
+    }
+};
+
+// Obter o elemento canvas onde o gráfico será renderizado
+const canvas = document.getElementById('grafico').getContext('2d');
+
+// Criar o gráfico
+const grafico = new Chart(canvas, configuracoes);
+</script>
+
+</body>
+</html>
