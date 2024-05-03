@@ -1,43 +1,43 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<meta charset="utf-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<title>API Call</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>API Call</title>
 </head>
 <body>
 <script type="text/javascript">
-	function obterUsuariosDaAPI() {
-	const url = 'https://jsonplaceholder.typicode.com/users';
+    function obterUsuariosDaAPI() {
+    const url = 'https://jsonplaceholder.typicode.com/users';
 
-	return fetch(url)
-	    .then(response => {
-	        if (!response.ok) {
-	            throw new Error('Erro ao carregar os dados da API.');
-	        }
-	        return response.json();
-	    })
-	    .then(data => {
-	        // Manipular os dados recebidos aqui
-	        console.log('Usuários da API:', data);
-	        return data;
-	    })
-	    .catch(error => {
-	        console.error('Erro na requisição:', error);
-	        throw error;
-	    });
-	}
+    return fetch(url)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Erro ao carregar os dados da API.');
+            }
+            return response.json();
+        })
+        .then(data => {
+            // Manipular os dados recebidos aqui
+            console.log('Usuários da API:', data);
+            return data;
+        })
+        .catch(error => {
+            console.error('Erro na requisição:', error);
+            throw error;
+        });
+    }
 
-	// Exemplo de uso:
-	obterUsuariosDaAPI()
-		.then(usuarios => {
-		    // Faça algo com os usuários recebidos
-		    console.log("Total de usuários:", usuarios.length);
-		})
-		.catch(error => {
-		    // Lidar com o erro, se necessário
-		    console.log(error)
-		});
+    // Exemplo de uso:
+    obterUsuariosDaAPI()
+        .then(usuarios => {
+            // Faça algo com os usuários recebidos
+            console.log("Total de usuários:", usuarios.length);
+        })
+        .catch(error => {
+            // Lidar com o erro, se necessário
+            console.log(error)
+        });
 </script>
 </body>
 </html>

@@ -1,40 +1,40 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<meta charset="utf-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<title>Try-Catch</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Try-Catch</title>
 </head>
 <body>
 <script type="text/javascript">
-	async function operacaoComplicada() {
-	    return new Promise((resolve, reject) => {
-	        // Simulação de uma operação complicada que pode lançar uma exceção
-	        setTimeout(() => {
-	            const resultado = Math.random() > 0.5;
-	            if (resultado) {
-	                resolve('Operação bem-sucedida!');
-	            } else {
-	                reject(new Error('Erro na operação!'));
-	            }
-	        }, 1000);
-	    });
-	}
+    async function operacaoComplicada() {
+        return new Promise((resolve, reject) => {
+            // Simulação de uma operação complicada que pode lançar uma exceção
+            setTimeout(() => {
+                const resultado = Math.random() > 0.5;
+                if (resultado) {
+                    resolve('Operação bem-sucedida!');
+                } else {
+                    reject(new Error('Erro na operação!'));
+                }
+            }, 1000);
+        });
+    }
 
-	// Função para executar a operação complicada continuamente
-	async function executarOperacaoContinuamente() {
-	    while (true) {
-	        try {
-	            const resultado = await operacaoComplicada();
-	            console.log(resultado);
-	        } catch (error) {
-	            console.error('Erro durante a operação:', error.message);
-	        }
-	    }
-	}
+    // Função para executar a operação complicada continuamente
+    async function executarOperacaoContinuamente() {
+        while (true) {
+            try {
+                const resultado = await operacaoComplicada();
+                console.log(resultado);
+            } catch (error) {
+                console.error('Erro durante a operação:', error.message);
+            }
+        }
+    }
 
-	// Iniciar a execução contínua
-	executarOperacaoContinuamente();
+    // Iniciar a execução contínua
+    executarOperacaoContinuamente();
 </script>
 </body>
 </html>
