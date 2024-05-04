@@ -6,37 +6,77 @@
     <title>API Call</title>
 </head>
 <body>
+<table id="tabela-usuarios">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Nome</th>
+            <th>Nome de Usuário</th>
+            <th>Email</th>
+            <th>Telefone</th>
+            <th>Website</th>
+            <th>Empresa</th>
+        </tr>
+    </thead>
+    <tbody>
+        <!-- Os dados dos usuários serão inseridos aqui -->
+    </tbody>
+</table>
+
 <script type="text/javascript">
     function obterUsuariosDaAPI() {
-    const url = 'https://jsonplaceholder.typicode.com/users';
+        const url = 'https://jsonplaceholder.typicode.com/users';
 
-    return fetch(url)
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Erro ao carregar os dados da API.');
-            }
-            return response.json();
-        })
-        .then(data => {
-            // Manipular os dados recebidos aqui
-            console.log('Usuários da API:', data);
-            return data;
-        })
-        .catch(error => {
-            console.error('Erro na requisição:', error);
-            throw error;
+        return fetch(url)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Erro ao carregar os dados da API.');
+                }
+                return response.json();
+            })
+            .then(data => {
+                // Manipular os dados recebidos aqui
+                console.log('Usuários da API:', data);
+                return data;
+            })
+            .catch(error => {
+                console.error('Erro na requisição:', error);
+                throw error;
+            });
+    }
+
+    function renderizarUsuariosNaTabela(usuarios) {
+        const tabela = document.getElementById('tabela-usuarios');
+        const tbody = tabela.getElementsByTagName('tbody')[0];
+
+        // Limpar qualquer conteúdo existente na tabela
+        tbody.innerHTML = '';
+
+        // Preencher a tabela com os dados dos usuários
+        usuarios.forEach(usuario => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${usuario.id}</td>
+                <td>${usuario.name}</td>
+                <td>${usuario.username}</td>
+                <td>${usuario.email}</td>
+                <td>${usuario.phone}</td>
+                <td>${usuario.website}</td>
+                <td>${usuario.company.name}</td>
+            `;
+            tbody.appendChild(tr);
         });
     }
 
     // Exemplo de uso:
     obterUsuariosDaAPI()
         .then(usuarios => {
-            // Faça algo com os usuários recebidos
+            renderizarUsuariosNaTabela(usuarios);
             console.log("Total de usuários:", usuarios.length);
         })
         .catch(error => {
             // Lidar com o erro, se necessário
-            console.log(error)
+            console.log(error);
         });
 </script>
 </body>

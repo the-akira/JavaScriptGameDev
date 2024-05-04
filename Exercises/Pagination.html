@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>API Call - Posts</title>
+    <style>
+        .post {
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+        .pagination {
+            margin-top: 20px;
+        }
+        .pagination button {
+            margin: 0 5px;
+        }
+    </style>
+</head>
+<body>
+<div id="blog-posts"></div>
+<div class="pagination">
+    <button id="first-page">Primeira Página</button>
+    <button id="prev-page">Anterior</button>
+    <span>Página <span id="current-page">1</span> de <span id="total-pages">1</span></span>
+    <button id="next-page">Próxima</button>
+    <button id="last-page">Última Página</button>
+</div>
+
+<script type="text/javascript">
+    const postsPerPage = 5;
+    let currentPage = 1;
+
+    function obterPostsDaAPI(page) {
+        const url = `https://jsonplaceholder.typicode.com/posts?_page=${page}&_limit=${postsPerPage}`;
+
+        return fetch(url)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Erro ao carregar os dados da API.');
+                }
+                return response.json();
+            })
+            .then(data => {
+                return data;
+            })
+            .catch(error => {
+                console.error('Erro na requisição:', error);
+                throw error;
+            });
+    }
+
+    function renderizarPosts(posts) {
+        const blogPosts = document.getElementById('blog-posts');
+        blogPosts.innerHTML = '';
+
+        posts.forEach(post => {
+            const postDiv = document.createElement('div');
+            postDiv.classList.add('post');
+            postDiv.innerHTML = `
+                <h2>${post.title}</h2>
+                <p>${post.body}</p>
+            `;
+            blogPosts.appendChild(postDiv);
+        });
+    }
+
+    function updatePaginationUI(currentPage, totalPages) {
+        document.getElementById('current-page').innerText = currentPage;
+        document.getElementById('total-pages').innerText = totalPages;
+    }
+
+    function goToPage(page) {
+        obterPostsDaAPI(page)
+            .then(posts => {
+                renderizarPosts(posts);
+                updatePaginationUI(page, Math.ceil(100 / postsPerPage)); // Assuming there are 100 posts in total
+                currentPage = page;
+            })
+            .catch(error => {
+                console.log(error);
+            });
+    }
+
+    document.getElementById('first-page').addEventListener('click', () => {
+        goToPage(1);
+    });
+
+    document.getElementById('prev-page').addEventListener('click', () => {
+        if (currentPage > 1) {
+            goToPage(currentPage - 1);
+        }
+    });
+
+    document.getElementById('next-page').addEventListener('click', () => {
+        const totalPages = Math.ceil(100 / postsPerPage); // Assuming there are 100 posts in total
+        if (currentPage < totalPages) {
+            goToPage(currentPage + 1);
+        }
+    });
+
+    document.getElementById('last-page').addEventListener('click', () => {
+        const totalPages = Math.ceil(100 / postsPerPage); // Assuming there are 100 posts in total
+        goToPage(totalPages);
+    });
+
+    // Initial load
+    goToPage(1);
+</script>
+</body>
+</html>
