@@ -16,4 +16,5 @@ Projeto educativo que propõe o ensino da programação através da construção
 - [Conway's Game of Life](https://github.com/the-akira/JavaScriptGameDev/tree/master/Games/Game%20of%20Life)
 - [Elder Dragon](https://github.com/the-akira/JavaScriptGameDev/tree/master/Games/Elder%20Dragon)
 - [Shadow Templar](https://github.com/the-akira/JavaScriptGameDev/tree/master/Games/Shadow%20Templar)
+- [Sistema de Coordenadas](https://github.com/the-akira/JavaScriptGameDev/tree/master/Games/Sistema%20de%20Coordenadas)
 - [Snake](https://github.com/the-akira/JavaScriptGameDev/tree/master/Games/Snake)
