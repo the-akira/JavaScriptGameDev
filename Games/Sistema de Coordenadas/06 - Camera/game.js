@@ -61,8 +61,8 @@ class Camera {
 
     follow(target) {
         // Define as coordenadas da câmera para que o jogador permaneça no centro da tela
-        this.x = target.x - this.viewportWidth / 2 + target.width / 2;
-        this.y = target.y - this.viewportHeight / 2 + target.height / 2;
+        this.x = target.x - this.viewportWidth / 2 + target.width / 2 + 5;
+        this.y = target.y - this.viewportHeight / 2 + target.height / 2 + 5;
 
         // Mantém a câmera dentro dos limites do mapa
         this.x = Math.min(Math.max(0, this.x), this.mapWidth - this.viewportWidth);
