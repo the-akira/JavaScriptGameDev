@@ -296,8 +296,10 @@ class Game {
     applyRemovedSkulls() {
         if (this.removedSkulls) {
             for (const skull of this.removedSkulls) {
-                const [x, y] = skull;
-                this.map[y][x] = -1; // Define o valor do crânio como removido (-1)
+                const [x, y, map] = skull;
+                if (this.currentMap == map) {
+                    this.map[y][x] = -1; // Define o valor do crânio como removido (-1)
+                }
             }   
         }
     }
@@ -305,7 +307,7 @@ class Game {
     // Método para remover um crânio
     removeSkull(x, y) {
         // Adiciona as coordenadas do crânio removido à matriz de crânios removidos
-        this.removedSkulls.push([x, y]);
+        this.removedSkulls.push([x, y, this.currentMap]);
     }
 
     // Método para desenhar o mapa no canvas
