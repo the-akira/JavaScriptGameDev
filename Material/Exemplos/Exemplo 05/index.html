@@ -1,0 +1,26 @@
+<canvas id="meuCanvas" width="200" height="400"></canvas>
+<script type="text/javascript">
+var canvas = document.getElementById("meuCanvas");
+var ctx = canvas.getContext("2d");
+
+var x = 0;
+var dx = 1;
+
+function animateBox() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = "red";
+    ctx.fillRect(x, 50, 50, 50);
+    
+    // Atualizar a posição x
+    x += dx;
+    
+    // Inverter a direção quando a caixa atinge as bordas
+    if (x <= 0 || x >= canvas.width - 50) {
+        dx = -dx;
+    }
+    
+    requestAnimationFrame(animateBox);
+}
+
+animateBox();
+</script>

@@ -1,0 +1,20 @@
+<canvas id="meuCanvas" width="400" height="400"></canvas>
+<script type="text/javascript">
+var canvas = document.getElementById("meuCanvas");
+var ctx = canvas.getContext("2d");
+
+ctx.fillStyle = "blue"; // Define a cor de preenchimento
+ctx.fillRect(50, 50, 100, 75); // Desenha um retângulo preenchido nas coordenadas (50, 50) com largura 100 e altura 75
+
+ctx.beginPath(); // Inicia o caminho do desenho
+ctx.arc(100, 250, 50, 0, Math.PI * 2); // Desenha um círculo com raio 50 e centro nas coordenadas (150, 150)
+ctx.fillStyle = "red"; // Define a cor de preenchimento
+ctx.fill(); // Preenche o círculo
+
+ctx.beginPath(); // Inicia o caminho do desenho
+ctx.moveTo(50, 170); // Move para as coordenadas (50, 170)
+ctx.lineTo(400, 170); // Desenha uma linha até as coordenadas (400, 170)
+ctx.strokeStyle = "green"; // Define a cor da linha
+ctx.lineWidth = 3;
+ctx.stroke(); // Desenha a linha
+</script>

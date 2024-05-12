@@ -1,0 +1,31 @@
+<script type="text/javascript">
+let startTime = Date.now(); // Captura o tempo atual em milissegundos no início do jogo
+
+function gameLoop() {
+    // Etapa 1: Processamento de Entrada
+
+    // Aqui você processaria qualquer entrada do usuário, como teclas pressionadas ou cliques do mouse
+
+    // Etapa 2: Atualização da Lógica do Jogo
+
+    // Aqui você atualizaria a lógica do jogo com base nas entradas do usuário e em outras condições
+
+    // Etapa 3: Renderização Gráfica
+
+    // Aqui você renderizaria os gráficos atualizados na tela
+
+    // Calcular o tempo decorrido desde o início do jogo
+    let currentTime = Date.now();
+    let elapsedTime = currentTime - startTime;
+    let seconds = Math.floor(elapsedTime / 1000); // Convertendo milissegundos para segundos
+
+    // Mostrar o tempo decorrido no console
+    console.log("Tempo decorrido: " + seconds + " segundos");
+
+    // Repetir o loop chamando a função novamente
+    requestAnimationFrame(gameLoop);
+}
+
+// Iniciar o loop de jogo
+gameLoop();
+</script>
