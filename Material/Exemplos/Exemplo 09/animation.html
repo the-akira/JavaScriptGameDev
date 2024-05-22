@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<canvas id="myCanvas" width="400" height="400"></canvas>
+<script>
+  const canvas = document.getElementById('myCanvas');
+  const ctx = canvas.getContext('2d');
+  const marioFrames = [];
+  const numberOfFrames = 4; // Supondo que você saiba quantos frames você tem
+
+  for (let i = 1; i <= numberOfFrames; i++) {
+      marioFrames.push(`frame${i}.png`);
+  }
+
+  const images = [];
+  let imagesLoaded = 0;
+
+  function preloadImages(sources, callback) {
+    sources.forEach((src, index) => {
+      images[index] = new Image();
+      images[index].onload = () => {
+        imagesLoaded++;
+        if (imagesLoaded === sources.length) {
+          callback();
+        }
+      };
+      images[index].src = src;
+    });
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(images[currentFrame], 50, 50, 146, 242); // adjust width and height as needed
+    currentFrame = (currentFrame + 1) % images.length;
+  }
+
+  let currentFrame = 0;
+
+  preloadImages(marioFrames, () => {
+    setInterval(draw, 100); // adjust the interval for desired animation speed
+  });
+</script>

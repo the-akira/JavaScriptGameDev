@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        canvas {
+            border: 2px solid black;
+            display: block;
+            margin: 0 auto;
+            background: #A4B0FF;
+        }
+    </style>
+</head>
+<body>
+    <h1 style="text-align: center;">Mario Animation</h1>
+    <canvas id="myCanvas" width="800" height="400"></canvas>
+    <script>
+        const canvas = document.getElementById('myCanvas');
+        const ctx = canvas.getContext('2d');
+        const marioFrames = [];
+        const numberOfFrames = 4; // Supondo que você saiba quantos frames você tem
+
+        for (let i = 1; i <= numberOfFrames; i++) {
+            marioFrames.push(`frame${i}.png`);
+        }
+
+        const images = [];
+        let imagesLoaded = 0;
+
+        function preloadImages(sources, callback) {
+            sources.forEach((src, index) => {
+                images[index] = new Image();
+                images[index].onload = () => {
+                    imagesLoaded++;
+                    if (imagesLoaded === sources.length) {
+                        callback();
+                    }
+                };
+                images[index].src = src;
+            });
+        }
+
+        let currentFrame = 0;
+        let xPos = 50;
+        let yPos = 290;
+        let moving = false;
+        let direction = 'right'; // 'right' or 'left'
+        const speed = 5;
+        const animationSpeed = 9; // Lower value for slower animation
+        let animationCounter = 0;
+        let keys = {};
+        let marioWidth = 70;
+        let marioHeight = 111;
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            ctx.save();
+            if (direction === 'left') {
+                ctx.scale(-1, 1);
+                ctx.drawImage(images[moving ? currentFrame : 1], -xPos - marioWidth, yPos, marioWidth, marioHeight); // adjust width and height as needed
+            } else {
+                ctx.drawImage(images[moving ? currentFrame : 1], xPos, yPos, marioWidth, marioHeight); // adjust width and height as needed
+            }
+            ctx.restore();
+
+            if (moving) {
+                animationCounter++;
+                if (animationCounter >= animationSpeed) {
+                    currentFrame = (currentFrame + 1) % images.length;
+                    animationCounter = 0;
+                }
+            }
+        }
+
+        function updatePosition() {
+            if (keys['ArrowRight']) {
+                xPos += speed;
+                direction = 'right';
+                moving = true;
+            } else if (keys['ArrowLeft']) {
+                xPos -= speed;
+                direction = 'left';
+                moving = true;
+            } else {
+                moving = false;
+            }
+
+            if (xPos < 0) {
+                xPos = 0;
+            } else if (xPos > canvas.width - marioWidth) {
+                xPos = canvas.width - marioWidth;
+            }
+
+            draw();
+        }
+
+        window.addEventListener('keydown', (e) => {
+            keys[e.key] = true;
+        });
+
+        window.addEventListener('keyup', (e) => {
+            keys[e.key] = false;
+        });
+
+        preloadImages(marioFrames, () => {
+            setInterval(updatePosition, 1000 / 60); // 60 frames per second
+        });
+    </script>
+</body>
+</html>
