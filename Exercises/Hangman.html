@@ -1,4 +1,3 @@
-<!DOCTYPE html>
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
@@ -23,98 +22,109 @@
 <body>
     <div id="main">
         <h1>Jogo da Forca</h1>
+        <canvas id="forcaCanvas" width="200" height="250"></canvas>
         <div id="palavra"></div>
         <div id="tentativas"></div>
         <div id="letras-utilizadas"></div>
         <div id="mensagem"></div>
-        <input type="text" id="entrada-letra">
-        <button onclick="verificarLetra()">Enviar</button>
+        <input type="text" id="entrada-letra" maxlength="1" disabled>
+        <button onclick="verificarLetra()" id="botao-enviar" disabled>Enviar</button>
+        <button onclick="iniciarJogo()">Resetar</button>
     </div>
 
     <script>
-    const palavras = ["javascript", "html", "css", "programacao", "web", "desenvolvimento"];
-    let palavraSecreta;
-    let palavraAtual;
-    let tentativasRestantes;
-    let letrasUtilizadas;
+        const palavras = ["javascript", "html", "css", "programacao", "web", "desenvolvimento"];
+        let palavraSecreta;
+        let palavraAtual;
+        let tentativasRestantes;
+        let letrasUtilizadas;
+        const canvas = document.getElementById("forcaCanvas");
+        const ctx = canvas.getContext("2d");
 
-    function iniciarJogo() {
-        // Escolher uma palavra aleatória
-        palavraSecreta = palavras[Math.floor(Math.random() * palavras.length)];
-        
-        // Inicializar a palavra atual com underscores e espaços
-        palavraAtual = "_".repeat(palavraSecreta.length * 2 - 1);
-        for (let i = 1; i < palavraAtual.length; i += 2) {
-            palavraAtual = palavraAtual.substring(0, i) + " " + palavraAtual.substring(i + 1);
+        function iniciarJogo() {
+            palavraSecreta = palavras[Math.floor(Math.random() * palavras.length)];
+            palavraAtual = "_ ".repeat(palavraSecreta.length).trim();
+            tentativasRestantes = 6;
+            letrasUtilizadas = [];
+            document.getElementById("entrada-letra").disabled = false;
+            document.getElementById("botao-enviar").disabled = false;
+            limparCanvas();
+            desenharBase();
+            atualizarInterface();
         }
-        
-        // Inicializar tentativas e letras utilizadas
-        tentativasRestantes = 6;
-        letrasUtilizadas = [];
-        
-        // Atualizar a interface
-        atualizarInterface();
-    }
 
-    function atualizarInterface() {
-        document.getElementById("palavra").textContent = palavraAtual;
-        document.getElementById("tentativas").textContent = `Tentativas Restantes: ${tentativasRestantes}`;
-        document.getElementById("letras-utilizadas").textContent = `Letras Utilizadas: ${letrasUtilizadas.join(", ")}`;
-        
-        // Verificar se o jogo terminou
-        if (palavraAtual === palavraSecreta.split("").join(" ")) {
-            document.getElementById("mensagem").textContent = "Parabéns! Você venceu!";
-        } else if (tentativasRestantes === 0) {
-            document.getElementById("mensagem").textContent = "Game Over. A palavra era: " + palavraSecreta;
-        } else {
+        function atualizarInterface() {
+            document.getElementById("palavra").textContent = palavraAtual;
+            document.getElementById("tentativas").textContent = `Tentativas Restantes: ${tentativasRestantes}`;
+            document.getElementById("letras-utilizadas").textContent = `Letras Utilizadas: ${letrasUtilizadas.join(", ")}`;
             document.getElementById("mensagem").textContent = "";
-        }
-    }
-
-    function verificarLetra() {
-        const letra = document.getElementById("entrada-letra").value.toLowerCase();
-
-        // Validações
-        if (!letra) {
-            alert("Você deve informar pelo menos uma letra.");
-            return;        
-        }
-
-        if (letra.length > 1) {
-            alert("Você deve informar apenas uma letra.");
-            return;        
-        }
-        
-        if (letrasUtilizadas.includes(letra)) {
-            alert("Esta letra já foi utilizada. Tente outra.");
-            return;
-        }
-        
-        // Adicionar letra às letras utilizadas
-        letrasUtilizadas.push(letra);
-        
-        // Verificar se a letra está na palavra
-        if (palavraSecreta.includes(letra)) {
-            // Atualizar a palavra atual com a letra correta
-            for (let i = 0; i < palavraSecreta.length; i++) {
-                if (palavraSecreta[i] === letra) {
-                    palavraAtual = palavraAtual.substring(0, i * 2) + letra + palavraAtual.substring(i * 2 + 1);
-                }
+            if (!palavraAtual.includes("_")) {
+                document.getElementById("mensagem").textContent = "Parabéns! Você venceu!";
+                desativarInput();
+            } else if (tentativasRestantes === 0) {
+                document.getElementById("mensagem").textContent = "Game Over. A palavra era: " + palavraSecreta;
+                desativarInput();
             }
-        } else {
-            // Reduzir as tentativas restantes
-            tentativasRestantes--;
         }
-        
-        // Atualizar a interface
-        atualizarInterface();
-        
-        // Limpar o campo de entrada
-        document.getElementById("entrada-letra").value = "";
-    }
 
-    // Iniciar o jogo quando a página carregar
-    window.onload = iniciarJogo;
+        function verificarLetra() {
+            const entrada = document.getElementById("entrada-letra");
+            const letra = entrada.value.toLowerCase();
+            entrada.value = "";
+            
+            if (!letra.match(/^[a-z]$/) || letrasUtilizadas.includes(letra)) {
+                alert("Digite apenas uma letra válida e não repetida.");
+                return;
+            }
+
+            letrasUtilizadas.push(letra);
+            if (palavraSecreta.includes(letra)) {
+                let novaPalavra = palavraAtual.split(" ");
+                for (let i = 0; i < palavraSecreta.length; i++) {
+                    if (palavraSecreta[i] === letra) {
+                        novaPalavra[i] = letra;
+                    }
+                }
+                palavraAtual = novaPalavra.join(" ");
+            } else {
+                tentativasRestantes--;
+                desenharParte(6 - tentativasRestantes);
+            }
+            atualizarInterface();
+        }
+
+        function desativarInput() {
+            document.getElementById("entrada-letra").disabled = true;
+            document.getElementById("botao-enviar").disabled = true;
+        }
+
+        function desenharBase() {
+            ctx.beginPath();
+            ctx.moveTo(20, 230);
+            ctx.lineTo(180, 230);
+            ctx.moveTo(100, 230);
+            ctx.lineTo(100, 20);
+            ctx.lineTo(150, 20);
+            ctx.lineTo(150, 50);
+            ctx.stroke();
+        }
+
+        function desenharParte(parte) {
+            ctx.beginPath();
+            if (parte === 1) ctx.arc(150, 70, 20, 0, Math.PI * 2);
+            else if (parte === 2) { ctx.moveTo(150, 90); ctx.lineTo(150, 150); }
+            else if (parte === 3) { ctx.moveTo(150, 110); ctx.lineTo(130, 130); }
+            else if (parte === 4) { ctx.moveTo(150, 110); ctx.lineTo(170, 130); }
+            else if (parte === 5) { ctx.moveTo(150, 150); ctx.lineTo(130, 180); }
+            else if (parte === 6) { ctx.moveTo(150, 150); ctx.lineTo(170, 180); }
+            ctx.stroke();
+        }
+
+        function limparCanvas() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+
+        window.onload = iniciarJogo;
     </script>
 </body>
 </html>
