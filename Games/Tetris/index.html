@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Matrix Tetris</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <link rel="stylesheet" type="text/css" href="styles.css">
+</head>
+<body>
+    <canvas class="matrix-rain" id="matrixRain"></canvas>
+    <div class="game-container">
+        <canvas id="gameCanvas"></canvas>
+        <div class="score-board">
+            <h3>SCORE: <span id="score">0</span></h3>
+            <h3>LINES: <span id="lines">0</span></h3>
+            <h3>LEVEL: <span id="level">1</span></h3>
+            <p>Controls:</p>
+            <p>← → : Move</p>
+            <p>↑ : Rotate</p>
+            <p>↓ : Soft Drop</p>
+            <p>Space : Hard Drop</p>
+        </div>
+    </div>
+    <script type="text/javascript" src="game.js"></script>
+</body>
+</html>

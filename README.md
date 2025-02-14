@@ -18,3 +18,4 @@ Projeto educativo que propõe o ensino da programação através da construção
 - [Shadow Templar](https://github.com/the-akira/JavaScriptGameDev/tree/master/Games/Shadow%20Templar)
 - [Sistema de Coordenadas](https://github.com/the-akira/JavaScriptGameDev/tree/master/Games/Sistema%20de%20Coordenadas)
 - [Snake](https://github.com/the-akira/JavaScriptGameDev/tree/master/Games/Snake)
+- [Tetris](https://github.com/the-akira/JavaScriptGameDev/tree/master/Games/Tetris)
