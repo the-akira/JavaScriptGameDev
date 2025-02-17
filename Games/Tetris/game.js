@@ -192,8 +192,6 @@ function checkLines() {
         lines += linesCleared;
         score += linesCleared * 100 * level;
         level = Math.floor(lines / 10) + 1;
-
-        dropInterval = Math.max(GAME_SPEED - (score * SPEED_DECREASE_PER_POINT), MIN_DROP_INTERVAL);
         
         document.getElementById('score').textContent = score;
         document.getElementById('lines').textContent = lines;
@@ -254,14 +252,20 @@ let lastTime = 0;
 let dropCounter = 0;
 const MIN_DROP_INTERVAL = 150; 
 const SPEED_DECREASE_PER_POINT = 0.01; 
-let dropInterval = GAME_SPEED;
+const SOFT_DROP_SPEED = 50;
+let isDownKeyActive = false;
+
+function getDropInterval() {
+    let dropInterval = Math.max(GAME_SPEED - (score * SPEED_DECREASE_PER_POINT), MIN_DROP_INTERVAL);
+    return isDownKeyActive ? SOFT_DROP_SPEED : dropInterval;
+}
 
 function update(time = 0) {
     const deltaTime = time - lastTime;
     lastTime = time;
 
     dropCounter += deltaTime;
-    if (dropCounter > dropInterval) {
+    if (dropCounter > getDropInterval()) {
         moveDown();
         dropCounter = 0;
     }
@@ -288,7 +292,6 @@ function resetGame() {
     lines = 0;
     level = 1;
     gameOver = false;
-    dropInterval = GAME_SPEED;
     document.getElementById('score').textContent = score;
     document.getElementById('lines').textContent = lines;
     document.getElementById('level').textContent = level;
@@ -314,7 +317,7 @@ document.addEventListener('keydown', event => {
                 }
                 break;
             case 40: // Down
-                moveDown();
+                isDownKeyActive = true;
                 break;
             case 38: // Up (Rotate)
                 if (performance.now() - lastRotateTime > ROTATE_DELAY) {
@@ -326,6 +329,12 @@ document.addEventListener('keydown', event => {
                 hardDrop();
                 break;
         }
+    }
+});
+
+document.addEventListener('keyup', event => {
+    if (event.keyCode === 40) { // Soltar a tecla ↓
+        isDownKeyActive = false;
     }
 });
 
