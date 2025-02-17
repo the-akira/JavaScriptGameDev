@@ -33,9 +33,25 @@ class SnakeGame {
     }
 
     generateFood() {
-        const foodX = Math.floor(Math.random() * (canvasSize / blockSize)) * blockSize;
-        const foodY = Math.floor(Math.random() * (canvasSize / blockSize)) * blockSize;
-        return { x: foodX, y: foodY };
+        let foodPosition;
+        let isOnSnake;
+
+        do {
+            isOnSnake = false;
+            foodPosition = {
+                x: Math.floor(Math.random() * (canvasSize / blockSize)) * blockSize,
+                y: Math.floor(Math.random() * (canvasSize / blockSize)) * blockSize
+            };
+
+            for (const segment of this.snake.body) {
+                if (segment.x === foodPosition.x && segment.y === foodPosition.y) {
+                    isOnSnake = true;
+                    break;
+                }
+            }
+        } while (isOnSnake);
+
+        return foodPosition;
     }
 
     drawBlock(x, y, color) {
