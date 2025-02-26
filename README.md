@@ -19,3 +19,4 @@ Projeto educativo que propõe o ensino da programação através da construção
 - [Sistema de Coordenadas](https://github.com/the-akira/JavaScriptGameDev/tree/master/Games/Sistema%20de%20Coordenadas)
 - [Snake](https://github.com/the-akira/JavaScriptGameDev/tree/master/Games/Snake)
 - [Tetris](https://github.com/the-akira/JavaScriptGameDev/tree/master/Games/Tetris)
+- [RPG Prototype](https://github.com/the-akira/JavaScriptGameDev/tree/master/Games/RPG%20Prototype)

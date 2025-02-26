@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RPG Prototype</title>
+    <link rel="stylesheet" type="text/css" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>As Aventuras do Mestre dos Magos</h1>
+        <div class="game-container">
+            <canvas id="gameCanvas" width="800" height="600"></canvas>
+            <canvas id="minimapCanvas"></canvas>
+        </div>
+        <div id="volumeControlContainer">
+            <span id="volumeIcon">🔊</span>
+            <input type="range" id="volumeControl" min="0" max="1" step="0.1" value="0.1">
+        </div>
+        <div id="controlsContainer">
+            <div class="control">
+                <span>☀️</span>
+                <input type="range" id="brightnessControl" min="0.2" max="2" step="0.1" value="1">
+            </div>
+            <div class="control">
+                <span>🌓</span>
+                <input type="range" id="contrastControl" min="0.3" max="2" step="0.1" value="1">
+            </div>
+            <div class="control">
+                <span>🌈</span>
+                <input type="range" id="saturationControl" min="0" max="2" step="0.1" value="1">
+            </div>
+        </div>
+        <div class="instructions">
+            <p>Use os botões do <b>MOUSE</b> para atacar</p>
+            <p>Use as teclas <b>WASD</b> para mover o personagem</p>
+            <p>Use a tecla <b>F</b> para transformar no modo coruja</p>
+            <p>Entre nos <b>portais azuis</b> para mudar de mapa</p>
+        </div>
+    </div>
+
+    <script type="text/javascript" src="game.js"></script>
+</body>
+</html>
