@@ -40,8 +40,8 @@
         const player = {
             x: 100,
             y: 300,
-            width: 20,
-            height: 20,
+            width: 15,
+            height: 15,
             speed: 3,
             color: 'blue',
             collisionBuffer: 1,
@@ -53,16 +53,16 @@
         
         // Árvore - vamos carregar a imagem
         const tree = {
-            x: 200,
-            y: 200,
-            width: 64, 
-            height: 80,
+            x: 100,
+            y: 100,
+            width: 200, 
+            height: 200,
             image: new Image(),
             collisionData: null
         };
         
         // Carregue a imagem da árvore
-        tree.image.src = 'tree.png';
+        tree.image.src = 'pinktree.png';
         
         // Função para extrair dados de colisão da imagem com margem de buffer
         function extractCollisionData(image) {
