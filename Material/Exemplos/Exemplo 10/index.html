@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Colisão Perfeita</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            background-color: #f0f0f0;
+            font-family: Arial, sans-serif;
+        }
+        canvas {
+            border: 2px solid #333;
+            display: block;
+            margin: auto;
+            margin-top: 20px;
+            background-color: #8bc34a;
+        }
+        #info {
+            background-color: rgba(255, 255, 255, 0.7);
+            padding: 10px;
+            font-size: 1.05rem;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div id="info">Use as setas para mover o quadrado. Verde = sem colisão, Vermelho = colisão!</div>
+    <canvas id="gameCanvas" width="400" height="400"></canvas>
+    <!-- python3 -m http.server -->
+    <script>
+        // Configuração inicial
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Criar objeto jogador (quadrado que o usuário controla)
+        const player = {
+            x: 100,
+            y: 300,
+            width: 20,
+            height: 20,
+            speed: 3,
+            color: 'blue',
+            collisionBuffer: 1,
+            isColliding: false
+        };
+        
+        // Variáveis para controle do teclado
+        const keys = {};
+        
+        // Árvore - vamos carregar a imagem
+        const tree = {
+            x: 200,
+            y: 200,
+            width: 64, 
+            height: 80,
+            image: new Image(),
+            collisionData: null
+        };
+        
+        // Carregue a imagem da árvore
+        tree.image.src = 'tree.png';
+        
+        // Função para extrair dados de colisão da imagem com margem de buffer
+        function extractCollisionData(image) {
+            // Criar um canvas temporário para analisar a imagem
+            const tempCanvas = document.createElement('canvas');
+            const tempCtx = tempCanvas.getContext('2d');
+            tempCanvas.width = image.width;
+            tempCanvas.height = image.height;
+            
+            // Desenhar a imagem no canvas temporário
+            tempCtx.drawImage(image, 0, 0);
+            
+            // Obter os dados da imagem (array de pixels)
+            const imageData = tempCtx.getImageData(0, 0, image.width, image.height);
+            const pixels = imageData.data;
+            
+            // Array para armazenar quais pixels são sólidos (não transparentes)
+            const collisionData = [];
+            
+            // Verifica cada pixel - se não for transparente, é sólido
+            for (let y = 0; y < image.height; y++) {
+                collisionData[y] = [];
+                for (let x = 0; x < image.width; x++) {
+                    // Calcula o índice no array de pixels (cada pixel tem 4 valores: R,G,B,A)
+                    const idx = (y * image.width + x) * 4;
+                    // Aumentamos o limiar de transparência para 20 para pegar mais pixels para colisão
+                    collisionData[y][x] = pixels[idx + 3] > 20;
+                }
+            }
+            
+            return collisionData;
+        }
+        
+        // Verifica se há movimento na direção dada e se resultaria em colisão
+        function wouldCollide(dx, dy) {
+            // Calcular a nova posição com o movimento proposto
+            const newX = player.x + dx;
+            const newY = player.y + dy;
+            
+            // Verificar colisão na nova posição
+            return checkPixelCollision(newX, newY);
+        }
+        
+        // Função para verificar colisão por pixel com posição específica
+        function checkPixelCollision(playerX = player.x, playerY = player.y) {
+            // Aplicar buffer de colisão para aumentar a área de detecção
+            const adjustedPlayerX = playerX - player.collisionBuffer;
+            const adjustedPlayerY = playerY - player.collisionBuffer;
+            const adjustedWidth = player.width + player.collisionBuffer * 2;
+            const adjustedHeight = player.height + player.collisionBuffer * 2;
+            
+            // Primeiro, verifique se há sobreposição de retângulos
+            if (adjustedPlayerX < tree.x + tree.width &&
+                adjustedPlayerX + adjustedWidth > tree.x &&
+                adjustedPlayerY < tree.y + tree.height &&
+                adjustedPlayerY + adjustedHeight > tree.y) {
+                
+                // Se houver sobreposição, verifique pixel por pixel
+                // Converta as coordenadas do jogador para o espaço da árvore
+                const playerRelativeX = Math.max(0, adjustedPlayerX - tree.x);
+                const playerRelativeY = Math.max(0, adjustedPlayerY - tree.y);
+                
+                // Defina a área de interseção
+                const overlapWidth = Math.min(adjustedPlayerX + adjustedWidth, tree.x + tree.width) - Math.max(adjustedPlayerX, tree.x);
+                const overlapHeight = Math.min(adjustedPlayerY + adjustedHeight, tree.y + tree.height) - Math.max(adjustedPlayerY, tree.y);
+                
+                // Verifique cada pixel na área de sobreposição com passos menores para evitar "túneis"
+                // Usamos passos de 0.5 pixel para maior precisão
+                for (let y = 0; y < overlapHeight; y += 0.5) {
+                    for (let x = 0; x < overlapWidth; x += 0.5) {
+                        // Verifique se o pixel da árvore nesta posição é sólido
+                        const treePixelX = Math.floor(playerRelativeX + x);
+                        const treePixelY = Math.floor(playerRelativeY + y);
+                        
+                        if (treePixelX >= 0 && treePixelX < tree.width && 
+                            treePixelY >= 0 && treePixelY < tree.height) {
+                            
+                            if (tree.collisionData[treePixelY][treePixelX]) {
+                                // Colisão!
+                                return true;
+                            }
+                        }
+                    }
+                }
+            }
+            
+            return false;
+        }
+        
+        // Função para atualizar a posição do jogador
+        function updatePlayer() {
+            // Resetar estado de colisão
+            player.isColliding = false;
+            
+            // Guardar posição antiga
+            const oldX = player.x;
+            const oldY = player.y;
+            
+            // Verificar cada direção separadamente para evitar "deslizamento" através de colisões
+            let newX = player.x;
+            let newY = player.y;
+            
+            // Mover horizontal e vertical separadamente
+            if (keys['ArrowUp']) {
+                // Tente mover para cima em incrementos menores
+                for (let step = 1; step <= player.speed; step++) {
+                    if (!wouldCollide(0, -step)) {
+                        newY = player.y - step;
+                    } else {
+                        player.isColliding = true;
+                        break;
+                    }
+                }
+            }
+            if (keys['ArrowDown']) {
+                for (let step = 1; step <= player.speed; step++) {
+                    if (!wouldCollide(0, step)) {
+                        newY = player.y + step;
+                    } else {
+                        player.isColliding = true;
+                        break;
+                    }
+                }
+            }
+            if (keys['ArrowLeft']) {
+                for (let step = 1; step <= player.speed; step++) {
+                    if (!wouldCollide(-step, 0)) {
+                        newX = player.x - step;
+                    } else {
+                        player.isColliding = true;
+                        break;
+                    }
+                }
+            }
+            if (keys['ArrowRight']) {
+                for (let step = 1; step <= player.speed; step++) {
+                    if (!wouldCollide(step, 0)) {
+                        newX = player.x + step;
+                    } else {
+                        player.isColliding = true;
+                        break;
+                    }
+                }
+            }
+            
+            // Atualizar posição
+            player.x = newX;
+            player.y = newY;
+            
+            // Manter dentro dos limites do canvas
+            player.x = Math.max(0, Math.min(canvas.width - player.width, player.x));
+            player.y = Math.max(0, Math.min(canvas.height - player.height, player.y));
+            
+            // Verificar colisão final após movimento
+            if (checkPixelCollision()) {
+                player.isColliding = true;
+                // Se houver colisão após movimento, reverter para a posição anterior
+                player.x = oldX;
+                player.y = oldY;
+            }
+            
+            // Atualizar cor baseado na colisão
+            player.color = player.isColliding ? 'red' : 'blue';
+        }
+        
+        // Função para desenhar tudo
+        function draw() {
+            // Limpar o canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Desenhar árvore
+            ctx.drawImage(tree.image, tree.x, tree.y);
+            
+            // Desenhar jogador
+            ctx.fillStyle = player.color;
+            ctx.fillRect(player.x, player.y, player.width, player.height);
+            
+            // Para debug - desenhar a hitbox da árvore
+            ctx.strokeStyle = 'rgba(255, 0, 0, 1)';
+            ctx.strokeRect(tree.x, tree.y, tree.width, tree.height);
+            
+            // Para debug - desenhar a hitbox real do jogador com buffer
+            if (player.collisionBuffer > 0) {
+                ctx.strokeStyle = 'rgba(255, 0, 0, 1)';
+                ctx.strokeRect(
+                    player.x - player.collisionBuffer, 
+                    player.y - player.collisionBuffer, 
+                    player.width + player.collisionBuffer * 2, 
+                    player.height + player.collisionBuffer * 2
+                );
+            }
+        }
+        
+        // Loop principal do jogo
+        function gameLoop() {
+            updatePlayer();
+            draw();
+            requestAnimationFrame(gameLoop);
+        }
+        
+        // Event listeners para teclado
+        window.addEventListener('keydown', (e) => {
+            keys[e.key] = true;
+            // Evitar que as setas rolem a página
+            if(['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+                e.preventDefault();
+            }
+        });
+        
+        window.addEventListener('keyup', (e) => {
+            keys[e.key] = false;
+        });
+        
+        // Iniciar quando a imagem carregar
+        tree.image.onload = function() {
+            // Extrair dados de colisão da imagem
+            tree.collisionData = extractCollisionData(tree.image);
+            // Iniciar o loop do jogo
+            gameLoop();
+        };
+    </script>
+</body>
+</html>
