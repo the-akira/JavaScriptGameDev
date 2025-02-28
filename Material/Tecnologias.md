@@ -1,4 +1,4 @@
-## Documento Formal do Projeto de Game Dev
+## Documento de Tecnologias do Projeto
 
 ### Sumário
 - [1. Introdução](#1-introdução)
@@ -11,7 +11,8 @@
 - [4. Modelos de Linguagem (LLMs) Recomendados](#4-modelos-de-linguagem-llms-recomendados)
 - [5. Editores de Código Recomendados](#5-editores-de-código-recomendados)
 - [6. Detalhes Técnicos](#6-detalhes-técnicos)
-- [7. Conclusão](#7-conclusão)
+- [7. Recursos de Estudo](#7-recursos-de-estudo)
+- [8. Conclusão](#8-conclusão)
 
 ### 1. Introdução
 
@@ -25,7 +26,7 @@ JavaScript foi escolhido por ser uma linguagem amplamente suportada por todos os
 
 #### **HTML & CSS**
 
-- **HTML** é utilizado para estruturar a interface do game e os elementos interativos.
+- **HTML** é utilizado para estruturar a interface do jogo e os elementos interativos.
 - **CSS** permite estilizar os elementos da interface, proporcionando uma melhor experiência visual ao usuário.
 
 #### **Canvas API**
@@ -48,7 +49,7 @@ Os seguintes navegadores são recomendados para melhor compatibilidade e desempe
 
 ### 4. Modelos de Linguagem (LLMs) Recomendados
 
-Os Modelos de Linguagem de Grande Escala (LLMs) podem ser utilizados para acelerar o desenvolvimento, otimizar debugging e gerar insights para a lógica do game. As seguintes opções são recomendadas:
+Os Modelos de Linguagem de Grande Escala (LLMs) podem ser utilizados para acelerar o desenvolvimento, otimizar debugging e gerar insights para a lógica do jogo. As seguintes opções são recomendadas:
 
 - **ChatGPT (OpenAI)**: Versátil para geração de código, explicações detalhadas e otimizações de performance.
 - **Claude (Anthropic)**: Enfoca segurança e alinhamento, útil para discussões técnicas e análise de código.
@@ -72,6 +73,31 @@ A escolha do editor de código pode impactar diretamente a produtividade do dese
 - **Metodologia**: Desenvolvimento incremental com revisões periódicas.
 - **Versionamento**: Controle de versão recomendado com Git e GitHub.
 
-### 7. Conclusão
+### 7. Recursos de Estudo
+
+Para aqueles que desejam aprofundar seus conhecimentos em JavaScript, HTML, CSS e Canvas, os seguintes recursos são recomendados:
+
+#### **JavaScript**
+
+- [MDN Web Docs - JavaScript](https://developer.mozilla.org/pt-BR/docs/Web/JavaScript) 
+- [Eloquent JavaScript](https://eloquentjavascript.net/) 
+- [JavaScript.info](https://javascript.info/)
+
+#### **HTML & CSS**
+
+- [W3Schools](https://www.w3schools.com/)
+- [FreeCodeCamp](https://www.freecodecamp.org/) 
+- [MDN Web Docs - HTML](https://developer.mozilla.org/pt-BR/docs/Web/HTML) 
+- [MDN Web Docs - CSS](https://developer.mozilla.org/pt-BR/docs/Web/CSS) 
+
+#### **Canvas API**
+
+- [MDN Web Docs - Canvas API](https://developer.mozilla.org/pt-BR/docs/Web/API/Canvas_API) 
+- [HTML5 Canvas Tutorials](https://www.html5canvastutorials.com/) 
+- [Gamedev.net - Canvas Programming](https://www.gamedev.net/tutorials/programming/graphics/)
+
+Esses materiais abrangem desde conceitos básicos até tópicos avançados, permitindo que os estudantes adquiram habilidades essenciais para o desenvolvimento de games web.
+
+### 8. Conclusão
 
 Este documento fornece a base técnica para o desenvolvimento e utilização do curso de Game Dev. Qualquer contribuição ou dúvida pode ser direcionada ao responsável pelo projeto.
