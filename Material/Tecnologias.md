@@ -42,32 +42,31 @@ O uso de navegadores como plataforma para o desenvolvimento de games permite ace
 
 Os seguintes navegadores são recomendados para melhor compatibilidade e desempenho:
 
-- Google Chrome
-- Mozilla Firefox
-- Microsoft Edge
-- Safari
-- Opera
-- Brave
+- [Google Chrome](https://www.google.com/chrome/dr/download/)
+- [Mozilla Firefox](https://www.mozilla.org/en-US/firefox/)
+- [Microsoft Edge](https://www.microsoft.com/en-us/edge/)
+- [Opera](https://www.opera.com/pt-br)
+- [Brave](https://brave.com/)
 
 ### Modelos de Linguagem (LLMs)
 
 Os Modelos de Linguagem de Grande Escala (LLMs) podem ser utilizados para acelerar o desenvolvimento, otimizar debugging e gerar insights para a lógica do game. As seguintes opções são recomendadas:
 
-- **ChatGPT (OpenAI)**: Versátil para geração de código, explicações detalhadas e otimizações de performance.
-- **Claude (Anthropic)**: Enfoca segurança e alinhamento, útil para discussões técnicas e análise de código.
-- **Deep Seek**: Especializado em busca e análise de informações contextuais para auxiliar no desenvolvimento.
-- **Chat Blackbox**: Desenvolvido especificamente para suporte a programação, fornecendo sugestões inteligentes e análise de código em tempo real.
-- **Bolt (StackBlitz)**: Integrado ao ambiente web, permite desenvolvimento ágil com suporte a múltiplas linguagens e ferramentas de deploy.
+- [ChatGPT (OpenAI)](https://chatgpt.com/)
+- [Claude (Anthropic)](https://claude.ai/)
+- [Deep Seek](https://chat.deepseek.com/)
+- [Chat Blackbox](https://www.blackbox.ai/)
+- [Bolt (StackBlitz)](https://bolt.new/)
 
 ### Editores de Código
 
 A escolha do editor de código pode impactar diretamente a produtividade do desenvolvedor. Abaixo estão algumas recomendações com seus respectivos diferenciais:
 
-- **Visual Studio Code**: Editor leve e extensível, com suporte a depuração, controle de versão e um ecossistema vasto de extensões.
-- **Sublime Text**: Conhecido por sua rapidez e interface limpa, ideal para edição de código rápida e eficiente.
-- **Brackets**: Criado especificamente para desenvolvimento web, com recursos voltados para HTML, CSS e JavaScript.
-- **WebStorm**: IDE robusta para desenvolvimento JavaScript, com suporte integrado a frameworks e ferramentas de teste.
-- **Notepad++**: Alternativa leve e poderosa para edição de código, especialmente útil para scripts e ajustes rápidos.
+- [Visual Studio Code](https://code.visualstudio.com/)
+- [Sublime Text](https://www.sublimetext.com/)
+- [Brackets](https://brackets.io/)
+- [WebStorm](https://www.jetbrains.com/pt-br/webstorm/)
+- [Notepad++](https://notepad-plus-plus.org/downloads/)
 
 ### Detalhes Técnicos
 
