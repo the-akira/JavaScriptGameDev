@@ -4,10 +4,13 @@
 
 Projeto educativo que propõe o ensino da programação através da construção de vídeo-games 2D.
 
-## Tecnologias Usadas
+## Conteúdo
 
-- HTML Canvas
-- JavaScript Puro
+- [Tecnologias Usadas](https://github.com/the-akira/JavaScriptGameDev/blob/master/Material/Tecnologias.md)
+- [Fundamentos](https://github.com/the-akira/JavaScriptGameDev/tree/master/Fundamentals)
+- [Exercícios](https://github.com/the-akira/JavaScriptGameDev/tree/master/Exercises)
+- [Material Didático](https://github.com/the-akira/JavaScriptGameDev/blob/master/Material/Introduction.pdf)
+- [Exemplos Práticos](https://github.com/the-akira/JavaScriptGameDev/tree/master/Material/Exemplos)
 
 ## Games Criados
 
@@ -15,8 +18,8 @@ Projeto educativo que propõe o ensino da programação através da construção
 - [Alpha Wings](https://github.com/the-akira/JavaScriptGameDev/tree/master/Games/Alpha%20Wings)
 - [Conway's Game of Life](https://github.com/the-akira/JavaScriptGameDev/tree/master/Games/Game%20of%20Life)
 - [Elder Dragon](https://github.com/the-akira/JavaScriptGameDev/tree/master/Games/Elder%20Dragon)
+- [RPG Prototype](https://github.com/the-akira/JavaScriptGameDev/tree/master/Games/RPG%20Prototype)
 - [Shadow Templar](https://github.com/the-akira/JavaScriptGameDev/tree/master/Games/Shadow%20Templar)
 - [Sistema de Coordenadas](https://github.com/the-akira/JavaScriptGameDev/tree/master/Games/Sistema%20de%20Coordenadas)
 - [Snake](https://github.com/the-akira/JavaScriptGameDev/tree/master/Games/Snake)
 - [Tetris](https://github.com/the-akira/JavaScriptGameDev/tree/master/Games/Tetris)
-- [RPG Prototype](https://github.com/the-akira/JavaScriptGameDev/tree/master/Games/RPG%20Prototype)
