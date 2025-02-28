@@ -2,24 +2,24 @@
 
 ### Sumário
 
-- [1. Introdução](#1-introdução)
-- [2. Justificativa do Uso das Tecnologias](#2-justificativa-do-uso-das-tecnologias)
+- [Introdução](#introdução)
+- [Justificativa do Uso das Tecnologias](#justificativa-do-uso-das-tecnologias)
   - [JavaScript](#javascript)
   - [HTML & CSS](#html--css)
   - [Canvas API](#canvas-api)
   - [Web Browsers](#web-browsers)
-- [3. Navegadores Compatíveis](#3-navegadores-compatíveis)
-- [4. Modelos de Linguagem (LLMs)](#4-modelos-de-linguagem-llms)
-- [5. Editores de Código](#5-editores-de-código)
-- [6. Detalhes Técnicos](#6-detalhes-técnicos)
-- [7. Recursos de Estudo](#7-recursos-de-estudo)
-- [8. Conclusão](#8-conclusão)
+- [Navegadores Compatíveis](#navegadores-compatíveis)
+- [Modelos de Linguagem (LLMs)](#modelos-de-linguagem-llms)
+- [Editores de Código](#editores-de-código)
+- [Detalhes Técnicos](#detalhes-técnicos)
+- [Recursos de Estudo](#recursos-de-estudo)
+- [Conclusão](#conclusão)
 
-### 1. Introdução
+### Introdução
 
 Este documento tem como objetivo justificar a escolha das tecnologias utilizadas no projeto de desenvolvimento de games, bem como fornecer informações técnicas relevantes para os usuários que desejam utilizar ou contribuir com o projeto.
 
-### 2. Justificativa do Uso das Tecnologias
+### Justificativa do Uso das Tecnologias
 
 #### **JavaScript**
 
@@ -38,7 +38,7 @@ A API Canvas do HTML5 foi escolhida para renderização gráfica por sua flexibi
 
 O uso de navegadores como plataforma para o desenvolvimento de games permite acessibilidade ampla, dispensando instalação de software adicional. Games desenvolvidos com JavaScript e Canvas podem ser executados diretamente no navegador do usuário, garantindo compatibilidade e facilidade de distribuição.
 
-### 3. Navegadores Compatíveis
+### Navegadores Compatíveis
 
 Os seguintes navegadores são recomendados para melhor compatibilidade e desempenho:
 
@@ -49,7 +49,7 @@ Os seguintes navegadores são recomendados para melhor compatibilidade e desempe
 - Opera
 - Brave
 
-### 4. Modelos de Linguagem (LLMs)
+### Modelos de Linguagem (LLMs)
 
 Os Modelos de Linguagem de Grande Escala (LLMs) podem ser utilizados para acelerar o desenvolvimento, otimizar debugging e gerar insights para a lógica do jogo. As seguintes opções são recomendadas:
 
@@ -59,7 +59,7 @@ Os Modelos de Linguagem de Grande Escala (LLMs) podem ser utilizados para aceler
 - **Chat Blackbox**: Desenvolvido especificamente para suporte a programação, fornecendo sugestões inteligentes e análise de código em tempo real.
 - **Bolt (StackBlitz)**: Integrado ao ambiente web, permite desenvolvimento ágil com suporte a múltiplas linguagens e ferramentas de deploy.
 
-### 5. Editores de Código
+### Editores de Código
 
 A escolha do editor de código pode impactar diretamente a produtividade do desenvolvedor. Abaixo estão algumas recomendações com seus respectivos diferenciais:
 
@@ -69,13 +69,13 @@ A escolha do editor de código pode impactar diretamente a produtividade do dese
 - **WebStorm**: IDE robusta para desenvolvimento JavaScript, com suporte integrado a frameworks e ferramentas de teste.
 - **Notepad++**: Alternativa leve e poderosa para edição de código, especialmente útil para scripts e ajustes rápidos.
 
-### 6. Detalhes Técnicos
+### Detalhes Técnicos
 
 - **Requisitos Mínimos**: Computador com navegador atualizado.
 - **Metodologia**: Desenvolvimento incremental com revisões periódicas.
 - **Versionamento**: Controle de versão recomendado com Git e GitHub.
 
-### 7. Recursos de Estudo
+### Recursos de Estudo
 
 Para aqueles que desejam aprofundar seus conhecimentos em JavaScript, HTML, CSS e Canvas, os seguintes recursos são recomendados:
 
@@ -87,6 +87,6 @@ Para aqueles que desejam aprofundar seus conhecimentos em JavaScript, HTML, CSS 
 
 Esses materiais abrangem desde conceitos básicos até tópicos avançados, permitindo que os estudantes adquiram habilidades essenciais para o desenvolvimento de games web.
 
-### 8. Conclusão
+### Conclusão
 
 Este documento fornece a base técnica para o desenvolvimento e utilização do curso de Game Dev. Qualquer contribuição ou dúvida pode ser direcionada ao responsável pelo projeto.
