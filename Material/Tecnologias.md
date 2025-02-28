@@ -60,7 +60,7 @@ Os Modelos de Linguagem de Grande Escala (LLMs) podem ser utilizados para aceler
 
 ### Editores de Código
 
-A escolha do editor de código pode impactar diretamente a produtividade do desenvolvedor. Abaixo estão algumas recomendações com seus respectivos diferenciais:
+A escolha do editor de código pode impactar diretamente a produtividade do desenvolvedor. Abaixo estão algumas recomendações:
 
 - [Visual Studio Code](https://code.visualstudio.com/)
 - [Sublime Text](https://www.sublimetext.com/)
