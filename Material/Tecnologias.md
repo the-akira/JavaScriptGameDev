@@ -1,6 +1,7 @@
 ## Documento de Tecnologias do Projeto
 
 ### Sumário
+
 - [1. Introdução](#1-introdução)
 - [2. Justificativa do Uso das Tecnologias](#2-justificativa-do-uso-das-tecnologias)
   - [JavaScript](#javascript)
@@ -77,24 +78,11 @@ A escolha do editor de código pode impactar diretamente a produtividade do dese
 
 Para aqueles que desejam aprofundar seus conhecimentos em JavaScript, HTML, CSS e Canvas, os seguintes recursos são recomendados:
 
-#### **JavaScript**
-
-- [MDN Web Docs - JavaScript](https://developer.mozilla.org/pt-BR/docs/Web/JavaScript) 
+- [MDN Web Docs](https://developer.mozilla.org/pt-BR/docs/Web) 
 - [Eloquent JavaScript](https://eloquentjavascript.net/) 
 - [JavaScript.info](https://javascript.info/)
-
-#### **HTML & CSS**
-
 - [W3Schools](https://www.w3schools.com/)
 - [FreeCodeCamp](https://www.freecodecamp.org/) 
-- [MDN Web Docs - HTML](https://developer.mozilla.org/pt-BR/docs/Web/HTML) 
-- [MDN Web Docs - CSS](https://developer.mozilla.org/pt-BR/docs/Web/CSS) 
-
-#### **Canvas API**
-
-- [MDN Web Docs - Canvas API](https://developer.mozilla.org/pt-BR/docs/Web/API/Canvas_API) 
-- [HTML5 Canvas Tutorials](https://www.html5canvastutorials.com/) 
-- [Gamedev.net - Canvas Programming](https://www.gamedev.net/tutorials/programming/graphics/)
 
 Esses materiais abrangem desde conceitos básicos até tópicos avançados, permitindo que os estudantes adquiram habilidades essenciais para o desenvolvimento de games web.
 
