@@ -1,14 +1,27 @@
-**Documento Formal do Projeto de Game Dev**
+## Documento Formal do Projeto de Game Dev
+
+### Sumário
+- [1. Introdução](#1-introdução)
+- [2. Justificativa do Uso das Tecnologias](#2-justificativa-do-uso-das-tecnologias)
+  - [JavaScript](#javascript)
+  - [HTML & CSS](#html--css)
+  - [Canvas API](#canvas-api)
+  - [Web Browsers](#web-browsers)
+- [3. Navegadores Compatíveis](#3-navegadores-compatíveis)
+- [4. Modelos de Linguagem (LLMs) Recomendados](#4-modelos-de-linguagem-llms-recomendados)
+- [5. Editores de Código Recomendados](#5-editores-de-código-recomendados)
+- [6. Outras Informações Técnicas](#6-outras-informações-técnicas)
+- [7. Conclusão](#7-conclusão)
 
 ### 1. Introdução
 
-Este documento tem como objetivo justificar a escolha das tecnologias utilizadas no projeto de desenvolvimento de jogos, bem como fornecer informações técnicas relevantes para os usuários que desejam utilizar ou contribuir com o trabalho.
+Este documento tem como objetivo justificar a escolha das tecnologias utilizadas no projeto de desenvolvimento de games, bem como fornecer informações técnicas relevantes para os usuários que desejam utilizar ou contribuir com o projeto.
 
 ### 2. Justificativa do Uso das Tecnologias
 
 #### **JavaScript**
 
-JavaScript foi escolhido por ser uma linguagem amplamente suportada por todos os navegadores modernos, permitindo a criação de jogos interativos diretamente na web sem necessidade de instalação de software adicional.
+JavaScript foi escolhido por ser uma linguagem amplamente suportada por todos os navegadores modernos, permitindo a criação de games interativos diretamente na web sem necessidade de instalação de software adicional.
 
 #### **HTML & CSS**
 
@@ -21,7 +34,7 @@ A API Canvas do HTML5 foi escolhida para renderização gráfica por sua flexibi
 
 #### **Web Browsers**
 
-O uso de navegadores como plataforma para o desenvolvimento de jogos permite acessibilidade ampla, dispensando instalação de software adicional. Jogos desenvolvidos com JavaScript e Canvas podem ser executados diretamente no navegador do usuário.
+O uso de navegadores como plataforma para o desenvolvimento de games permite acessibilidade ampla, dispensando instalação de software adicional. Jogos desenvolvidos com JavaScript e Canvas podem ser executados diretamente no navegador do usuário.
 
 ### 3. Navegadores Compatíveis
 
@@ -39,7 +52,7 @@ Os seguintes LLMs podem ser utilizados para auxiliar no desenvolvimento, debuggi
 
 - ChatGPT (OpenAI)
 - Claude (Anthropic)
-- DeepSeek
+- Deep Seek
 - Chat Blackbox
 - Bolt (StackBlitz)
 
@@ -53,7 +66,7 @@ Para o desenvolvimento do projeto, recomendamos os seguintes editores de código
 - WebStorm
 - Notepad++
 
-### 6. Outras Informações Técnicas
+### 6. Detalhes Técnicos
 
 - **Requisitos Mínimos**: Computador com navegador atualizado.
 - **Metodologia**: Desenvolvimento incremental com revisões periódicas.
