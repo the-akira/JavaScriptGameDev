@@ -1,4 +1,4 @@
-## Documento de Tecnologias do Projeto
+## Documento de Tecnologias do Projeto Game Dev
 
 ### Sumário
 
@@ -27,7 +27,7 @@ JavaScript foi escolhido por ser uma linguagem amplamente suportada por todos os
 
 #### **HTML & CSS**
 
-- **HTML** é utilizado para estruturar a interface do jogo e os elementos interativos.
+- **HTML** é utilizado para estruturar a interface do game e os elementos interativos.
 - **CSS** permite estilizar os elementos da interface, proporcionando uma melhor experiência visual ao usuário.
 
 #### **Canvas API**
@@ -51,7 +51,7 @@ Os seguintes navegadores são recomendados para melhor compatibilidade e desempe
 
 ### Modelos de Linguagem (LLMs)
 
-Os Modelos de Linguagem de Grande Escala (LLMs) podem ser utilizados para acelerar o desenvolvimento, otimizar debugging e gerar insights para a lógica do jogo. As seguintes opções são recomendadas:
+Os Modelos de Linguagem de Grande Escala (LLMs) podem ser utilizados para acelerar o desenvolvimento, otimizar debugging e gerar insights para a lógica do game. As seguintes opções são recomendadas:
 
 - **ChatGPT (OpenAI)**: Versátil para geração de código, explicações detalhadas e otimizações de performance.
 - **Claude (Anthropic)**: Enfoca segurança e alinhamento, útil para discussões técnicas e análise de código.
