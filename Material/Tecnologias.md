@@ -10,7 +10,7 @@
 - [3. Navegadores Compatíveis](#3-navegadores-compatíveis)
 - [4. Modelos de Linguagem (LLMs) Recomendados](#4-modelos-de-linguagem-llms-recomendados)
 - [5. Editores de Código Recomendados](#5-editores-de-código-recomendados)
-- [6. Outras Informações Técnicas](#6-outras-informações-técnicas)
+- [6. Outras Informações Técnicas](#6-detalhes-técnicos)
 - [7. Conclusão](#7-conclusão)
 
 ### 1. Introdução
