@@ -9,8 +9,8 @@
   - [Canvas API](#canvas-api)
   - [Web Browsers](#web-browsers)
 - [3. Navegadores Compatíveis](#3-navegadores-compatíveis)
-- [4. Modelos de Linguagem (LLMs) Recomendados](#4-modelos-de-linguagem-llms-recomendados)
-- [5. Editores de Código Recomendados](#5-editores-de-código-recomendados)
+- [4. Modelos de Linguagem (LLMs) Recomendados](#4-modelos-de-linguagem-llms)
+- [5. Editores de Código Recomendados](#5-editores-de-código)
 - [6. Detalhes Técnicos](#6-detalhes-técnicos)
 - [7. Recursos de Estudo](#7-recursos-de-estudo)
 - [8. Conclusão](#8-conclusão)
@@ -47,8 +47,9 @@ Os seguintes navegadores são recomendados para melhor compatibilidade e desempe
 - Microsoft Edge
 - Safari
 - Opera
+- Brave
 
-### 4. Modelos de Linguagem (LLMs) Recomendados
+### 4. Modelos de Linguagem (LLMs)
 
 Os Modelos de Linguagem de Grande Escala (LLMs) podem ser utilizados para acelerar o desenvolvimento, otimizar debugging e gerar insights para a lógica do jogo. As seguintes opções são recomendadas:
 
@@ -58,7 +59,7 @@ Os Modelos de Linguagem de Grande Escala (LLMs) podem ser utilizados para aceler
 - **Chat Blackbox**: Desenvolvido especificamente para suporte a programação, fornecendo sugestões inteligentes e análise de código em tempo real.
 - **Bolt (StackBlitz)**: Integrado ao ambiente web, permite desenvolvimento ágil com suporte a múltiplas linguagens e ferramentas de deploy.
 
-### 5. Editores de Código Recomendados
+### 5. Editores de Código
 
 A escolha do editor de código pode impactar diretamente a produtividade do desenvolvedor. Abaixo estão algumas recomendações com seus respectivos diferenciais:
 
