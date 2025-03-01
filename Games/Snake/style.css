@@ -1,20 +1,47 @@
 body {
-    background: #a8e036;
+    background: #c2ed6b;
 }
 
 canvas {
-    border: 5px solid #124203;
-    padding-left: 0;
-    padding-right: 0;
+    border: 3px solid #124203;
     margin-left: auto;
     margin-right: auto;
     display: block;
-    background: white;
 }
 
 h1 {
     font-family: "Delius", cursive;
-    font-size: 3rem;    
+    font-size: 2.4rem;    
     text-align: center;
     color: #124203;
+    margin-bottom: 15px;
+    margin-top: 20px;
+}
+
+#controls {
+    margin-top: 15px;
+    display: flex;
+    justify-content: center;
+}
+
+button {
+    padding: 10px 15px;
+    margin: 5px;
+    font-size: 16px;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    background-color: #f44336; 
+    color: white;
+    cursor: not-allowed;
+}
+
+button.active {
+    background-color: #4CAF50; 
+    color: white;
+}
+
+button.inactive {
+    background-color: #f44336; 
+    color: white;
 }

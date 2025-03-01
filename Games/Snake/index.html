@@ -7,8 +7,14 @@
     <link rel="stylesheet" type="text/css" href="style.css">
 </head>
 <body>
-    <h1>Snake</h1>
-    <canvas id="gameCanvas" width="500" height="500"></canvas>
+    <h1>Snake Game</h1>
+    <canvas id="gameCanvas"></canvas>
+    <div id="controls">
+        <button id="matrixModeButton" disabled>(X) Matrix Mode: OFF</button>
+        <button id="invertedControlsButton" disabled>(Z) Inverted Controls: OFF</button>
+        <button id="wallPassButton" disabled>(W) Wall Pass: OFF</button>
+        <button id="fastModeButton" disabled>(F) Fast Mode: OFF</button>
+    </div>
     <script src="game.js"></script>
 </body>
 </html>
