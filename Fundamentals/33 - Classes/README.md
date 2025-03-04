@@ -20,6 +20,9 @@ class Player {
     this.color = color;
     this.canvasWidth = canvasWidth;
     this.canvasHeight = canvasHeight;
+    this.speed = 3;
+    this.vx = 0;
+    this.vy = 0;
   }
 
   // Método para desenhar o jogador no canvas
@@ -28,10 +31,10 @@ class Player {
     ctx.fillRect(this.x, this.y, this.width, this.height);
   }
 
-  // Método para mover o jogador
-  move(dx, dy) {
-    this.x += dx;
-    this.y += dy;
+  // Método para atualizar a posição do jogador
+  update() {
+    this.x += this.vx;
+    this.y += this.vy;
     this.constrain();
   }
 
@@ -62,36 +65,50 @@ const ctx = canvas.getContext('2d');
 
 // Criando uma instância do Player
 const player = new Player(50, 50, 30, 30, 'blue', canvas.width, canvas.height);
+const keys = {};
 
-// Função para atualizar o jogo
-function update() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height); // Limpa o canvas
-  player.draw(ctx); // Desenha o jogador
-  requestAnimationFrame(update); // Chama a função de atualização novamente
+// Captura das teclas pressionadas
+window.addEventListener('keydown', (event) => {
+  keys[event.key] = true;
+});
+
+window.addEventListener('keyup', (event) => {
+  keys[event.key] = false;
+});
+
+// Função para capturar e processar entrada do jogador
+function handleInput() {
+  player.vx = 0;
+  player.vy = 0;
+
+  if (keys["ArrowUp"]) player.vy = -player.speed;
+  if (keys["ArrowDown"]) player.vy = player.speed;
+  if (keys["ArrowLeft"]) player.vx = -player.speed;
+  if (keys["ArrowRight"]) player.vx = player.speed;
+  if (keys["c"]) player.setColor("red");
+  if (keys["s"]) player.resize(50, 50);
 }
 
-// Inicia a atualização do jogo
-update();
+// Função de atualização do jogo
+function gameLoop() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  handleInput();
+  player.update();
+  player.draw(ctx);
+  requestAnimationFrame(gameLoop);
+}
 
-// Exemplo de movimento do jogador e mudança de cor
-document.addEventListener('keydown', function(event) {
-  const step = 5;
-  if (event.key === 'ArrowUp') player.move(0, -step);
-  if (event.key === 'ArrowDown') player.move(0, step);
-  if (event.key === 'ArrowLeft') player.move(-step, 0);
-  if (event.key === 'ArrowRight') player.move(step, 0);
-  if (event.key === 'c') player.setColor('red'); // Muda a cor para vermelho
-  if (event.key === 's') player.resize(50, 50); // Redimensiona o jogador
-});
+// Inicia o loop do jogo
+gameLoop();
 ```
 
 ## Explicação do Código
 
 ### 1. Definição da Classe Player
 
-- **Construtor:** O construtor define as propriedades iniciais do jogador, incluindo as dimensões do canvas (`canvasWidth` e `canvasHeight`), que serão usadas para confinar o jogador dentro dos limites do canvas.
+- **Construtor:** Define as propriedades iniciais do jogador, incluindo as dimensões do canvas (`canvasWidth` e `canvasHeight`), que serão usadas para confinar o jogador dentro dos limites do canvas.
 - **Método `draw`:** Desenha o jogador no canvas.
-- **Método `move`:** Move o jogador e chama o método `constrain` para garantir que ele fique dentro dos limites do canvas.
+- **Método `update`:** Atualiza a posição do jogador conforme sua velocidade e chama `constrain` para manter os limites.
 - **Método `constrain`:** Ajusta a posição do jogador para que ele não saia dos limites do canvas.
 - **Método `setColor`:** Permite mudar a cor do jogador.
 - **Método `resize`:** Permite redimensionar o jogador e chama `constrain` para garantir que o novo tamanho não ultrapasse os limites do canvas.
@@ -104,14 +121,19 @@ document.addEventListener('keydown', function(event) {
 
 - Criamos uma instância do `Player` com uma posição inicial, tamanho, cor e dimensões do canvas.
 
-### 4. Função de Atualização do Jogo
+### 4. Movimento Suave do Jogador
 
-- A função `update` é responsável por limpar o canvas e redesenhar o jogador em cada frame. `requestAnimationFrame` é usado para criar um loop de animação suave.
+- O código agora usa um **sistema de teclas pressionadas (`keys`)**, armazenando quais teclas estão ativas.
+- Em cada quadro, verificamos as teclas pressionadas e ajustamos a velocidade (`vx`, `vy`) ao invés de apenas mover diretamente.
+- Isso evita atraso ou interrupções no movimento ao pressionar várias teclas ao mesmo tempo.
 
-### 5. Movimento do Jogador e Mudança de Cor
+### 5. Loop de Atualização Contínuo
 
-- Adicionamos um ouvinte de eventos para capturar pressionamentos de teclas. Além de mover o jogador, podemos mudar sua cor e redimensioná-lo.
+- A função `gameLoop` é chamada continuamente usando `requestAnimationFrame`.
+- Isso permite um movimento suave e contínuo do jogador sem necessidade de pressionar várias vezes as teclas.
 
 ## Conclusão
 
-O conceito de classes em JavaScript permite uma estruturação mais clara e organizada do código, especialmente em projetos maiores como jogos. No exemplo acima, usamos uma classe `Player` para encapsular todas as propriedades e métodos relacionados ao jogador, facilitando a manutenção e expansão do código. Com a adição de métodos para confinar o jogador dentro dos limites do canvas, mudar a cor e redimensioná-lo, a classe `Player` se torna mais robusta e versátil, ilustrando melhor as capacidades de orientação a objetos em JavaScript.
+O conceito de classes em JavaScript permite uma estruturação mais clara e organizada do código, especialmente em projetos maiores como jogos. No exemplo acima, usamos uma classe `Player` para encapsular todas as propriedades e métodos relacionados ao jogador, facilitando a manutenção e expansão do código.
+
+Com a adição de um sistema de **movimento contínuo e fluído**, o jogador pode se mover sem interrupções ao segurar as teclas. Isso demonstra como podemos combinar a **orientação a objetos com eventos de teclado** para criar uma jogabilidade responsiva e eficiente.
