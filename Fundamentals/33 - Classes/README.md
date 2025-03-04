@@ -4,7 +4,7 @@ Classes em JavaScript foram introduzidas no ECMAScript 2015 (ES6) como uma manei
 
 ## Definindo uma Classe Player
 
-Vamos criar uma classe `Player` que representa um jogador como uma figura geométrica em um jogo. Este jogador terá propriedades como posição (x, y), tamanho (width, height), cor e métodos para desenhar, mover-se e confinar-se dentro dos limites do canvas.
+Vamos criar uma classe `Player` que representa um jogador como uma figura geométrica em um jogo. Este jogador terá propriedades como posição (x, y), tamanho (width, height), cor e métodos para desenhar, atualizar e confinar-se dentro dos limites do canvas.
 
 ## Exemplo de Classe Player
 
@@ -123,8 +123,8 @@ gameLoop();
 
 ### 4. Movimento Suave do Jogador
 
-- O código agora usa um **sistema de teclas pressionadas (`keys`)**, armazenando quais teclas estão ativas.
-- Em cada quadro, verificamos as teclas pressionadas e ajustamos a velocidade (`vx`, `vy`) ao invés de apenas mover diretamente.
+- O código usa um **sistema de teclas pressionadas (`keys`)**, armazenando quais teclas estão ativas.
+- Em cada quadro, verificamos as teclas pressionadas e ajustamos a velocidade (`vx`, `vy`).
 - Isso evita atraso ou interrupções no movimento ao pressionar várias teclas ao mesmo tempo.
 
 ### 5. Loop de Atualização Contínuo
@@ -135,5 +135,3 @@ gameLoop();
 ## Conclusão
 
 O conceito de classes em JavaScript permite uma estruturação mais clara e organizada do código, especialmente em projetos maiores como jogos. No exemplo acima, usamos uma classe `Player` para encapsular todas as propriedades e métodos relacionados ao jogador, facilitando a manutenção e expansão do código.
-
-Com a adição de um sistema de **movimento contínuo e fluído**, o jogador pode se mover sem interrupções ao segurar as teclas. Isso demonstra como podemos combinar a **orientação a objetos com eventos de teclado** para criar uma jogabilidade responsiva e eficiente.
