@@ -4,7 +4,7 @@ Classes em JavaScript foram introduzidas no ECMAScript 2015 (ES6) como uma manei
 
 ## Definindo uma Classe Player
 
-Vamos criar uma classe `Player` que representa um jogador como uma figura geométrica em um jogo. Este jogador terá propriedades como posição (x, y), tamanho (width, height), cor e métodos para desenhar, atualizar e confinar-se dentro dos limites do canvas.
+Vamos criar uma classe `Player` que representa um jogador como uma figura geométrica em um jogo. Este jogador terá propriedades como posição (`x`, `y`), tamanho (`width`, `height`), cor e métodos para desenhar, atualizar e confinar-se dentro dos limites do canvas.
 
 ## Exemplo de Classe Player
 
