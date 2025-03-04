@@ -1,86 +1,90 @@
-<style type="text/css">
-  canvas { 
-    border: 1px solid black;
-    display: block;
-    margin: 0 auto;
-    margin-top: 40px;
-    background: #b7d9f7;
-  }
+<style>
+    canvas { 
+        border: 1px solid black;
+        display: block;
+        margin: 0 auto;
+        margin-top: 40px;
+        background: #b7d9f7;
+    }
 </style>
+
 <canvas id="gameCanvas" width="400" height="400"></canvas>
-<script type="text/javascript">
-// Definindo a classe Player
-class Player {
-  // O construtor define as propriedades iniciais do jogador
-  constructor(x, y, width, height, color, canvasWidth, canvasHeight) {
-    this.x = x;
-    this.y = y;
-    this.width = width;
-    this.height = height;
-    this.color = color;
-    this.canvasWidth = canvasWidth;
-    this.canvasHeight = canvasHeight;
-  }
+<script>
+    class Player {
+        constructor(x, y, width, height, color, canvasWidth, canvasHeight) {
+            this.x = x;
+            this.y = y;
+            this.width = width;
+            this.height = height;
+            this.color = color;
+            this.canvasWidth = canvasWidth;
+            this.canvasHeight = canvasHeight;
+            this.speed = 3;
+            this.vx = 0;
+            this.vy = 0;
+        }
 
-  // Método para desenhar o jogador no canvas
-  draw(ctx) {
-    ctx.fillStyle = this.color;
-    ctx.fillRect(this.x, this.y, this.width, this.height);
-  }
+        draw(ctx) {
+            ctx.fillStyle = this.color;
+            ctx.fillRect(this.x, this.y, this.width, this.height);
+        }
 
-  // Método para mover o jogador
-  move(dx, dy) {
-    this.x += dx;
-    this.y += dy;
-    this.constrain();
-  }
+        update() {
+            this.x += this.vx;
+            this.y += this.vy;
+            this.constrain();
+        }
 
-  // Método para confinar o jogador dentro dos limites do canvas
-  constrain() {
-    if (this.x < 0) this.x = 0;
-    if (this.y < 0) this.y = 0;
-    if (this.x + this.width > this.canvasWidth) this.x = this.canvasWidth - this.width;
-    if (this.y + this.height > this.canvasHeight) this.y = this.canvasHeight - this.height;
-  }
+        constrain() {
+            if (this.x < 0) this.x = 0;
+            if (this.y < 0) this.y = 0;
+            if (this.x + this.width > this.canvasWidth) this.x = this.canvasWidth - this.width;
+            if (this.y + this.height > this.canvasHeight) this.y = this.canvasHeight - this.height;
+        }
 
-  // Método para mudar a cor do jogador
-  setColor(newColor) {
-    this.color = newColor;
-  }
+        setColor(newColor) {
+            this.color = newColor;
+        }
 
-  // Método para redimensionar o jogador
-  resize(newWidth, newHeight) {
-    this.width = newWidth;
-    this.height = newHeight;
-    this.constrain();
-  }
-}
+        resize(newWidth, newHeight) {
+            this.width = newWidth;
+            this.height = newHeight;
+            this.constrain();
+        }
+    }
 
-// Configurando o canvas
-const canvas = document.getElementById('gameCanvas');
-const ctx = canvas.getContext('2d');
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const player = new Player(50, 50, 30, 30, 'blue', canvas.width, canvas.height);
+    const keys = {};
 
-// Criando uma instância do Player
-const player = new Player(50, 50, 30, 30, 'blue', canvas.width, canvas.height);
+    window.addEventListener('keydown', (event) => {
+        keys[event.key] = true;
+    });
 
-// Função para atualizar o jogo
-function update() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height); // Limpa o canvas
-  player.draw(ctx); // Desenha o jogador
-  requestAnimationFrame(update); // Chama a função de atualização novamente
-}
+    window.addEventListener('keyup', (event) => {
+        keys[event.key] = false;
+    });
 
-// Inicia a atualização do jogo
-update();
+    function handleInput() {
+        player.vx = 0;
+        player.vy = 0;
 
-// Exemplo de movimento do jogador e mudança de cor
-document.addEventListener('keydown', function(event) {
-  const step = 5;
-  if (event.key === 'ArrowUp') player.move(0, -step);
-  if (event.key === 'ArrowDown') player.move(0, step);
-  if (event.key === 'ArrowLeft') player.move(-step, 0);
-  if (event.key === 'ArrowRight') player.move(step, 0);
-  if (event.key === 'c') player.setColor('red'); // Muda a cor para vermelho
-  if (event.key === 's') player.resize(50, 50); // Redimensiona o jogador
-});
+        if (keys["ArrowUp"]) player.vy = -player.speed;
+        if (keys["ArrowDown"]) player.vy = player.speed;
+        if (keys["ArrowLeft"]) player.vx = -player.speed;
+        if (keys["ArrowRight"]) player.vx = player.speed;
+        if (keys["c"]) player.setColor("red");
+        if (keys["s"]) player.resize(50, 50);
+    }
+
+    function gameLoop() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        handleInput();
+        player.update();
+        player.draw(ctx);
+        requestAnimationFrame(gameLoop);
+    }
+
+    gameLoop();
 </script>
