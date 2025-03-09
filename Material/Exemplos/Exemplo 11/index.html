@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exemplo de Cooldown em Jogos</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-family: Arial, sans-serif;
+            background: #222;
+            color: white;
+        }
+        
+        canvas {
+            border: 2px solid #444;
+            margin-top: 0px;
+            background: #111;
+        }
+        
+        .instructions {
+            margin: 20px;
+            padding: 15px;
+            background: #333;
+            text-align: center;
+        }
+
+        .instructions > h2 {
+            margin-top: 0px;
+        }
+        
+        .cooldown-status {
+            margin-top: 10px;
+            font-size: 18px;
+            color: #4fc3f7;
+        }
+    </style>
+</head>
+<body>
+    <div class="instructions">
+        <h2>Demonstração de Cooldown</h2>
+        <p>Use as teclas <strong>W, A, S, D</strong> para mover o jogador (retângulo)</p>
+        <p>Pressione <strong>ESPAÇO</strong> para atirar</p>
+        <div class="cooldown-status" id="cooldown-display">Pronto para atirar!</div>
+    </div>
+    
+    <canvas id="gameCanvas" width="800" height="500"></canvas>
+    
+    <script>
+        // Elementos do DOM
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const cooldownDisplay = document.getElementById('cooldown-display');
+        
+        // Configurações do jogador
+        const player = {
+            x: canvas.width / 2,
+            y: canvas.height / 2,
+            width: 50,
+            height: 50,
+            speed: 5,
+            color: '#4fc3f7'
+        };
+        
+        // Configurações de tiro
+        const bullets = [];
+        const bulletConfig = {
+            radius: 8,
+            speed: 10,
+            color: '#ff5252',
+            cooldown: 500, // Cooldown em milissegundos (0.5 segundos)
+            lastShot: 0    // Timestamp do último tiro
+        };
+        
+        // Estado das teclas
+        const keys = {
+            w: false,
+            a: false,
+            s: false,
+            d: false,
+            space: false
+        };
+        
+        // Event listeners para teclas
+        window.addEventListener('keydown', function(e) {
+            switch(e.key.toLowerCase()) {
+                case 'w': keys.w = true; break;
+                case 'a': keys.a = true; break;
+                case 's': keys.s = true; break;
+                case 'd': keys.d = true; break;
+                case ' ': keys.space = true; shoot(); break;
+            }
+        });
+        
+        window.addEventListener('keyup', function(e) {
+            switch(e.key.toLowerCase()) {
+                case 'w': keys.w = false; break;
+                case 'a': keys.a = false; break;
+                case 's': keys.s = false; break;
+                case 'd': keys.d = false; break;
+                case ' ': keys.space = false; break;
+            }
+        });
+        
+        // Função para atirar
+        function shoot() {
+            const currentTime = Date.now();
+            
+            // Verifica se o cooldown já passou
+            if (currentTime - bulletConfig.lastShot > bulletConfig.cooldown) {
+                // Cria o novo tiro no centro do jogador
+                const bullet = {
+                    x: player.x + player.width / 2,
+                    y: player.y + player.height / 2,
+                    radius: bulletConfig.radius,
+                    speed: bulletConfig.speed,
+                    direction: { x: 1, y: 0 } // Tiro só vai para direita neste exemplo
+                };
+                
+                bullets.push(bullet);
+                
+                // Atualiza o timestamp do último tiro
+                bulletConfig.lastShot = currentTime;
+                
+                // Atualiza a interface do usuário
+                cooldownDisplay.textContent = "Recarregando...";
+                cooldownDisplay.style.color = "#ff5252";
+            }
+        }
+        
+        // Função para atualizar a posição do jogador
+        function updatePlayer() {
+            if (keys.w) player.y -= player.speed;
+            if (keys.a) player.x -= player.speed;
+            if (keys.s) player.y += player.speed;
+            if (keys.d) player.x += player.speed;
+            
+            // Limitando o jogador ao canvas
+            player.x = Math.max(0, Math.min(canvas.width - player.width, player.x));
+            player.y = Math.max(0, Math.min(canvas.height - player.height, player.y));
+        }
+        
+        // Função para atualizar a posição dos tiros
+        function updateBullets() {
+            for (let i = bullets.length - 1; i >= 0; i--) {
+                const bullet = bullets[i];
+                
+                // Atualiza a posição do tiro
+                bullet.x += bullet.direction.x * bullet.speed;
+                bullet.y += bullet.direction.y * bullet.speed;
+                
+                // Remove tiros que saíram do canvas
+                if (bullet.x > canvas.width + bullet.radius) {
+                    bullets.splice(i, 1);
+                }
+            }
+        }
+        
+        // Função para atualizar o status do cooldown na interface
+        function updateCooldownDisplay() {
+            const currentTime = Date.now();
+            const timeSinceLastShot = currentTime - bulletConfig.lastShot;
+            
+            if (timeSinceLastShot > bulletConfig.cooldown) {
+                cooldownDisplay.textContent = "Pronto para atirar!";
+                cooldownDisplay.style.color = "#4fc3f7";
+            } else {
+                const remainingCooldown = Math.ceil((bulletConfig.cooldown - timeSinceLastShot) / 100) / 10;
+                cooldownDisplay.textContent = `Recarregando... ${remainingCooldown}s`;
+            }
+        }
+        
+        // Função para desenhar o jogador
+        function drawPlayer() {
+            ctx.fillStyle = player.color;
+            ctx.fillRect(player.x, player.y, player.width, player.height);
+        }
+        
+        // Função para desenhar os tiros
+        function drawBullets() {
+            ctx.fillStyle = bulletConfig.color;
+            
+            bullets.forEach(bullet => {
+                ctx.beginPath();
+                ctx.arc(bullet.x, bullet.y, bullet.radius, 0, Math.PI * 2);
+                ctx.fill();
+            });
+        }
+        
+        // Função para atualizar indicadores visuais do cooldown
+        function drawCooldownIndicator() {
+            const currentTime = Date.now();
+            const timeSinceLastShot = currentTime - bulletConfig.lastShot;
+            
+            // Desenha barra de cooldown no canto superior direito
+            ctx.fillStyle = "#222";
+            ctx.fillRect(canvas.width - 120, 20, 100, 20);
+            
+            if (timeSinceLastShot < bulletConfig.cooldown) {
+                // Calcula a porcentagem de preenchimento da barra
+                const fillPercentage = timeSinceLastShot / bulletConfig.cooldown;
+                ctx.fillStyle = "#ff5252";
+                ctx.fillRect(canvas.width - 120, 20, 100 * fillPercentage, 20);
+            } else {
+                // Barra cheia quando o cooldown terminou
+                ctx.fillStyle = "#4fc3f7";
+                ctx.fillRect(canvas.width - 120, 20, 100, 20);
+            }
+            
+            // Borda da barra
+            ctx.strokeStyle = "white";
+            ctx.strokeRect(canvas.width - 120, 20, 100, 20);
+        }
+        
+        // Função de loop do jogo
+        function gameLoop() {
+            // Limpa o canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Atualiza posições
+            updatePlayer();
+            updateBullets();
+            updateCooldownDisplay();
+            
+            // Desenha elementos
+            drawPlayer();
+            drawBullets();
+            drawCooldownIndicator();
+            
+            // Continua o loop
+            requestAnimationFrame(gameLoop);
+        }
+        
+        // Inicia o jogo
+        gameLoop();
+    </script>
+</body>
+</html>

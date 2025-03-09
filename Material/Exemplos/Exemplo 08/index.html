@@ -1,5 +1,7 @@
+<div id="timer">Tempo decorrido: 0 segundos</div>
 <script type="text/javascript">
 let startTime = Date.now(); // Captura o tempo atual em milissegundos no início do jogo
+const timerElement = document.getElementById('timer');
 
 function gameLoop() {
     // Etapa 1: Processamento de Entrada
@@ -21,6 +23,7 @@ function gameLoop() {
 
     // Mostrar o tempo decorrido no console
     console.log("Tempo decorrido: " + seconds + " segundos");
+    timerElement.textContent = "Tempo decorrido: " + seconds + " segundos";
 
     // Repetir o loop chamando a função novamente
     requestAnimationFrame(gameLoop);

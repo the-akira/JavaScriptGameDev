@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        canvas {
+            border: 2px solid black;
+            display: block;
+            margin: 0 auto;
+            background: #A4B0FF;
+        }
+    </style>
+    <title>Mario Animation with Jump</title>
+</head>
+<body>
+    <h1 style="text-align: center;">Mario Animation with Jump</h1>
+    <canvas id="myCanvas" width="800" height="400"></canvas>
+    <script>
+        // Classe Mario
+        class Mario {
+            constructor(x, y, width, height, frames) {
+                this.x = x;
+                this.y = y;
+                this.width = width;
+                this.height = height;
+                this.frames = frames;
+                this.currentFrame = 0;
+                this.moving = false;
+                this.direction = 'right';
+                this.speed = 5;
+                this.animationSpeed = 9;
+                this.animationCounter = 0;
+
+                // Pulo
+                this.isJumping = false;
+                this.yVelocity = 0;
+                this.gravity = 0.5;
+                this.jumpStrength = -11;
+            }
+
+            // Desenhar o Mario
+            draw(ctx) {
+                ctx.save();
+                if (this.direction === 'left') {
+                    ctx.scale(-1, 1);
+                    ctx.drawImage(this.frames[this.moving ? this.currentFrame : 1], -this.x - this.width, this.y, this.width, this.height);
+                } else {
+                    ctx.drawImage(this.frames[this.moving ? this.currentFrame : 1], this.x, this.y, this.width, this.height);
+                }
+                ctx.restore();
+
+                // Atualizar a animação
+                if (this.moving) {
+                    this.animationCounter++;
+                    if (this.animationCounter >= this.animationSpeed) {
+                        this.currentFrame = (this.currentFrame + 1) % this.frames.length;
+                        this.animationCounter = 0;
+                    }
+                }
+            }
+
+            // Atualizar a posição e o pulo
+            update(canvasWidth) {
+                // Movimento horizontal
+                if (this.moving) {
+                    if (this.direction === 'right') {
+                        this.x += this.speed;
+                    } else if (this.direction === 'left') {
+                        this.x -= this.speed;
+                    }
+
+                    // Limitar o movimento horizontal aos limites do canvas
+                    if (this.x < 0) {
+                        this.x = 0;
+                    } else if (this.x > canvasWidth - this.width) {
+                        this.x = canvasWidth - this.width;
+                    }
+                }
+
+                // Pulo e gravidade
+                if (this.isJumping) {
+                    this.y += this.yVelocity;
+                    this.yVelocity += this.gravity;
+
+                    // Verificar se o Mario atingiu o chão
+                    if (this.y >= 290) {
+                        this.y = 290; // Resetar para a posição do chão
+                        this.isJumping = false;
+                        this.yVelocity = 0;
+                    }
+                }
+            }
+
+            // Iniciar o pulo
+            jump() {
+                if (!this.isJumping) {
+                    this.isJumping = true;
+                    this.yVelocity = this.jumpStrength;
+                }
+            }
+        }
+
+        // Classe Game
+        class Game {
+            constructor(canvasId, marioFrames) {
+                this.canvas = document.getElementById(canvasId);
+                this.ctx = this.canvas.getContext('2d');
+                this.marioFrames = marioFrames;
+                this.images = [];
+                this.keys = {};
+                this.mario = null;
+
+                // Carregar imagens e iniciar o jogo
+                this.preloadImages(() => {
+                    this.mario = new Mario(50, 290, 70, 111, this.images);
+                    this.start();
+                });
+            }
+
+            // Pré-carregar as imagens
+            preloadImages(callback) {
+                let imagesLoaded = 0;
+                this.marioFrames.forEach((src, index) => {
+                    this.images[index] = new Image();
+                    this.images[index].onload = () => {
+                        imagesLoaded++;
+                        if (imagesLoaded === this.marioFrames.length) {
+                            callback();
+                        }
+                    };
+                    this.images[index].src = src;
+                });
+            }
+
+            // Iniciar o jogo
+            start() {
+                // Eventos de teclado
+                window.addEventListener('keydown', (e) => {
+                    this.keys[e.key] = true;
+
+                    // Iniciar o pulo se a tecla Space for pressionada
+                    if (e.key === ' ' && !this.mario.isJumping) {
+                        this.mario.jump();
+                    }
+                });
+
+                window.addEventListener('keyup', (e) => {
+                    this.keys[e.key] = false;
+                });
+
+                // Loop do jogo
+                this.gameLoop();
+            }
+
+            // Loop do jogo
+            gameLoop() {
+                // Atualizar o estado do jogo
+                this.update();
+                // Renderizar o jogo
+                this.render();
+                // Chamar o próximo frame
+                requestAnimationFrame(() => this.gameLoop());
+            }
+
+            // Atualizar o estado do jogo
+            update() {
+                // Movimento horizontal
+                if (this.keys['ArrowRight']) {
+                    this.mario.moving = true;
+                    this.mario.direction = 'right';
+                } else if (this.keys['ArrowLeft']) {
+                    this.mario.moving = true;
+                    this.mario.direction = 'left';
+                } else {
+                    this.mario.moving = false;
+                }
+
+                // Atualizar a posição do Mario
+                this.mario.update(this.canvas.width);
+            }
+
+            // Renderizar o jogo
+            render() {
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                this.mario.draw(this.ctx);
+            }
+        }
+
+        // Inicializar o jogo
+        const marioFrames = [];
+        const numberOfFrames = 4; // Número de frames da animação
+        for (let i = 1; i <= numberOfFrames; i++) {
+            marioFrames.push(`frame${i}.png`);
+        }
+
+        new Game('myCanvas', marioFrames);
+    </script>
+</body>
+</html>
