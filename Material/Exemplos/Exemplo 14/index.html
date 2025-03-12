@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RPG com Câmera - Demo</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background-color: #1a1a1a;
+      color: white;
+      font-family: Arial, sans-serif;
+    }
+    
+    h1 {
+      margin-top: 20px;
+      margin-bottom: 5px;
+    }
+    
+    .game-container {
+      position: relative;
+      margin: 20px;
+    }
+    
+    canvas {
+      border: 2px solid #333;
+      background-color: black;
+    }
+    
+    #minimap {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      border: 2px solid white;
+    }
+    
+    .controls {
+      margin-top: 0px;
+      background-color: #333;
+      padding: 10px;
+      text-align: center;
+      width: 620px;
+      margin-bottom: 23px;
+    }
+
+    #camera {
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Exemplo de Câmera em RPG com JavaScript</h1>
+  <div class="game-container">
+    <canvas id="gameCanvas" width="640" height="480"></canvas>
+    <canvas id="minimap" width="150" height="120"></canvas>
+  </div>
+  <div class="controls">
+    <div>Use as setas ← ↑ → ↓ para mover o personagem</div>
+    <div style="margin-top: 2.5px;">Use a tecla <b>c</b> para trocar o modo da câmera</div>
+    <div style="margin-top: 2.5px;">Use as teclas <b>wasd</b> para mover a câmera no modo free</div>
+    <div id="camera">Modo de câmera: follow</div>
+  </div>
+
+  <script>
+    // ======= Configurações do Jogo =======
+    const TILE_SIZE = 32; // Tamanho de cada tile em pixels
+    const PLAYER_SIZE = 24; // Tamanho do jogador em pixels
+    const GAME_WIDTH = 640; // Largura do canvas principal
+    const GAME_HEIGHT = 480; // Altura do canvas principal
+    const MINIMAP_WIDTH = 150; // Largura do minimap
+    const MINIMAP_HEIGHT = 120; // Altura do minimap
+    const PLAYER_SPEED = 3.3; // Velocidade de movimento do jogador
+    
+    // ======= Elementos do DOM =======
+    const gameCanvas = document.getElementById('gameCanvas');
+    const gameCtx = gameCanvas.getContext('2d');
+    const minimapCanvas = document.getElementById('minimap');
+    const cameraModeElement = document.getElementById('camera');
+    const minimapCtx = minimapCanvas.getContext('2d');
+    
+    // ======= Mapa do Jogo =======
+    // 0 = chão (passável), 1 = parede (colisão)
+    const MAP_ROWS = 30;
+    const MAP_COLS = 40;
+    const gameMap = [
+      [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+      [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+      [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+      [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+      [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+      [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+      [1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1],
+      [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+      [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+      [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+      [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+      [1, 0, 0, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+      [1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+      [1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+      [1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+      [1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+      [1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 0, 0, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+      [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+      [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+      [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+      [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+      [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1],
+      [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+      [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+      [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+      [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+      [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+      [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+      [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+      [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+    ];
+    
+    // ======= Estado do Jogo =======
+    const player = {
+      x: 100,
+      y: 100,
+      width: PLAYER_SIZE,
+      height: PLAYER_SIZE,
+      color: '#FF5555',
+      speed: PLAYER_SPEED,
+      moveUp: false,
+      moveDown: false,
+      moveLeft: false,
+      moveRight: false
+    };
+
+    let freeCamera = false; // Indica se a câmera está no modo livre
+    const cameraSpeed = 5; // Velocidade de movimento da câmera
+    const cameraControls = { up: false, down: false, left: false, right: false };
+    let cameraMode = "follow";
+    
+    // Câmera
+    const camera = {
+      x: 0,
+      y: 0,
+      width: GAME_WIDTH,
+      height: GAME_HEIGHT
+    };
+    
+    // ======= Controles =======
+    window.addEventListener('keydown', (event) => {
+      switch (event.key) {
+        case 'ArrowUp': player.moveUp = true; break;
+        case 'ArrowDown': player.moveDown = true; break;
+        case 'ArrowLeft': player.moveLeft = true; break;
+        case 'ArrowRight': player.moveRight = true; break;
+        case 'c': toggleCameraMode(); break; // Alternar modos de câmera
+        case 'w': cameraControls.up = true; break;
+        case 's': cameraControls.down = true; break;
+        case 'a': cameraControls.left = true; break;
+        case 'd': cameraControls.right = true; break;
+        case '+': camera.width *= 0.9; camera.height *= 0.9; break; // Zoom in
+        case '-': camera.width *= 1.1; camera.height *= 1.1; break; // Zoom out
+      }
+    });
+    
+    window.addEventListener('keyup', (event) => {
+      switch (event.key) {
+        case 'ArrowUp': player.moveUp = false; break;
+        case 'ArrowDown': player.moveDown = false; break;
+        case 'ArrowLeft': player.moveLeft = false; break;
+        case 'ArrowRight': player.moveRight = false; break;
+        case 'w': cameraControls.up = false; break;
+        case 's': cameraControls.down = false; break;
+        case 'a': cameraControls.left = false; break;
+        case 'd': cameraControls.right = false; break;
+      }
+    });
+
+    function toggleCameraMode() {
+        const modes = ["follow", "free", "smooth", "static", "room"];
+        let index = modes.indexOf(cameraMode);
+        cameraMode = modes[(index + 1) % modes.length];
+        console.log("Modo de Câmera:", cameraMode);
+        cameraModeElement.innerHTML = `Modo de câmera: ${cameraMode}`;
+    }
+    
+    // ======= Funções do Jogo =======
+    // Atualizar posição do jogador
+    function updatePlayer() {
+      // Salvar posição atual antes de mover
+      const originalX = player.x;
+      const originalY = player.y;
+      
+      // Calcular o movimento desejado
+      let moveX = 0;
+      let moveY = 0;
+      
+      if (player.moveUp) moveY -= player.speed;
+      if (player.moveDown) moveY += player.speed;
+      if (player.moveLeft) moveX -= player.speed;
+      if (player.moveRight) moveX += player.speed;
+      
+      // Aplicar movimento em X
+      if (moveX !== 0) {
+        player.x += moveX;
+        
+        // Se houver colisão, ajustar para a posição exata da borda
+        if (checkCollision(player.x, player.y, player.width, player.height)) {
+          if (moveX > 0) { // Movendo para a direita
+            // Alinhar com a borda esquerda da parede
+            player.x = TILE_SIZE * Math.floor((player.x + player.width) / TILE_SIZE) - player.width;
+          } else { // Movendo para a esquerda
+            // Alinhar com a borda direita da parede
+            player.x = TILE_SIZE * Math.ceil(player.x / TILE_SIZE);
+          }
+        }
+      }
+      
+      // Aplicar movimento em Y
+      if (moveY !== 0) {
+        player.y += moveY;
+        
+        // Se houver colisão, ajustar para a posição exata da borda
+        if (checkCollision(player.x, player.y, player.width, player.height)) {
+          if (moveY > 0) { // Movendo para baixo
+            // Alinhar com a borda superior da parede
+            player.y = TILE_SIZE * Math.floor((player.y + player.height) / TILE_SIZE) - player.height;
+          } else { // Movendo para cima
+            // Alinhar com a borda inferior da parede
+            player.y = TILE_SIZE * Math.ceil(player.y / TILE_SIZE);
+          }
+        }
+      }
+      
+      // Verificação final de segurança para garantir que não estamos dentro de uma parede
+      if (checkCollision(player.x, player.y, player.width, player.height)) {
+        // Se ainda houver colisão, voltar à posição original
+        player.x = originalX;
+        player.y = originalY;
+      }
+      
+      // Atualizar a posição da câmera para seguir o jogador
+      updateCamera();
+    }
+
+    // Verificar colisão com paredes - mantém a lógica simplificada
+    function checkCollision(x, y, width, height) {
+      // Obter os tiles com que o jogador está colidindo
+      const left = Math.floor(x / TILE_SIZE);
+      const right = Math.floor((x + width - 1) / TILE_SIZE);
+      const top = Math.floor(y / TILE_SIZE);
+      const bottom = Math.floor((y + height - 1) / TILE_SIZE);
+      
+      // Verificar cada tile ocupado pelo jogador
+      for (let row = top; row <= bottom; row++) {
+        for (let col = left; col <= right; col++) {
+          if (row >= 0 && col >= 0 && row < MAP_ROWS && col < MAP_COLS) {
+            if (gameMap[row][col] === 1) {
+              return true;
+            }
+          }
+        }
+      }
+      
+      return false;
+    }
+    
+    // Atualizar posição da câmera para seguir o jogador
+    function updateCamera() {
+        const targetX = player.x - camera.width / 2 + player.width / 2;
+        const targetY = player.y - camera.height / 2 + player.height / 2;
+
+        switch (cameraMode) {
+            case "follow": // Segue o jogador normalmente
+                camera.x = targetX;
+                camera.y = targetY;
+                break;
+
+            case "free": // Câmera livre (WASD)
+                if (cameraControls.up) camera.y -= cameraSpeed;
+                if (cameraControls.down) camera.y += cameraSpeed;
+                if (cameraControls.left) camera.x -= cameraSpeed;
+                if (cameraControls.right) camera.x += cameraSpeed;
+                break;
+
+            case "smooth": // Câmera segue suavemente
+                camera.x += (targetX - camera.x) * 0.1;
+                camera.y += (targetY - camera.y) * 0.1;
+                break;
+
+            case "static": // Câmera fixa em uma posição
+                camera.x = 0;
+                camera.y = 0;
+                break;
+
+            case "room":
+                // Calcula em qual "sala" o jogador está, considerando o tamanho do jogador
+                const currentRoomX = Math.floor((player.x + player.width / 2) / GAME_WIDTH);
+                const currentRoomY = Math.floor((player.y + player.height / 2) / GAME_HEIGHT);
+
+                // Atualiza a posição da câmera para o canto da sala correspondente
+                camera.x = currentRoomX * GAME_WIDTH;
+                camera.y = currentRoomY * GAME_HEIGHT;
+                break;
+        }
+
+        // Limitar a câmera aos limites do mapa
+        const maxCameraX = MAP_COLS * TILE_SIZE - camera.width;
+        const maxCameraY = MAP_ROWS * TILE_SIZE - camera.height;
+
+        camera.x = Math.max(0, Math.min(camera.x, maxCameraX));
+        camera.y = Math.max(0, Math.min(camera.y, maxCameraY));
+    }
+    
+    // Renderizar o mapa
+    function renderMap() {
+      // Calcular os tiles visíveis na câmera
+      const startCol = Math.floor(camera.x / TILE_SIZE);
+      const endCol = Math.ceil((camera.x + GAME_WIDTH) / TILE_SIZE);
+      const startRow = Math.floor(camera.y / TILE_SIZE);
+      const endRow = Math.ceil((camera.y + GAME_HEIGHT) / TILE_SIZE);
+      
+      // Renderizar apenas os tiles visíveis
+      for (let row = startRow; row < endRow && row < MAP_ROWS; row++) {
+        for (let col = startCol; col < endCol && col < MAP_COLS; col++) {
+          const tile = gameMap[row][col];
+          const x = Math.floor(col * TILE_SIZE - camera.x);
+          const y = Math.floor(row * TILE_SIZE - camera.y);
+          
+          if (tile === 1) {
+            // Parede
+            gameCtx.fillStyle = '#555555';
+            gameCtx.fillRect(x, y, TILE_SIZE, TILE_SIZE);
+            
+            // Borda da parede
+            gameCtx.strokeStyle = '#333333';
+            gameCtx.lineWidth = 1;
+            gameCtx.strokeRect(x, y, TILE_SIZE, TILE_SIZE);
+          } else {
+            // Chão
+            gameCtx.fillStyle = '#222222';
+            gameCtx.fillRect(x, y, TILE_SIZE, TILE_SIZE);
+            
+            // Padrão do chão
+            gameCtx.fillStyle = '#2A2A2A';
+            gameCtx.fillRect(x + TILE_SIZE / 4, y + TILE_SIZE / 4, TILE_SIZE / 2, TILE_SIZE / 2);
+          }
+        }
+      }
+    }
+    
+    // Renderizar o jogador
+    function renderPlayer() {
+      const x = player.x - camera.x;
+      const y = player.y - camera.y;
+      
+      // Corpo do jogador
+      gameCtx.fillStyle = player.color;
+      gameCtx.fillRect(x, y, player.width, player.height);
+      
+      // Sombra
+      gameCtx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+      gameCtx.fillRect(x + 2, y + 2, player.width, player.height);
+      
+      // Detalhes do jogador
+      gameCtx.fillStyle = '#FFCCCC';
+      gameCtx.fillRect(x + player.width / 4, y + player.height / 8, player.width / 2, player.height / 4);
+    }
+    
+    // Renderizar o minimap
+    function renderMinimap() {
+      // Calcular a escala do minimap
+      const scaleX = MINIMAP_WIDTH / (MAP_COLS * TILE_SIZE);
+      const scaleY = MINIMAP_HEIGHT / (MAP_ROWS * TILE_SIZE);
+      
+      // Limpar o minimap
+      minimapCtx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+      minimapCtx.fillRect(0, 0, MINIMAP_WIDTH, MINIMAP_HEIGHT);
+      
+      // Renderizar tiles no minimap
+      for (let row = 0; row < MAP_ROWS; row++) {
+        for (let col = 0; col < MAP_COLS; col++) {
+          const tile = gameMap[row][col];
+          const x = col * TILE_SIZE * scaleX;
+          const y = row * TILE_SIZE * scaleY;
+          const width = TILE_SIZE * scaleX;
+          const height = TILE_SIZE * scaleY;
+          
+          if (tile === 1) {
+            // Parede no minimap
+            minimapCtx.fillStyle = '#777777';
+          } else {
+            // Chão no minimap
+            minimapCtx.fillStyle = '#333333';
+          }
+          
+          minimapCtx.fillRect(x, y, width, height);
+        }
+      }
+      
+      // Renderizar o jogador no minimap
+      const playerX = player.x * scaleX;
+      const playerY = player.y * scaleY;
+      const playerWidth = player.width * scaleX;
+      const playerHeight = player.height * scaleY;
+      
+      minimapCtx.fillStyle = '#FF0000';
+      minimapCtx.fillRect(playerX, playerY, playerWidth, playerHeight);
+      
+      // Renderizar a área visível da câmera no minimap
+      const cameraX = camera.x * scaleX;
+      const cameraY = camera.y * scaleY;
+      const cameraWidth = GAME_WIDTH * scaleX;
+      const cameraHeight = GAME_HEIGHT * scaleY;
+      
+      minimapCtx.strokeStyle = '#00FF00';
+      minimapCtx.lineWidth = 2;
+      minimapCtx.strokeRect(cameraX, cameraY, cameraWidth, cameraHeight);
+    }
+    
+    // Loop principal do jogo
+    function gameLoop() {
+      // Atualizar
+      updatePlayer();
+      
+      // Renderizar
+      gameCtx.clearRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+      renderMap();
+      renderPlayer();
+      renderMinimap();
+      
+      // Continuar o loop
+      requestAnimationFrame(gameLoop);
+    }
+    
+    // Iniciar o jogo
+    gameLoop();
+  </script>
+</body>
+</html>

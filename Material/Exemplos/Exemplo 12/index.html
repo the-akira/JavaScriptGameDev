@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detecção de Colisão com Bloqueio</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        canvas {
+            border: 2px solid #333;
+            background-color: #f0f0f0;
+            margin-bottom: 20px;
+        }
+        .instrucoes {
+            background-color: #eee;
+            padding: 10px;
+            max-width: 500px;
+        }
+        .colisao-info {
+            font-weight: bold;
+            font-size: 18px;
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+    <h1 style="margin-top: 10px; margin-bottom: 15px;">Demonstração de Colisão em Games</h1>
+    <div class="colisao-info" id="colisaoStatus">Status: Sem colisão</div>
+    <canvas id="gameCanvas" width="600" height="400"></canvas>
+    <div class="instrucoes">
+        <h3 style="margin-top: 5px;">Instruções:</h3>
+        <p>Use as setas do teclado para mover o jogador (retângulo azul).</p>
+        <p>O obstáculo xadrez (retângulo sólido) não pode ser atravessado!</p>
+        <p style="margin-bottom: 5px;">Os outros obstáculos apenas mudam de cor quando há colisão.</p>
+    </div>
+
+    <script>
+        // Configuração inicial
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const colisaoStatus = document.getElementById('colisaoStatus');
+        
+        // Objeto jogador
+        const jogador = {
+            x: 50,
+            y: 200,
+            largura: 40,
+            altura: 40,
+            velocidade: 5,
+            cor: '#0077FF',
+            posicaoAnterior: { x: 50, y: 200 }
+        };
+        
+        // Array de obstáculos
+        const obstaculos = [
+            { x: 200, y: 150, largura: 50, altura: 150, cor: '#FF3333', solido: true },
+            { x: 350, y: 100, largura: 60, altura: 60, cor: '#FF3333', solido: false },
+            { x: 450, y: 250, largura: 80, altura: 50, cor: '#FF3333', solido: false }
+        ];
+        
+        // Teclas pressionadas
+        const teclas = {};
+        
+        // Evento de tecla pressionada
+        window.addEventListener('keydown', (e) => {
+            teclas[e.key] = true;
+        });
+        
+        // Evento de tecla solta
+        window.addEventListener('keyup', (e) => {
+            teclas[e.key] = false;
+        });
+        
+        // Função para verificar colisão entre retângulos
+        function verificarColisao(retA, retB) {
+            return (
+                retA.x < retB.x + retB.largura &&
+                retA.x + retA.largura > retB.x &&
+                retA.y < retB.y + retB.altura &&
+                retA.y + retA.altura > retB.y
+            );
+        }
+        
+        // Função para atualizar a posição do jogador
+        function atualizarJogador() {
+            // Salva a posição atual antes de mover
+            jogador.posicaoAnterior.x = jogador.x;
+            jogador.posicaoAnterior.y = jogador.y;
+            
+            // Movimento com as setas do teclado
+            if (teclas['ArrowUp']) {
+                jogador.y = Math.max(0, jogador.y - jogador.velocidade);
+            }
+            if (teclas['ArrowDown']) {
+                jogador.y = Math.min(canvas.height - jogador.altura, jogador.y + jogador.velocidade);
+            }
+            if (teclas['ArrowLeft']) {
+                jogador.x = Math.max(0, jogador.x - jogador.velocidade);
+            }
+            if (teclas['ArrowRight']) {
+                jogador.x = Math.min(canvas.width - jogador.largura, jogador.x + jogador.velocidade);
+            }
+        }
+        
+        // Função para verificar colisões com todos os obstáculos
+        function verificarColisoes() {
+            let houveColisao = false;
+
+            for (const obstaculo of obstaculos) {
+                const emColisao = verificarColisao(jogador, obstaculo);
+
+                if (emColisao) {
+                    houveColisao = true;
+
+                    // Se o obstáculo for sólido, ajusta a posição do jogador
+                    if (obstaculo.solido) {
+                        // Calcula a sobreposição nos eixos X e Y
+                        const overlapX = Math.min(
+                            jogador.x + jogador.largura - obstaculo.x,
+                            obstaculo.x + obstaculo.largura - jogador.x
+                        );
+                        const overlapY = Math.min(
+                            jogador.y + jogador.altura - obstaculo.y,
+                            obstaculo.y + obstaculo.altura - jogador.y
+                        );
+
+                        // Decide se ajusta no eixo X ou Y com base na menor sobreposição
+                        if (overlapX < overlapY) {
+                            // Ajusta no eixo X
+                            if (jogador.x < obstaculo.x) {
+                                jogador.x = obstaculo.x - jogador.largura;
+                            } else {
+                                jogador.x = obstaculo.x + obstaculo.largura;
+                            }
+                        } else {
+                            // Ajusta no eixo Y
+                            if (jogador.y < obstaculo.y) {
+                                jogador.y = obstaculo.y - jogador.altura;
+                            } else {
+                                jogador.y = obstaculo.y + obstaculo.altura;
+                            }
+                        }
+                    }
+
+                    obstaculo.cor = 'green'; // Verde para obstáculos sólidos em colisão
+                    jogador.cor = '#00FF00'; // Verde para o jogador em colisão
+                } else {
+                    // Restaura a cor padrão
+                    obstaculo.cor = obstaculo.solido ? '#AA0000' : '#FF3333';
+                }
+            }
+
+            // Atualiza o status de colisão
+            if (!houveColisao) {
+                jogador.cor = '#0077FF'; // Azul para o jogador sem colisão
+                colisaoStatus.textContent = 'Status: Sem colisão';
+                colisaoStatus.style.color = '#000';
+            } else {
+                colisaoStatus.textContent = 'Status: COLISÃO DETECTADA!';
+                colisaoStatus.style.color = '#FF0000';
+            }
+
+            return houveColisao;
+        }
+        
+        // Função para desenhar um retângulo
+        function desenharRetangulo(retangulo) {
+            ctx.fillStyle = retangulo.cor;
+            ctx.fillRect(retangulo.x, retangulo.y, retangulo.largura, retangulo.altura);
+            
+            // Adiciona um contorno
+            ctx.strokeStyle = '#000';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(retangulo.x, retangulo.y, retangulo.largura, retangulo.altura);
+            
+            // Adiciona um indicador visual para obstáculos sólidos
+            if (retangulo.solido) {
+                ctx.fillStyle = '#000';
+                const patternSize = 10;
+                
+                // Desenha um padrão de linhas cruzadas para obstáculos sólidos
+                for (let i = 0; i < retangulo.largura; i += patternSize) {
+                    for (let j = 0; j < retangulo.altura; j += patternSize) {
+                        if ((i + j) % (patternSize * 2) < patternSize) {
+                            ctx.fillRect(retangulo.x + i, retangulo.y + j, 
+                                        Math.min(patternSize, retangulo.x + retangulo.largura - (retangulo.x + i)), 
+                                        Math.min(patternSize, retangulo.y + retangulo.altura - (retangulo.y + j)));
+                        }
+                    }
+                }
+            }
+        }
+        
+        // Função principal de desenho
+        function desenhar() {
+            // Limpa o canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Atualiza a posição do jogador
+            atualizarJogador();
+            
+            // Verifica colisões
+            verificarColisoes();
+            
+            // Desenha obstáculos
+            obstaculos.forEach(desenharRetangulo);
+            
+            // Desenha o jogador
+            desenharRetangulo(jogador);
+            
+            // Solicita o próximo quadro de animação
+            requestAnimationFrame(desenhar);
+        }
+        
+        // Inicia o loop do jogo
+        desenhar();
+    </script>
+</body>
+</html>

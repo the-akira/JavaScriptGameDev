@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cooldown e Respawn de Inimigos</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-family: Arial, sans-serif;
+            background: #111;
+            color: white;
+        }
+        
+        canvas {
+            border: 2px solid #444;
+            margin-top: 20px;
+            background: #000;
+        }
+        
+        .game-info {
+            margin: 20px;
+            margin-bottom: 0px;
+            padding: 15px;
+            background: #222;
+            text-align: center;
+            width: 770px;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .instructions {
+            text-align: left;
+        }
+        
+        .stats {
+            text-align: right;
+        }
+        
+        .cooldown-status {
+            margin-top: 10px;
+            font-size: 18px;
+            color: #4fc3f7;
+        }
+        
+        .game-over {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.8);
+            padding: 30px;
+            border-radius: 10px;
+            text-align: center;
+            display: none;
+        }
+        
+        .game-over h2 {
+            color: #ff5252;
+            font-size: 36px;
+            margin-bottom: 20px;
+        }
+        
+        .game-over button {
+            background: #4fc3f7;
+            border: none;
+            color: #111;
+            padding: 12px 24px;
+            font-size: 18px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: background 0.3s;
+        }
+        
+        .game-over button:hover {
+            background: #03a9f4;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-info">
+        <div class="instructions">
+            <h2>Nave Espacial - Cooldown & Respawn</h2>
+            <p>Use as teclas <strong>W, A, S, D</strong> para mover a nave</p>
+            <p>Pressione <strong>ESPAÇO</strong> para atirar</p>
+            <div class="cooldown-status" id="cooldown-display">Pronto para atirar!</div>
+        </div>
+        <div class="stats">
+            <h2>Estatísticas</h2>
+            <p>Pontuação: <span id="score">0</span></p>
+            <p>Inimigos destruídos: <span id="enemies-killed">0</span></p>
+            <p>Próximo respawn: <span id="next-respawn">0</span>s</p>
+        </div>
+    </div>
+    
+    <canvas id="gameCanvas" width="800" height="400"></canvas>
+    
+    <div class="game-over" id="game-over-screen">
+        <h2>GAME OVER</h2>
+        <p>Sua pontuação final: <span id="final-score">0</span></p>
+        <p style="margin-bottom: 2.5px;">Inimigos destruídos: <span id="final-enemies">0</span></p>
+        <button id="restart-button">Jogar Novamente</button>
+    </div>
+    
+    <script>
+        // Elementos do DOM
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const cooldownDisplay = document.getElementById('cooldown-display');
+        const scoreDisplay = document.getElementById('score');
+        const enemiesKilledDisplay = document.getElementById('enemies-killed');
+        const nextRespawnDisplay = document.getElementById('next-respawn');
+        const gameOverScreen = document.getElementById('game-over-screen');
+        const finalScoreDisplay = document.getElementById('final-score');
+        const finalEnemiesDisplay = document.getElementById('final-enemies');
+        const restartButton = document.getElementById('restart-button');
+        
+        // Estado do jogo
+        let gameActive = true;
+        
+        // Estatísticas do jogo
+        const gameStats = {
+            score: 0,
+            enemiesKilled: 0
+        };
+        
+        // Configurações do jogador (agora é uma nave)
+        const player = {
+            x: 100,
+            y: canvas.height / 2,
+            width: 60,
+            height: 30,
+            speed: 5,
+            color: '#4fc3f7',
+            lives: 3
+        };
+        
+        // Configurações de tiro
+        const bullets = [];
+        const bulletConfig = {
+            radius: 6,
+            speed: 8,
+            color: '#ff5252',
+            cooldown: 300, // Cooldown em milissegundos 
+            lastShot: 0    // Timestamp do último tiro
+        };
+        
+        // Configurações de inimigos
+        const enemies = [];
+        const enemyConfig = {
+            width: 40,
+            height: 40,
+            minSpeed: 2,
+            maxSpeed: 5,
+            color: '#76ff03',
+            respawnInterval: 4000, // Respawn a cada 3 segundos
+            enemiesPerWave: 3,     // Quantidade de inimigos por wave
+            lastRespawn: 0         // Timestamp do último respawn
+        };
+        
+        // Estado das teclas
+        const keys = {
+            w: false,
+            a: false,
+            s: false,
+            d: false,
+            space: false
+        };
+        
+        // Event listeners para teclas
+        window.addEventListener('keydown', function(e) {
+            if (!gameActive) return;
+            
+            switch(e.key.toLowerCase()) {
+                case 'w': keys.w = true; break;
+                case 'a': keys.a = true; break;
+                case 's': keys.s = true; break;
+                case 'd': keys.d = true; break;
+                case ' ': keys.space = true; shoot(); break;
+            }
+        });
+        
+        window.addEventListener('keyup', function(e) {
+            switch(e.key.toLowerCase()) {
+                case 'w': keys.w = false; break;
+                case 'a': keys.a = false; break;
+                case 's': keys.s = false; break;
+                case 'd': keys.d = false; break;
+                case ' ': keys.space = false; break;
+            }
+        });
+        
+        // Botão de reiniciar
+        restartButton.addEventListener('click', function() {
+            resetGame();
+        });
+        
+        // Função para atirar
+        function shoot() {
+            if (!gameActive) return;
+            
+            const currentTime = Date.now();
+            
+            // Verifica se o cooldown já passou
+            if (currentTime - bulletConfig.lastShot > bulletConfig.cooldown) {
+                // Cria um novo tiro na frente da nave
+                const bullet = {
+                    x: player.x + player.width,
+                    y: player.y + player.height / 2,
+                    radius: bulletConfig.radius,
+                    speed: bulletConfig.speed,
+                    direction: { x: 1, y: 0 } // Tiro vai para direita
+                };
+                
+                bullets.push(bullet);
+                
+                // Atualiza o timestamp do último tiro
+                bulletConfig.lastShot = currentTime;
+                
+                // Atualiza a interface do usuário
+                cooldownDisplay.textContent = "Recarregando...";
+                cooldownDisplay.style.color = "#ff5252";
+            }
+        }
+        
+        // Função para criar inimigos
+        function spawnEnemies() {
+            if (!gameActive) return;
+            
+            const currentTime = Date.now();
+            
+            // Verificar se já passou o intervalo de respawn
+            if (currentTime - enemyConfig.lastRespawn > enemyConfig.respawnInterval) {
+                // Spawna vários inimigos conforme configurado
+                for (let i = 0; i < enemyConfig.enemiesPerWave; i++) {
+                    const enemy = {
+                        x: canvas.width + Math.random() * 100, // Um pouco fora da tela à direita
+                        y: Math.random() * (canvas.height - enemyConfig.height),
+                        width: enemyConfig.width,
+                        height: enemyConfig.height,
+                        speed: enemyConfig.minSpeed + Math.random() * (enemyConfig.maxSpeed - enemyConfig.minSpeed),
+                        color: enemyConfig.color,
+                    };
+                    
+                    enemies.push(enemy);
+                }
+                // Atualiza o timestamp do último respawn
+                enemyConfig.lastRespawn = currentTime;
+                enemyConfig.enemiesPerWave = Math.floor(Math.random() * 3) + 3;
+            }
+        }
+        
+        // Função para atualizar a posição do jogador
+        function updatePlayer() {
+            if (!gameActive) return;
+            
+            if (keys.w) player.y -= player.speed;
+            if (keys.a) player.x -= player.speed;
+            if (keys.s) player.y += player.speed;
+            if (keys.d) player.x += player.speed;
+            
+            // Limitando o jogador ao canvas
+            player.x = Math.max(0, Math.min(canvas.width - player.width, player.x));
+            player.y = Math.max(0, Math.min(canvas.height - player.height, player.y));
+        }
+        
+        // Função para atualizar a posição dos tiros
+        function updateBullets() {
+            for (let i = bullets.length - 1; i >= 0; i--) {
+                const bullet = bullets[i];
+                
+                // Atualiza a posição do tiro
+                bullet.x += bullet.direction.x * bullet.speed;
+                
+                // Remove tiros que saíram do canvas
+                if (bullet.x > canvas.width + bullet.radius) {
+                    bullets.splice(i, 1);
+                }
+            }
+        }
+        
+        // Função para atualizar a posição dos inimigos
+        function updateEnemies() {
+            for (let i = enemies.length - 1; i >= 0; i--) {
+                const enemy = enemies[i];
+                
+                // Move o inimigo da direita para a esquerda
+                enemy.x -= enemy.speed;
+                
+                // Remove inimigos que saíram da tela
+                if (enemy.x + enemy.width < 0) {
+                    enemies.splice(i, 1);
+                }
+            }
+        }
+        
+        // Função para verificar colisões
+        function checkCollisions() {
+            if (!gameActive) return;
+            
+            // Verifica colisão entre tiros e inimigos
+            for (let i = bullets.length - 1; i >= 0; i--) {
+                const bullet = bullets[i];
+                
+                for (let j = enemies.length - 1; j >= 0; j--) {
+                    const enemy = enemies[j];
+                    
+                    // Verifica se o tiro atingiu o inimigo
+                    if (
+                        bullet.x + bullet.radius > enemy.x &&
+                        bullet.x - bullet.radius < enemy.x + enemy.width &&
+                        bullet.y + bullet.radius > enemy.y &&
+                        bullet.y - bullet.radius < enemy.y + enemy.height
+                    ) {
+                        // Remove o tiro e o inimigo
+                        bullets.splice(i, 1);
+                        enemies.splice(j, 1);
+                        
+                        // Atualiza estatísticas
+                        gameStats.score += 100;
+                        gameStats.enemiesKilled++;
+                        
+                        // Atualiza o display
+                        scoreDisplay.textContent = gameStats.score;
+                        enemiesKilledDisplay.textContent = gameStats.enemiesKilled;
+                        
+                        // Sai do loop interno após encontrar uma colisão
+                        break;
+                    }
+                }
+            }
+            
+            // Verifica colisão entre jogador e inimigos
+            for (let i = enemies.length - 1; i >= 0; i--) {
+                const enemy = enemies[i];
+                
+                if (
+                    player.x < enemy.x + enemy.width &&
+                    player.x + player.width > enemy.x &&
+                    player.y < enemy.y + enemy.height &&
+                    player.y + player.height > enemy.y
+                ) {
+                    // Colisão com o jogador
+                    enemies.splice(i, 1);
+                    player.lives--;
+                    
+                    // Verifica se o jogador perdeu todas as vidas
+                    if (player.lives <= 0) {
+                        gameOver();
+                    }
+                }
+            }
+        }
+        
+        // Função de game over
+        function gameOver() {
+            gameActive = false;
+            
+            // Atualiza tela de game over
+            finalScoreDisplay.textContent = gameStats.score;
+            finalEnemiesDisplay.textContent = gameStats.enemiesKilled;
+            
+            // Mostra a tela de game over
+            gameOverScreen.style.display = 'block';
+        }
+        
+        // Função para reiniciar o jogo
+        function resetGame() {
+            // Reseta o estado do jogo
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            gameActive = true;
+            
+            // Limpa arrays
+            bullets.length = 0;
+            enemies.length = 0;
+            
+            // Reseta estatísticas
+            gameStats.score = 0;
+            gameStats.enemiesKilled = 0;
+            
+            // Atualiza display
+            scoreDisplay.textContent = gameStats.score;
+            enemiesKilledDisplay.textContent = gameStats.enemiesKilled;
+            
+            // Reseta o jogador
+            player.x = 100;
+            player.y = canvas.height / 2;
+            player.lives = 3;
+            
+            // Reseta configurações de inimigos
+            enemyConfig.respawnInterval = 4000;
+            enemyConfig.enemiesPerWave = 3;
+            enemyConfig.lastRespawn = 0;
+            
+            // Esconde a tela de game over
+            gameOverScreen.style.display = 'none';
+        }
+        
+        // Função para atualizar o status do cooldown na interface
+        function updateCooldownDisplay() {
+            const currentTime = Date.now();
+            const timeSinceLastShot = currentTime - bulletConfig.lastShot;
+            
+            if (timeSinceLastShot > bulletConfig.cooldown) {
+                cooldownDisplay.textContent = "Pronto para atirar!";
+                cooldownDisplay.style.color = "#4fc3f7";
+            } else {
+                const remainingCooldown = Math.ceil((bulletConfig.cooldown - timeSinceLastShot) / 100) / 10;
+                cooldownDisplay.textContent = `Recarregando... ${remainingCooldown}s`;
+            }
+        }
+        
+        // Função para atualizar o contador de próximo respawn
+        function updateRespawnDisplay() {
+            const currentTime = Date.now();
+            const timeSinceLastRespawn = currentTime - enemyConfig.lastRespawn;
+            const timeUntilNextRespawn = Math.max(0, (enemyConfig.respawnInterval - timeSinceLastRespawn) / 1000).toFixed(1);
+            
+            nextRespawnDisplay.textContent = timeUntilNextRespawn;
+        }
+        
+        // Função para desenhar o jogador (nave)
+        function drawPlayer() {
+            ctx.fillStyle = player.color;
+            
+            // Desenha o corpo da nave (triângulo)
+            ctx.beginPath();
+            ctx.moveTo(player.x + player.width, player.y + player.height / 2);
+            ctx.lineTo(player.x, player.y);
+            ctx.lineTo(player.x, player.y + player.height);
+            ctx.closePath();
+            ctx.fill();
+            
+            // Desenha a cabine
+            ctx.fillStyle = '#bbdefb';
+            ctx.beginPath();
+            ctx.arc(player.x + player.width * 0.7, player.y + player.height / 2, player.height * 0.2, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        
+        // Função para desenhar os tiros
+        function drawBullets() {
+            ctx.fillStyle = bulletConfig.color;
+            
+            bullets.forEach(bullet => {
+                ctx.beginPath();
+                ctx.arc(bullet.x, bullet.y, bullet.radius, 0, Math.PI * 2);
+                ctx.fill();
+            });
+        }
+        
+        // Função para desenhar os inimigos
+        function drawEnemies() {
+            enemies.forEach(enemy => {
+                // Corpo do inimigo
+                ctx.fillStyle = enemy.color;
+                ctx.fillRect(enemy.x, enemy.y, enemy.width, enemy.height);
+                
+                // Detalhes do inimigo
+                ctx.fillStyle = '#333';
+                ctx.fillRect(enemy.x + enemy.width * 0.1, enemy.y + enemy.height * 0.2, enemy.width * 0.3, enemy.height * 0.2);
+                ctx.fillRect(enemy.x + enemy.width * 0.1, enemy.y + enemy.height * 0.6, enemy.width * 0.3, enemy.height * 0.2);
+                
+                // "Olho" do inimigo
+                ctx.fillStyle = '#ff0000';
+                ctx.beginPath();
+                ctx.arc(enemy.x + enemy.width * 0.7, enemy.y + enemy.height * 0.5, enemy.height * 0.15, 0, Math.PI * 2);
+                ctx.fill();
+            });
+        }
+        
+        // Função para desenhar indicadores visuais do cooldown
+        function drawCooldownIndicator() {
+            const currentTime = Date.now();
+            const timeSinceLastShot = currentTime - bulletConfig.lastShot;
+            
+            // Desenha barra de cooldown no canto superior direito
+            ctx.fillStyle = "#222";
+            ctx.fillRect(canvas.width - 120, 20, 100, 20);
+            
+            if (timeSinceLastShot < bulletConfig.cooldown) {
+                // Calcula a porcentagem de preenchimento da barra
+                const fillPercentage = timeSinceLastShot / bulletConfig.cooldown;
+                ctx.fillStyle = "#ff5252";
+                ctx.fillRect(canvas.width - 120, 20, 100 * fillPercentage, 20);
+            } else {
+                // Barra cheia quando o cooldown terminou
+                ctx.fillStyle = "#4fc3f7";
+                ctx.fillRect(canvas.width - 120, 20, 100, 20);
+            }
+            
+            // Borda da barra
+            ctx.strokeStyle = "white";
+            ctx.strokeRect(canvas.width - 120, 20, 100, 20);
+        }
+        
+        // Função para desenhar vidas do jogador
+        function drawLives() {
+            ctx.fillStyle = "white";
+            ctx.font = "16px Arial";
+            ctx.fillText("Vidas:", 15, 30);
+            
+            for (let i = 0; i < player.lives; i++) {
+                ctx.fillStyle = player.color;
+                ctx.beginPath();
+                ctx.moveTo(90 + i * 30, 25);
+                ctx.lineTo(75 + i * 30, 15);
+                ctx.lineTo(75 + i * 30, 35);
+                ctx.closePath();
+                ctx.fill();
+            }
+        }
+        
+        // Função de loop do jogo
+        function gameLoop() {
+            // Limpa o canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Se o jogo não estiver ativo, preenche o canvas de preto
+            if (!gameActive) {
+                ctx.fillStyle = "#000"; // Cor preta
+                ctx.fillRect(0, 0, canvas.width, canvas.height); // Preenche todo o canvas
+            } else {
+                // Restante do código do gameLoop...
+                spawnEnemies();
+                updatePlayer();
+                updateBullets();
+                updateEnemies();
+                checkCollisions();
+                updateCooldownDisplay();
+                updateRespawnDisplay();
+
+                drawPlayer();
+                drawBullets();
+                drawEnemies();
+                drawCooldownIndicator();
+                drawLives();
+            }
+
+            // Continua o loop
+            requestAnimationFrame(gameLoop);
+        }
+        
+        // Inicia o jogo
+        resetGame();
+        gameLoop();
+    </script>
+</body>
+</html>
