@@ -1,0 +1,37 @@
+body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-family: Arial, sans-serif;
+    background-color: #f0f0f0;
+    margin: 0;
+    padding: 20px;
+}
+
+canvas {
+    border: 2px solid #333;
+    background-color: #87CEEB;
+    margin-top: 20px;
+}
+
+.controls {
+    padding: 10px;
+    background-color: #eee;
+}
+
+.state-info {
+    margin-top: 10px;
+    padding: 0px 10px;
+    background-color: #ddd;
+    width: 480px;
+    text-align: center;
+}
+
+.game-info {
+    margin-top: 10px;
+    padding: 10px;
+    background-color: #ddd;
+    width: 480px;
+    display: flex;
+    justify-content: space-between;
+}

@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Flatlanders</title>
+    <link rel="stylesheet" type="text/css" href="styles.css">
+</head>
+<body>
+    <h1 style="margin-bottom: 5px; margin-top: 5px;">The Flatlanders</h1>
+    
+    <div class="state-info">
+        <h3 id="currentState">Estado Atual: Parado</h3>
+    </div>
+    
+    <div class="game-info">
+        <span id="score">Pontos: 0</span>
+        <span id="enemies">Inimigos: 0</span>
+        <span id="position">Posição: 0, 0</span>
+    </div>
+    
+    <canvas id="gameCanvas" width="500" height="300"></canvas>
+    
+    <div class="controls">
+        <p style="margin-top: 10px;">Use as teclas de seta ←→ para mover, Espaço para pular, e Z para atacar</p>
+    </div>
+
+    <script type="text/javascript" src="game.js"></script>
+</body>
+</html>
