@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Explorador de Mundo</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #222;
+            color: #fff;
+            font-family: Arial, sans-serif;
+        }
+        h1 {
+            margin-bottom: 15px;
+        }
+        #gameCanvas {
+            margin-top: 15px;
+            border: 2px solid black;
+            background-color: #1a1a1a;
+        }
+        #controls {
+            text-align: center;
+        }
+        #fileInput {
+            display: none;
+        }
+        button {
+            background-color: #4CAF50;
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 4px 2px;
+            margin-right: 10px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        #statsPanel {
+            padding: 11px 20px;
+            background-color: rgba(0, 0, 0, 0.7);
+            border-radius: 5px;
+            display: inline-block;
+        }
+        .instructions {
+            margin-top: 15px;
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 5px 12.5px;
+            border-radius: 5px;
+            max-width: 800px;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <h1>Explorador de Mundo</h1>
+
+    <div id="controls">
+        <input type="file" id="fileInput" accept=".csv">
+        <button id="indexPage">Página Inicial</button>
+        <button id="loadMapBtn">Carregar Mapa</button>
+        <button id="showMapBtn">Mostrar Mapa</button>
+        <div id="statsPanel">
+            Posição: X: <span id="posX">0</span>, Y: <span id="posY">0</span> | 
+            Bioma: <span id="biomeType">Nenhum</span>
+        </div>
+    </div>
+
+    <canvas id="gameCanvas" width="640" height="480"></canvas>
+
+    <div class="instructions">
+        <p>1. Clique em "Carregar Mapa" para selecionar o arquivo CSV gerado pelo World Generator.</p>
+        <p>2. Use as teclas WASD ou as setas para mover o personagem.</p>
+        <p>3. Alguns biomas têm colisão (não pode atravessar água, montanhas e florestas).</p>
+    </div>
+
+    <script>
+        class Game {
+            constructor() {
+                this.canvas = document.getElementById('gameCanvas');
+                this.ctx = this.canvas.getContext('2d');
+                this.tileSize = 32; // Tamanho padrão de cada tile
+                this.mapData = [];
+                this.mapWidth = 0;
+                this.mapHeight = 0;
+                this.player = {
+                    x: 0,
+                    y: 0,
+                    width: 24,
+                    height: 24,
+                    speed: 5,
+                    color: '#530dbd'
+                };
+                this.camera = {
+                    x: 0,
+                    y: 0,
+                    width: this.canvas.width,
+                    height: this.canvas.height
+                };
+                this.keys = {
+                    w: false,
+                    a: false,
+                    s: false,
+                    d: false,
+                    up: false,
+                    left: false,
+                    down: false,
+                    right: false
+                };
+                this.isRunning = false;
+                this.biomes = [
+                    { name: "Oceano Profundo", color: "#0077be", collision: true },
+                    { name: "Oceano", color: "#00a9e0", collision: true },
+                    { name: "Água Rasa", color: "#add8e6", collision: true },
+                    { name: "Praia", color: "#e2d9a2", collision: false },
+                    { name: "Planície", color: "#90ee90", collision: false },
+                    { name: "Floresta", color: "#228b22", collision: true },
+                    { name: "Montanha", color: "#a0522d", collision: true },
+                    { name: "Pico Nevado", color: "#f5f5f5", collision: true }
+                ];
+                this.lastTime = 0;
+                this.fps = 0;
+                this.frameCount = 0;
+                this.lastFpsUpdate = 0;
+                this.setupEventListeners();
+                this.exploredMap = [];
+                this.fovRadius = 5;
+                this.showMap = false;
+                this.renderStartScreen();
+            }
+
+            renderStartScreen() {
+                if (this.mapData.length === 0) {
+                    // Renderizar mensagem de carregamento
+                    this.ctx.fillStyle = 'white';
+                    this.ctx.font = '24px Arial';
+                    this.ctx.textAlign = 'center';
+                    this.ctx.fillText('Carregue um mapa CSV para começar', this.canvas.width / 2, this.canvas.height / 2);
+                    return;
+                }
+            }
+
+            toggleMap() {
+                if (this.mapData.length === 0) return;
+
+                this.showMap = !this.showMap;
+                
+                if (this.showMap) {
+                    document.getElementById('showMapBtn').innerHTML = "Ocultar Mapa";
+                } else {
+                    document.getElementById('showMapBtn').innerHTML = "Mostrar Mapa";
+                }                
+            }
+
+            setupEventListeners() {
+                // Botão de carregar mapa
+                document.getElementById('loadMapBtn').addEventListener('click', () => {
+                    document.getElementById('fileInput').click();
+                });
+
+                // Input de arquivo
+                document.getElementById('fileInput').addEventListener('change', (e) => {
+                    const file = e.target.files[0];
+                    if (file) {
+                        this.loadMap(file);
+                    }
+                });
+
+                document.getElementById('showMapBtn').addEventListener('click', () => {
+                    this.toggleMap();
+                });
+
+                document.getElementById('indexPage').addEventListener('click', () => {
+                    window.location.href = 'index.html';
+                });
+
+                // Eventos de teclado
+                window.addEventListener('keydown', (e) => {
+                    e.preventDefault();
+                    this.setKey(e.key, true);
+                });
+
+                window.addEventListener('keyup', (e) => {
+                    this.setKey(e.key, false);
+                });
+            }
+
+            setKey(key, pressed) {
+                switch (key) {
+                    case 'w':
+                    case 'W':
+                        this.keys.w = pressed;
+                        break;
+                    case 'a':
+                    case 'A':
+                        this.keys.a = pressed;
+                        break;
+                    case 's':
+                    case 'S':
+                        this.keys.s = pressed;
+                        break;
+                    case 'd':
+                    case 'D':
+                        this.keys.d = pressed;
+                        break;
+                    case 'ArrowUp':
+                        this.keys.up = pressed;
+                        break;
+                    case 'ArrowLeft':
+                        this.keys.left = pressed;
+                        break;
+                    case 'ArrowDown':
+                        this.keys.down = pressed;
+                        break;
+                    case 'ArrowRight':
+                        this.keys.right = pressed;
+                        break;
+                    case 'm':
+                        if (pressed) {
+                            this.toggleMap();
+                        }
+                        break;
+                }
+            }
+
+            async loadMap(file) {
+                const text = await file.text();
+                const rows = text.trim().split('\n');
+                this.mapHeight = rows.length;
+                this.mapWidth = rows[0].split(',').length;
+                this.mapData = rows.map(row => row.split(',').map(Number));
+
+                // Inicializar a matriz de exploração
+                this.exploredMap = Array(this.mapHeight).fill().map(() => Array(this.mapWidth).fill(false));
+
+                // Centralizar o player em uma área atravessável
+                this.findStartPosition();
+
+                if (!this.isRunning) {
+                    this.isRunning = true;
+                    requestAnimationFrame(this.gameLoop.bind(this));
+                }
+            }
+
+            findStartPosition() {
+                // Encontrar uma posição inicial válida (não colisão)
+                for (let y = 0; y < this.mapHeight; y++) {
+                    for (let x = 0; x < this.mapWidth; x++) {
+                        const biomeIndex = this.mapData[y][x];
+                        if (biomeIndex >= 0 && biomeIndex < this.biomes.length && !this.biomes[biomeIndex].collision) {
+                            this.player.x = x * this.tileSize + this.tileSize / 2;
+                            this.player.y = y * this.tileSize + this.tileSize / 2;
+                            // Centralizar a câmera no player
+                            this.updateCamera();
+                            return;
+                        }
+                    }
+                }
+                // Se não encontrar, usar posição padrão
+                this.player.x = this.mapWidth * this.tileSize / 2;
+                this.player.y = this.mapHeight * this.tileSize / 2;
+            }
+
+            gameLoop(timestamp) {
+                if (!this.isRunning) return;
+                
+                // Calcular delta time
+                const deltaTime = timestamp - this.lastTime;
+                this.lastTime = timestamp;
+                
+                // Atualizar FPS
+                this.frameCount++;
+                if (timestamp - this.lastFpsUpdate > 1000) {
+                    this.fps = Math.round(this.frameCount * 1000 / (timestamp - this.lastFpsUpdate));
+                    this.lastFpsUpdate = timestamp;
+                    this.frameCount = 0;
+                }
+
+                this.update(deltaTime);
+                this.render();
+                
+                requestAnimationFrame(this.gameLoop.bind(this));
+            }
+
+            update(deltaTime) {
+                // Só executar se o mapa estiver carregado
+                if (this.mapData.length === 0) return;
+
+                // Se o mapa estiver aberto, não permitir movimento
+                if (this.showMap) return;
+
+                // Calcular movimento baseado em input
+                let dx = 0;
+                let dy = 0;
+
+                if (this.keys.w || this.keys.up) dy -= this.player.speed;
+                if (this.keys.s || this.keys.down) dy += this.player.speed;
+                if (this.keys.a || this.keys.left) dx -= this.player.speed;
+                if (this.keys.d || this.keys.right) dx += this.player.speed;
+
+                // Normalizar movimento diagonal
+                if (dx !== 0 && dy !== 0) {
+                    const factor = 1 / Math.sqrt(2);
+                    dx *= factor;
+                    dy *= factor;
+                }
+
+                // Testar colisão antes de mover
+                if (dx !== 0) {
+                    const newX = this.player.x + dx;
+                    if (!this.checkCollision(newX, this.player.y)) {
+                        this.player.x = newX;
+                    } else {
+                        // Calcular os limites do personagem em relação aos tiles
+                        const left = Math.floor((this.player.x - this.player.width / 2) / this.tileSize);
+                        const right = Math.floor((this.player.x + this.player.width / 2 - 1) / this.tileSize);
+
+                        // Ajustar a posição para o limite do tile
+                        if (dx > 0) {
+                            this.player.x = (right + 1) * this.tileSize - this.player.width / 2;
+                        } else if (dx < 0) {
+                            this.player.x = left * this.tileSize + this.player.width / 2;
+                        }
+                    }
+                }
+
+                if (dy !== 0) {
+                    const newY = this.player.y + dy;
+                    if (!this.checkCollision(this.player.x, newY)) {
+                        this.player.y = newY;
+                    } else {
+                        // Calcular os limites do personagem em relação aos tiles
+                        const top = Math.floor((this.player.y - this.player.height / 2) / this.tileSize);
+                        const bottom = Math.floor((this.player.y + this.player.height / 2 - 1) / this.tileSize);
+
+                        // Ajustar a posição para o limite do tile
+                        if (dy > 0) {
+                            this.player.y = (bottom + 1) * this.tileSize - this.player.height / 2;
+                        } else if (dy < 0) {
+                            this.player.y = top * this.tileSize + this.player.height / 2;
+                        }
+                    }
+                }
+
+                // Atualizar a matriz de exploração com o campo de visão
+                const playerTileX = Math.floor(this.player.x / this.tileSize);
+                const playerTileY = Math.floor(this.player.y / this.tileSize);
+
+                for (let y = playerTileY - this.fovRadius; y <= playerTileY + this.fovRadius; y++) {
+                    for (let x = playerTileX - this.fovRadius; x <= playerTileX + this.fovRadius; x++) {
+                        if (x >= 0 && x < this.mapWidth && y >= 0 && y < this.mapHeight) {
+                            this.exploredMap[y][x] = true;
+                        }
+                    }
+                }
+
+                // Atualizar a câmera para seguir o player
+                this.updateCamera();
+
+                // Atualizar informações de status
+                this.updateStats();
+            }
+
+            checkCollision(x, y) {
+                // Verificar todos os tiles que o personagem ocupa
+                const left = Math.floor((x - this.player.width / 2) / this.tileSize);
+                const right = Math.floor((x + this.player.width / 2 - 1) / this.tileSize);
+                const top = Math.floor((y - this.player.height / 2) / this.tileSize);
+                const bottom = Math.floor((y + this.player.height / 2 - 1) / this.tileSize);
+
+                for (let tileY = top; tileY <= bottom; tileY++) {
+                    for (let tileX = left; tileX <= right; tileX++) {
+                        // Verificar se está dentro do mapa
+                        if (tileX < 0 || tileX >= this.mapWidth || tileY < 0 || tileY >= this.mapHeight) {
+                            return true; // Colisão com a borda do mapa
+                        }
+
+                        // Verificar colisão com o bioma
+                        const biomeIndex = this.mapData[tileY][tileX];
+                        if (biomeIndex >= 0 && biomeIndex < this.biomes.length && this.biomes[biomeIndex].collision) {
+                            return true; // Colisão com bioma
+                        }
+                    }
+                }
+
+                return false; // Sem colisão
+            }
+
+            updateCamera() {
+                // Centralizar a câmera no player
+                this.camera.x = this.player.x - this.camera.width / 2;
+                this.camera.y = this.player.y - this.camera.height / 2;
+                
+                // Limitar a câmera aos limites do mapa
+                this.camera.x = Math.max(0, Math.min(this.camera.x, this.mapWidth * this.tileSize - this.camera.width));
+                this.camera.y = Math.max(0, Math.min(this.camera.y, this.mapHeight * this.tileSize - this.camera.height));
+            }
+
+            updateStats() {
+                // Atualizar informações de posição
+                document.getElementById('posX').textContent = Math.floor(this.player.x / this.tileSize);
+                document.getElementById('posY').textContent = Math.floor(this.player.y / this.tileSize);
+                
+                // Atualizar informação de bioma
+                const biomeX = Math.floor(this.player.x / this.tileSize);
+                const biomeY = Math.floor(this.player.y / this.tileSize);
+                
+                if (biomeX >= 0 && biomeX < this.mapWidth && biomeY >= 0 && biomeY < this.mapHeight) {
+                    const biomeIndex = this.mapData[biomeY][biomeX];
+                    if (biomeIndex >= 0 && biomeIndex < this.biomes.length) {
+                        document.getElementById('biomeType').textContent = this.biomes[biomeIndex].name;
+                    } else {
+                        document.getElementById('biomeType').textContent = "Desconhecido";
+                    }
+                } else {
+                    document.getElementById('biomeType').textContent = "Fora do mapa";
+                }
+            }
+
+            renderMap() {
+                if (this.mapData.length === 0) return;
+
+                // Limpar o minimap
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+                // Calcular a escala do minimap
+                const scaleX = this.canvas.width / (this.mapWidth * this.tileSize);
+                const scaleY = this.canvas.height / (this.mapHeight * this.tileSize);
+
+                // Desenhar o mapa no minimap (apenas áreas exploradas)
+                for (let y = 0; y < this.mapHeight; y++) {
+                    for (let x = 0; x < this.mapWidth; x++) {
+                        if (this.exploredMap[y][x]) { // Verificar se a área foi explorada
+                            const biomeIndex = this.mapData[y][x];
+                            if (biomeIndex >= 0 && biomeIndex < this.biomes.length) {
+                                this.ctx.fillStyle = this.biomes[biomeIndex].color;
+                                this.ctx.fillRect(
+                                    Math.floor(x * this.tileSize * scaleX),
+                                    Math.floor(y * this.tileSize * scaleY),
+                                    Math.ceil(this.tileSize * scaleX),
+                                    Math.ceil(this.tileSize * scaleY)
+                                );
+                            }
+                        }
+                    }
+                }
+
+                // Desenhar o jogador no minimap
+                const playerX = Math.floor(this.player.x * scaleX);
+                const playerY = Math.floor(this.player.y * scaleY);
+                this.ctx.fillStyle = '#ff0000'; // Cor do jogador no minimap
+                this.ctx.beginPath();
+                this.ctx.arc(playerX, playerY, 3, 0, Math.PI * 2); // Desenhar um círculo para o jogador
+                this.ctx.fill();
+            }
+
+            render() {
+                // Limpar o canvas
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+                if (this.showMap) {
+                    this.renderMap();
+                } else {
+                    // Renderizar tiles visíveis
+                    const startX = Math.floor(this.camera.x / this.tileSize);
+                    const startY = Math.floor(this.camera.y / this.tileSize);
+                    const endX = Math.ceil((this.camera.x + this.camera.width) / this.tileSize);
+                    const endY = Math.ceil((this.camera.y + this.camera.height) / this.tileSize);
+                    
+                    for (let y = startY; y < endY; y++) {
+                        for (let x = startX; x < endX; x++) {
+                            if (x >= 0 && x < this.mapWidth && y >= 0 && y < this.mapHeight) {
+                                const biomeIndex = this.mapData[y][x];
+                                if (biomeIndex >= 0 && biomeIndex < this.biomes.length) {
+                                    this.ctx.fillStyle = this.biomes[biomeIndex].color;
+                                    this.ctx.fillRect(
+                                        Math.floor(x * this.tileSize - this.camera.x),
+                                        Math.floor(y * this.tileSize - this.camera.y),
+                                        this.tileSize,
+                                        this.tileSize
+                                    );
+                                    
+                                    // Opcional: Desenhar grid
+                                    this.ctx.strokeStyle = 'rgba(0, 0, 0, 0.1)';
+                                    this.ctx.strokeRect(
+                                        Math.floor(x * this.tileSize - this.camera.x),
+                                        Math.floor(y * this.tileSize - this.camera.y),
+                                        this.tileSize,
+                                        this.tileSize
+                                    );
+                                }
+                            }
+                        }
+                    }
+                    
+                    // Renderizar o player
+                    const playerScreenX = Math.floor(this.player.x - this.camera.x - this.player.width / 2);
+                    const playerScreenY = Math.floor(this.player.y - this.camera.y - this.player.height / 2);
+                    
+                    // Desenhar corpo do player
+                    this.ctx.fillStyle = this.player.color;
+                    this.ctx.fillRect(
+                        playerScreenX,
+                        playerScreenY,
+                        this.player.width,
+                        this.player.height
+                    );
+                    
+                    // Renderizar informações de debug
+                    this.ctx.fillStyle = 'white';
+                    this.ctx.font = '12px Arial';
+                    this.ctx.textAlign = 'left';
+                    this.ctx.fillText(`FPS: ${this.fps}`, 10, 20);
+                }
+            }
+        }
+
+        // Inicializar o jogo
+        const game = new Game();
+    </script>
+</body>
+</html>

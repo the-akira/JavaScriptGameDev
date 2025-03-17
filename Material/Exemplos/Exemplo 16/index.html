@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerador de Mundo</title>
+    <link rel="stylesheet" type="text/css" href="styles.css">
+</head>
+<body>
+    <h1>Gerador de Mundo</h1>
+    
+    <div class="controls">
+        <div>
+            <label for="tileSize">Tamanho do Tile:</label>
+            <select id="tileSize">
+                <option value="2" selected>2px</option>
+                <option value="4">4px</option>
+                <option value="8">8px</option>
+                <option value="16">16px</option>
+            </select>
+        </div>
+        <div>
+            <label for="scale">Escala:</label>
+            <input type="range" id="scale" min="10" max="100" value="30">
+        </div>
+        <div>
+            <label for="octaves">Octaves:</label>
+            <input type="range" id="octaves" min="1" max="8" value="4">
+        </div>
+        <div>
+            <label for="persistence">Persistência:</label>
+            <input type="range" id="persistence" min="1" max="100" value="50">
+        </div>
+        <button id="generate">Gerar</button>
+        <button id="exportCSV">Exportar</button>
+        <button id="exploreMap">Explorar</button>
+    </div>
+    
+    <canvas id="worldCanvas" width="640" height="480"></canvas>
+    
+    <div class="legend">
+        <div class="legend-item">
+            <div class="color-box" style="background-color: #0077be;"></div>
+            <span>Oceano Profundo</span>
+        </div>
+        <div class="legend-item">
+            <div class="color-box" style="background-color: #00a9e0;"></div>
+            <span>Oceano</span>
+        </div>
+        <div class="legend-item">
+            <div class="color-box" style="background-color: #add8e6;"></div>
+            <span>Água Rasa</span>
+        </div>
+        <div class="legend-item">
+            <div class="color-box" style="background-color: #e2d9a2;"></div>
+            <span>Praia</span>
+        </div>
+        <div class="legend-item">
+            <div class="color-box" style="background-color: #90ee90;"></div>
+            <span>Planície</span>
+        </div>
+        <div class="legend-item">
+            <div class="color-box" style="background-color: #228b22;"></div>
+            <span>Floresta</span>
+        </div>
+        <div class="legend-item">
+            <div class="color-box" style="background-color: #a0522d;"></div>
+            <span>Montanha</span>
+        </div>
+        <div class="legend-item">
+            <div class="color-box" style="background-color: #f5f5f5;"></div>
+            <span>Pico Nevado</span>
+        </div>
+    </div>
+
+    <script type="text/javascript" src="app.js"></script>
+</body>
+</html>
