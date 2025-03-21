@@ -54,7 +54,7 @@ Os Modelos de Linguagem de Grande Escala (LLMs) podem ser utilizados para aceler
 
 - [ChatGPT (OpenAI)](https://chatgpt.com/)
 - [Claude (Anthropic)](https://claude.ai/)
-- [Deep Seek](https://chat.deepseek.com/)
+- [DeepSeek](https://chat.deepseek.com/)
 - [Chat Blackbox](https://www.blackbox.ai/)
 - [Bolt (StackBlitz)](https://bolt.new/)
 
