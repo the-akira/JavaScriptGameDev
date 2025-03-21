@@ -796,12 +796,16 @@
                 
                 // Informações de debug
                 if (this.debug) {
+                    // Use valores inteiros para evitar tremor
+                    const debugX = Math.floor(this.camera.x) + 10;
+                    const debugY = Math.floor(this.camera.y) + this.camera.height - 70;
+                    
                     ctx.fillStyle = '#fff';
                     ctx.font = '12px Arial';
-                    ctx.fillText(`Pos: (${Math.floor(this.player.x)}, ${Math.floor(this.player.y)})`, 10, CANVAS_HEIGHT - 10);
-                    ctx.fillText(`Velocidade: (${this.player.velocityX.toFixed(1)}, ${this.player.velocityY.toFixed(1)})`, 10, CANVAS_HEIGHT - 30);
-                    ctx.fillText(`No chão: ${this.player.isGrounded ? 'Sim' : 'Não'}`, 10, CANVAS_HEIGHT - 50);
-                    ctx.fillText(`Mapa: ${this.mapManager.currentMapId}`, 10, CANVAS_HEIGHT - 70);
+                    ctx.fillText(`Pos: (${Math.floor(this.player.x)}, ${Math.floor(this.player.y)})`, debugX, debugY + 60);
+                    ctx.fillText(`Velocidade: (${this.player.velocityX.toFixed(1)}, ${this.player.velocityY.toFixed(1)})`, debugX, debugY + 40);
+                    ctx.fillText(`No chão: ${this.player.isGrounded ? 'Sim' : 'Não'}`, debugX, debugY + 20);
+                    ctx.fillText(`Mapa: ${this.mapManager.currentMapId}`, debugX, debugY);
                 }
                 
                 // Resetar transformação
