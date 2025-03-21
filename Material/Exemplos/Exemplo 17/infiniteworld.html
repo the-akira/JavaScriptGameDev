@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plataforma 2D com Mundo Infinito</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: #222;
+        }
+        h1 {
+            text-align: center;
+            color: #d4d4d4;
+            margin-bottom: 15px;
+        }
+        canvas {
+            border: 2px solid #d4d4d4;
+            background-color: #87CEEB;
+            display: block;
+            margin: 0 auto;
+        }
+        #gameControls {
+            bottom: 10px;
+            color: white;
+            font-family: Arial, sans-serif;
+            text-align: center;
+            width: 100%;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Plataforma 2D com Mundo Infinito</h1>
+    <canvas id="gameCanvas"></canvas>
+    <div id="gameControls">
+        <b>Controles:</b> Setas ← → para mover, ↑ para pular | Espaço para cavar | Clique para construir
+    </div>
+    <script>
+        // Configurações do jogo
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = 800;
+        canvas.height = 600;
+
+        // Constantes do jogo
+        const TILE_SIZE = 32;
+        const CHUNK_SIZE = 16; // Número de blocos em um chunk
+        const GRAVITY = 0.5;
+        const JUMP_FORCE = 12;
+
+        // Cores dos blocos
+        const BLOCK_COLORS = {
+            0: 'rgba(0, 0, 0, 0)', // Ar (transparente)
+            1: '#8B4513', // Terra
+            2: '#555555', // Pedra
+            3: '#336633', // Grama
+            4: '#DAA520', // Minério
+            5: '#0000FF'  // Água
+        };
+
+        // Player
+        const player = {
+            width: TILE_SIZE - 4,
+            height: TILE_SIZE * 1.5,
+            x: 0, // Posição no mundo
+            y: 0, // Posição Y no mundo
+            velocityX: 0,
+            velocityY: 0,
+            speed: 5,
+            jumping: false,
+            color: '#FF5555'
+        };
+
+        // Câmera
+        const camera = {
+            x: 0,
+            y: 0,
+            width: canvas.width,
+            height: canvas.height
+        };
+
+        // Mundo
+        const world = {
+            chunks: {},
+            getChunkKey: function(chunkX, chunkY) {
+                return `${chunkX},${chunkY}`;
+            },
+            getChunk: function(chunkX, chunkY) {
+                const key = this.getChunkKey(chunkX, chunkY);
+                if (!this.chunks[key]) {
+                    this.generateChunk(chunkX, chunkY);
+                }
+                return this.chunks[key];
+            },
+            generateChunk: function(chunkX, chunkY) {
+                const chunk = [];
+                for (let y = 0; y < CHUNK_SIZE; y++) {
+                    chunk[y] = [];
+                    for (let x = 0; x < CHUNK_SIZE; x++) {
+                        const worldX = chunkX * CHUNK_SIZE + x;
+                        
+                        // Geração de terreno usando ruído Perlin simplificado
+                        const height = Math.sin(worldX * 0.1) * 3 + 
+                                      Math.sin(worldX * 0.05) * 5 +
+                                      10; // Altura média
+                        
+                        const worldY = chunkY * CHUNK_SIZE + y;
+                        
+                        // Gerar diferentes tipos de blocos
+                        if (worldY > height) {
+                            if (worldY === Math.floor(height) + 1) {
+                                chunk[y][x] = 3; // Grama no topo
+                            } else if (worldY < height + 5) {
+                                chunk[y][x] = 1; // Terra perto da superfície
+                            } else if (Math.random() < 0.05) {
+                                chunk[y][x] = 4; // Minério aleatório
+                            } else {
+                                chunk[y][x] = 2; // Pedra como padrão subterrâneo
+                            }
+                            
+                            // Gerar cavernas simples
+                            const caveNoise = Math.sin(worldX * 0.2) * Math.cos(worldY * 0.2);
+                            if (worldY > height + 3 && caveNoise > 0.7) {
+                                chunk[y][x] = 0; // Caverna (ar)
+                            }
+                            
+                            // Água em áreas baixas
+                            if (worldY > height && worldY < 15 && Math.random() < 0.2) {
+                                chunk[y][x] = 5; // Água
+                            }
+                        } else {
+                            chunk[y][x] = 0; // Ar acima da superfície
+                        }
+                    }
+                }
+                this.chunks[this.getChunkKey(chunkX, chunkY)] = chunk;
+            },
+            getBlock: function(worldX, worldY) {
+                const chunkX = Math.floor(worldX / CHUNK_SIZE);
+                const chunkY = Math.floor(worldY / CHUNK_SIZE);
+                const localX = ((worldX % CHUNK_SIZE) + CHUNK_SIZE) % CHUNK_SIZE;
+                const localY = ((worldY % CHUNK_SIZE) + CHUNK_SIZE) % CHUNK_SIZE;
+                
+                const chunk = this.getChunk(chunkX, chunkY);
+                return chunk[localY][localX];
+            },
+            setBlock: function(worldX, worldY, blockType) {
+                const chunkX = Math.floor(worldX / CHUNK_SIZE);
+                const chunkY = Math.floor(worldY / CHUNK_SIZE);
+                const localX = ((worldX % CHUNK_SIZE) + CHUNK_SIZE) % CHUNK_SIZE;
+                const localY = ((worldY % CHUNK_SIZE) + CHUNK_SIZE) % CHUNK_SIZE;
+                
+                const chunk = this.getChunk(chunkX, chunkY);
+                chunk[localY][localX] = blockType;
+            },
+            isSolid: function(worldX, worldY) {
+                const blockType = this.getBlock(worldX, worldY);
+                return blockType !== 0 && blockType !== 5; // Ar e água não são sólidos
+            }
+        };
+
+        // Input
+        const keys = {};
+        window.addEventListener('keydown', (e) => {
+            keys[e.key] = true;
+        });
+        window.addEventListener('keyup', (e) => {
+            keys[e.key] = false;
+        });
+
+        // Mouse
+        let mouseX = 0;
+        let mouseY = 0;
+        let mouseDown = false;
+
+        canvas.addEventListener('mousemove', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            mouseX = e.clientX - rect.left;
+            mouseY = e.clientY - rect.top;
+        });
+
+        canvas.addEventListener('mousedown', (e) => {
+            mouseDown = true;
+            handleMouseInteraction();
+        });
+
+        window.addEventListener('mouseup', () => {
+            mouseDown = false;
+        });
+
+        let cooldown = 0; // Tempo restante do cooldown
+        const COOLDOWN_TIME = 20; // Tempo de cooldown após quebrar um bloco (em frames)
+
+        // Tratar a interação do mouse com o jogo
+        function handleMouseInteraction() {
+            if (cooldown > 0) return; 
+
+            // Converter posição do mouse para posição do mundo
+            const worldMouseX = Math.floor((mouseX + camera.x) / TILE_SIZE);
+            const worldMouseY = Math.floor((mouseY + camera.y) / TILE_SIZE);
+            
+            // Verificar distância do jogador
+            const playerWorldX = Math.floor(player.x / TILE_SIZE);
+            const playerWorldY = Math.floor(player.y / TILE_SIZE);
+            
+            const distance = Math.sqrt(
+                Math.pow(worldMouseX - playerWorldX, 2) + 
+                Math.pow(worldMouseY - playerWorldY, 2)
+            );
+            
+            // Só pode interagir se estiver perto o suficiente
+            if (distance <= 5) {
+                if (keys[' ']) {
+                    // Remover bloco (cavar)
+                    world.setBlock(worldMouseX, worldMouseY, 0);
+                    cooldown = COOLDOWN_TIME; 
+                } else {
+                    // Verificar se o bloco não colide com o jogador
+                    const playerLeft = Math.floor(player.x / TILE_SIZE);
+                    const playerRight = Math.floor((player.x + player.width - 1) / TILE_SIZE);
+                    const playerTop = Math.floor(player.y / TILE_SIZE);
+                    const playerBottom = Math.floor((player.y + player.height - 1) / TILE_SIZE);
+                    
+                    // Verificar se o bloco está dentro da área do jogador
+                    const wouldCollideWithPlayer = (
+                        worldMouseX >= playerLeft && worldMouseX <= playerRight &&
+                        worldMouseY >= playerTop && worldMouseY <= playerBottom
+                    );
+                    
+                    // Colocar bloco apenas se não colidir com o jogador e for um espaço vazio
+                    if (!wouldCollideWithPlayer) {
+                        const currentBlock = world.getBlock(worldMouseX, worldMouseY);
+                        if (currentBlock === 0) {
+                            world.setBlock(worldMouseX, worldMouseY, 1); // Coloca terra
+                        }
+                    }
+                }
+            }
+        }
+
+        // Atualizar física do jogador
+        function updatePlayer() {
+            // Movimentação horizontal
+            player.velocityX = 0;
+            if (keys['ArrowRight']) {
+                player.velocityX = player.speed;
+            }
+            if (keys['ArrowLeft']) {
+                player.velocityX = -player.speed;
+            }
+
+            // Atualizar cooldown
+            if (cooldown > 0) {
+                cooldown--;
+            }
+            
+            // Aplicar gravidade
+            player.velocityY += GRAVITY;
+            const FALL_THRESHOLD = 45; // Ajuste esse valor conforme necessário
+
+            if (player.velocityY > FALL_THRESHOLD) {
+                // Limitar velocidade apenas em quedas grandes
+                player.velocityY = Math.min(player.velocityY, 15);
+            }
+            
+            // Pular se estiver no chão
+            if (keys['ArrowUp'] && !player.jumping) {
+                player.velocityY = -JUMP_FORCE;
+                player.jumping = true;
+            }
+            
+            // Atualizar posição horizontal com colisão
+            let newWorldX = player.x + player.velocityX;
+            
+            // Verificar colisão horizontal
+            const playerTop = Math.floor(player.y / TILE_SIZE);
+            const playerBottom = Math.floor((player.y + player.height - 1) / TILE_SIZE);
+            
+            // Colisão para a direita
+            if (player.velocityX > 0) {
+                const playerRight = Math.floor((newWorldX + player.width) / TILE_SIZE);
+                let collision = false;
+                
+                // Verificar todos os tiles na lateral direita do jogador
+                for (let y = playerTop; y <= playerBottom; y++) {
+                    if (world.isSolid(playerRight, y)) {
+                        collision = true;
+                        break;
+                    }
+                }
+                
+                if (collision) {
+                    newWorldX = playerRight * TILE_SIZE - player.width;
+                }
+            }
+            
+            // Colisão para a esquerda
+            if (player.velocityX < 0) {
+                const playerLeft = Math.floor(newWorldX / TILE_SIZE);
+                let collision = false;
+                
+                // Verificar todos os tiles na lateral esquerda do jogador
+                for (let y = playerTop; y <= playerBottom; y++) {
+                    if (world.isSolid(playerLeft, y)) {
+                        collision = true;
+                        break;
+                    }
+                }
+                
+                if (collision) {
+                    newWorldX = (playerLeft + 1) * TILE_SIZE;
+                }
+            }
+            
+            player.x = newWorldX;
+            
+            // Atualizar posição vertical com colisão
+            let newWorldY = player.y + player.velocityY;
+            
+            const playerLeft = Math.floor(player.x / TILE_SIZE);
+            const playerRight = Math.floor((player.x + player.width - 1) / TILE_SIZE);
+            
+            // Recalcular após movimento horizontal
+            const newPlayerTop = Math.floor(newWorldY / TILE_SIZE);
+            const newPlayerBottom = Math.floor((newWorldY + player.height) / TILE_SIZE);
+            
+            // Colisão com o chão
+            if (player.velocityY > 0) {
+                let floorCollision = false;
+                
+                // Verificar todos os tiles abaixo do jogador
+                for (let x = playerLeft; x <= playerRight; x++) {
+                    if (world.isSolid(x, newPlayerBottom)) {
+                        floorCollision = true;
+                        break;
+                    }
+                }
+                
+                if (floorCollision) {
+                    newWorldY = newPlayerBottom * TILE_SIZE - player.height;
+                    player.velocityY = 0;
+                    player.jumping = false;
+                }
+            }
+            
+            // Colisão com o teto
+            if (player.velocityY < 0) {
+                let ceilingCollision = false;
+                
+                // Verificar todos os tiles acima do jogador
+                for (let x = playerLeft; x <= playerRight; x++) {
+                    if (world.isSolid(x, newPlayerTop)) {
+                        ceilingCollision = true;
+                        break;
+                    }
+                }
+                
+                if (ceilingCollision) {
+                    newWorldY = (newPlayerTop + 1) * TILE_SIZE;
+                    player.velocityY = 0;
+                }
+            }
+            
+            player.y = newWorldY;
+            
+            // Atualizar câmera para seguir o jogador
+            camera.x = player.x - canvas.width / 2 + player.width / 2;
+            camera.y = player.y - canvas.height / 2 + player.height / 2;
+        }
+
+        // Renderizar o mundo visível
+        function renderWorld() {
+            // Calcular chunks visíveis
+            const startChunkX = Math.floor(camera.x / (CHUNK_SIZE * TILE_SIZE)) - 1;
+            const endChunkX = startChunkX + Math.ceil(canvas.width / (CHUNK_SIZE * TILE_SIZE)) + 1;
+            const startChunkY = Math.floor(camera.y / (CHUNK_SIZE * TILE_SIZE)) - 1;
+            const endChunkY = startChunkY + Math.ceil(canvas.height / (CHUNK_SIZE * TILE_SIZE)) + 1;
+            
+            // Desenhar céu degradê
+            const skyGradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+            skyGradient.addColorStop(0, '#87CEEB'); // Azul claro no topo
+            skyGradient.addColorStop(1, '#E0F7FA'); // Azul mais claro embaixo
+            ctx.fillStyle = skyGradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Renderizar blocos visíveis
+            for (let chunkY = startChunkY; chunkY <= endChunkY; chunkY++) {
+                for (let chunkX = startChunkX; chunkX <= endChunkX; chunkX++) {
+                    const chunk = world.getChunk(chunkX, chunkY);
+                    
+                    for (let y = 0; y < CHUNK_SIZE; y++) {
+                        for (let x = 0; x < CHUNK_SIZE; x++) {
+                            const blockType = chunk[y][x];
+                            if (blockType !== 0) { // Não desenha ar (transparente)
+                                const worldX = chunkX * CHUNK_SIZE + x;
+                                const worldY = chunkY * CHUNK_SIZE + y;
+                                const screenX = Math.floor(worldX * TILE_SIZE - camera.x);
+                                const screenY = Math.floor(worldY * TILE_SIZE - camera.y);
+                                
+                                // Só desenhar se estiver na tela
+                                if (screenX > -TILE_SIZE && screenX < canvas.width &&
+                                    screenY > -TILE_SIZE && screenY < canvas.height) {
+                                    
+                                    // Desenhar bloco
+                                    ctx.fillStyle = BLOCK_COLORS[blockType];
+                                    ctx.fillRect(screenX, screenY, TILE_SIZE, TILE_SIZE);
+                                    
+                                    // Adicionar efeito de sombreamento
+                                    if (blockType === 3) { // Grama
+                                        ctx.fillStyle = '#5D8C4A';
+                                        ctx.fillRect(screenX, screenY, TILE_SIZE, 5);
+                                    }
+                                    
+                                    // Desenhar borda dos blocos
+                                    ctx.strokeStyle = 'rgba(0, 0, 0, 0.5)';
+                                    ctx.lineWidth = 1;
+                                    ctx.strokeRect(screenX, screenY, TILE_SIZE, TILE_SIZE);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // Renderizar jogador
+        function renderPlayer() {
+            // Calcular posição na tela
+            const screenX = canvas.width / 2 - player.width / 2;
+            const screenY = canvas.height / 2 - player.height / 2;
+            
+            // Corpo do jogador
+            ctx.fillStyle = player.color;
+            ctx.fillRect(screenX, screenY, player.width, player.height);
+        }
+
+        let mouseInCanvas = false;
+
+        // Adicionar eventos para rastrear quando o mouse entra e sai do canvas
+        canvas.addEventListener('mouseenter', () => {
+            mouseInCanvas = true;
+        });
+
+        canvas.addEventListener('mouseleave', () => {
+            mouseInCanvas = false;
+        });
+
+        // Renderizar cursor
+        function renderCursor() {
+            // Só renderiza o cursor se o mouse estiver dentro do canvas
+            if (mouseInCanvas) {
+                const tileX = Math.floor((mouseX + camera.x) / TILE_SIZE) * TILE_SIZE - camera.x;
+                const tileY = Math.floor((mouseY + camera.y) / TILE_SIZE) * TILE_SIZE - camera.y;
+                
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.7)';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(tileX, tileY, TILE_SIZE, TILE_SIZE);
+            }
+        }
+
+        // Renderizar hitbox do jogador (Debug)
+        function renderPlayerHitbox() {
+            const screenX = canvas.width / 2 - player.width / 2;
+            const screenY = canvas.height / 2 - player.height / 2;
+            
+            ctx.strokeStyle = 'rgba(0, 255, 0, 0.8)';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(screenX, screenY, player.width, player.height);
+        }
+
+        // Inicializar jogador próximo à superfície
+        function initializePlayer() {
+            // Encontrar a superfície
+            let surfaceY = 0;
+            for (let y = 0; y < 30; y++) {
+                if (world.isSolid(0, y)) {
+                    surfaceY = y;
+                    break;
+                }
+            }
+            
+            // Posicionar o jogador acima da superfície
+            player.x = 0;
+            player.y = (surfaceY - 3) * TILE_SIZE;
+        }
+
+        // HUD - Informações na tela
+        function renderHUD() {
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+            ctx.fillRect(5, 5, 205, 32);
+            
+            ctx.font = '12px Arial';
+            ctx.fillStyle = 'white';
+            ctx.fillText(`Posição do Player: (${Math.floor(player.x)}, ${Math.floor(player.y)})`, 10, 25);
+        }
+
+        // Loop principal do jogo
+        function gameLoop() {
+            // Atualizar
+            updatePlayer();
+            
+            // Interação com o mouse
+            if (mouseDown || keys[' ']) {
+                handleMouseInteraction();
+            }
+            
+            // Renderizar
+            renderWorld();
+            // renderHUD();
+            renderPlayer();
+            // renderPlayerHitbox(); // Descomentar para debug da hitbox
+            renderCursor();
+            
+            requestAnimationFrame(gameLoop);
+        }
+
+        // Iniciar jogo
+        initializePlayer();
+        gameLoop();
+    </script>
+</body>
+</html>

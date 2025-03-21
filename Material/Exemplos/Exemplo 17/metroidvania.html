@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title>Metroidvania</title>
+    <style>
+        body {
+            background: #94aed6;
+        }
+        canvas {
+            display: block;
+            margin: 0 auto;
+            border: 2px solid #010c1c;
+            background: #e0edff;
+        }
+        h1 {
+            text-align: center;
+            color: #010c1c;
+        }
+    </style>
+</head>
+<body>
+    <h1>Metroidvania</h1>
+    <canvas id="gameCanvas"></canvas> 
+    <script>
+        // === Configurações Iniciais ===
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const TILE_SIZE = 16;  // Tiles menores: 16x16
+        const SCALE = 2;       // Escala 2x para aumentar a visibilidade
+        const GRAVITY = 0.25;  // Gravidade reduzida para tiles menores
+        const MAX_CANVAS_WIDTH = 400;  // Largura máxima na escala lógica (800px na tela)
+        const MAX_CANVAS_HEIGHT = 300; // Altura máxima na escala lógica (600px na tela)
+
+        // === Estrutura de Dados do Jogo ===
+        const gameData = {
+            maps: {
+                'map1': {
+                    tiles: [
+                        [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+                        [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+                        [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+                        [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+                        [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+                        [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+                        [1,0,0,0,0,0,0,0,0,0,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+                        [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+                        [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+                        [1,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+                        [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+                        [1,0,0,0,0,0,0,0,0,0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+                        [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+                        [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+                        [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+                        [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+                        [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+                        [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+                        [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+                        [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+                        [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+                        [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+                        [1,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+                        [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+                        [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+                        [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+                    ],
+                    portals: [
+                        { destination: 'map2', destX: 2, destY: 7 }
+                    ],
+                    items: [],
+                    enemies: []
+                },
+                'map2': {
+                    tiles: [
+                        [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+                        [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+                        [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+                        [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+                        [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+                        [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+                        [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+                        [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+                        [1,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,2,0,0,0,1],
+                        [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+                    ],
+                    portals: [
+                        { destination: 'map3', destX: 2, destY: 2 }
+                    ],
+                    items: [],
+                    enemies: []
+                },
+                'map3': {
+                    tiles: [
+                        [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+                        [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+                        [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+                        [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,0,0,0,1],
+                        [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+                    ],
+                    portals: [
+                        { destination: 'map1', destX: 2, destY: 15 }
+                    ],
+                    items: [],
+                    enemies: []
+                }
+            }
+        };
+
+        // === Estado do Jogo ===
+        let currentMap = 'map1';
+
+        // Função para ajustar o tamanho do canvas dinamicamente com limite máximo
+        function adjustCanvasSize() {
+            const mapWidth = gameData.maps[currentMap].tiles[0].length * TILE_SIZE;
+            const mapHeight = gameData.maps[currentMap].tiles.length * TILE_SIZE;
+
+            // Definir o tamanho do canvas usando o tamanho do mapa, mas limitando ao máximo
+            canvas.width = Math.min(MAX_CANVAS_WIDTH, mapWidth) * SCALE;
+            canvas.height = Math.min(MAX_CANVAS_HEIGHT, mapHeight) * SCALE;
+
+            // Reaplicar a escala após redimensionar
+            ctx.scale(SCALE, SCALE);
+
+            // Atualizar dimensões do mapa e câmera
+            MAP_WIDTH = mapWidth;
+            MAP_HEIGHT = mapHeight;
+            camera.width = Math.min(MAX_CANVAS_WIDTH, mapWidth);
+            camera.height = Math.min(MAX_CANVAS_HEIGHT, mapHeight);
+        }
+
+        let MAP_WIDTH = gameData.maps[currentMap].tiles[0].length * TILE_SIZE;
+        let MAP_HEIGHT = gameData.maps[currentMap].tiles.length * TILE_SIZE;
+
+        // === Objetos do Jogo ===
+        const player = {
+            x: 40,
+            y: 50,
+            width: 16,
+            height: 16,
+            speed: 2.7,
+            velX: 0,
+            velY: 0,
+            jumping: false
+        };
+
+        const camera = {
+            x: 0,
+            y: 0,
+            width: Math.min(MAX_CANVAS_WIDTH, MAP_WIDTH),  // Inicializado com limite
+            height: Math.min(MAX_CANVAS_HEIGHT, MAP_HEIGHT),
+            follow(target) {
+                let targetX = target.x - this.width / 2;
+                let targetY = target.y - this.height / 2;
+                this.x = Math.max(0, Math.min(targetX, MAP_WIDTH - this.width));
+                this.y = Math.max(0, Math.min(targetY, MAP_HEIGHT - this.height));
+            }
+        };
+
+        // Ajustar o canvas ao iniciar
+        adjustCanvasSize();
+
+        // === Função para Encontrar Posição do Portal ===
+        function findPortalPosition(mapName) {
+            const mapData = gameData.maps[mapName].tiles;
+            for (let y = 0; y < mapData.length; y++) {
+                for (let x = 0; x < mapData[y].length; x++) {
+                    if (mapData[y][x] === 2) {
+                        return { x: x * TILE_SIZE, y: y * TILE_SIZE };
+                    }
+                }
+            }
+            return { x: TILE_SIZE, y: TILE_SIZE }; // Posição padrão se não encontrar
+        }
+
+        // === Controles ===
+        const keys = { left: false, right: false, up: false };
+
+        document.addEventListener('keydown', (e) => {
+            switch(e.key) {
+                case 'ArrowLeft': keys.left = true; break;
+                case 'ArrowRight': keys.right = true; break;
+                case 'ArrowUp': if (!player.jumping) { 
+                    player.velY = -5.5; 
+                    player.jumping = true; 
+                } break;
+            }
+        });
+
+        document.addEventListener('keyup', (e) => {
+            switch(e.key) {
+                case 'ArrowLeft': keys.left = false; break;
+                case 'ArrowRight': keys.right = false; break;
+            }
+        });
+
+        // === Sistema de Colisão ===
+        function checkCollision(rect1, rect2) {
+            return (rect1.x < rect2.x + rect2.width &&
+                    rect1.x + rect1.width > rect2.x &&
+                    rect1.y < rect2.y + rect2.height &&
+                    rect1.y + rect1.height > rect2.y);
+        }
+
+        function resolveCollisions() {
+            const mapData = gameData.maps[currentMap].tiles;
+            let wasOnGround = false;
+
+            // Movimento X
+            player.x += player.velX;
+
+            for (let y = 0; y < mapData.length; y++) {
+                for (let x = 0; x < mapData[y].length; x++) {
+                    if (mapData[y][x] === 1) {
+                        const tile = { x: x * TILE_SIZE, y: y * TILE_SIZE, width: TILE_SIZE, height: TILE_SIZE };
+                        if (checkCollision(player, tile)) {
+                            if (player.velX > 0) {
+                                player.x = tile.x - player.width;
+                            } else if (player.velX < 0) {
+                                player.x = tile.x + tile.width;
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Movimento Y
+            player.y += player.velY;
+
+            for (let y = 0; y < mapData.length; y++) {
+                for (let x = 0; x < mapData[y].length; x++) {
+                    if (mapData[y][x] === 1) {
+                        const tile = { x: x * TILE_SIZE, y: y * TILE_SIZE, width: TILE_SIZE, height: TILE_SIZE };
+                        if (checkCollision(player, tile)) {
+                            if (player.velY > 0) {
+                                player.y = tile.y - player.height;
+                                player.velY = 0;
+                                player.jumping = false;
+                                wasOnGround = true;
+                            } else if (player.velY < 0) {
+                                player.y = tile.y + tile.height;
+                                player.velY = 0;
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Colisão com portais
+            gameData.maps[currentMap].portals.forEach(portal => {
+                const portalPos = findPortalPosition(currentMap);
+                const portalRect = {
+                    x: portalPos.x,
+                    y: portalPos.y,
+                    width: TILE_SIZE,
+                    height: TILE_SIZE
+                };
+                
+                if (checkCollision(player, portalRect)) {
+                    // Transição de mapa
+                    currentMap = portal.destination;
+                    adjustCanvasSize(); // Ajustar o canvas ao mudar de mapa
+                    player.x = portal.destX * TILE_SIZE;
+                    player.y = portal.destY * TILE_SIZE;
+                    player.velX = 0;
+                    player.velY = 0;
+                    camera.follow(player);
+                }
+            });
+
+            if (!wasOnGround && player.velY < 10) {
+                player.velY += GRAVITY;
+            }
+        }
+
+        // === Atualização do Jogo ===
+        function update() {
+            player.velX = 0;
+            if (keys.left) player.velX = -player.speed;
+            if (keys.right) player.velX = player.speed;
+
+            player.x = Math.max(0, Math.min(player.x, MAP_WIDTH - player.width));
+            player.y = Math.max(0, Math.min(player.y, MAP_HEIGHT - player.height));
+
+            resolveCollisions();
+            camera.follow(player);
+        }
+
+        // === Renderização ===
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width / SCALE, canvas.height / SCALE); // Limpar o tamanho lógico do canvas
+            
+            // Arredondar a posição da câmera para evitar lacunas
+            const cameraX = Math.round(camera.x);
+            const cameraY = Math.round(camera.y);
+
+            ctx.save();
+            ctx.translate(-cameraX, -cameraY);
+
+            const mapData = gameData.maps[currentMap].tiles;
+            for (let y = 0; y < mapData.length; y++) {
+                for (let x = 0; x < mapData[y].length; x++) {
+                    if (mapData[y][x] === 1) {
+                        ctx.fillStyle = '#666';
+                        // Arredondar as posições dos tiles para inteiros
+                        ctx.fillRect(Math.round(x * TILE_SIZE), Math.round(y * TILE_SIZE), TILE_SIZE, TILE_SIZE);
+                    }
+                    if (mapData[y][x] === 2) {
+                        ctx.fillStyle = '#00f';
+                        ctx.fillRect(Math.round(x * TILE_SIZE), Math.round(y * TILE_SIZE), TILE_SIZE, TILE_SIZE);
+                    }
+                }
+            }
+
+            // Arredondar a posição do jogador para inteiros
+            ctx.fillStyle = '#f00';
+            ctx.fillRect(Math.round(player.x), Math.round(player.y), player.width, player.height);
+
+            ctx.restore();
+        }
+
+        // === Loop Principal ===
+        function gameLoop() {
+            update();
+            draw();
+            requestAnimationFrame(gameLoop);
+        }
+
+        gameLoop();
+    </script>
+</body>
+</html>

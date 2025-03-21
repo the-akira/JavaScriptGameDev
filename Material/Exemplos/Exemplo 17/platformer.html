@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title>Jogo de Plataforma 2D</title>
+    <style>
+        canvas {
+            border: 2px solid black;
+            display: block;
+            margin: 0 auto;
+            background-color: #333;
+        }
+        body {
+            background-color: #1f1f1f;
+        }
+        h1 {
+            text-align: center;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <h1>Platformer 2D</h1>
+    <canvas id="gameCanvas" width="800" height="400"></canvas>
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Configurações do jogo
+        const GRAVITY = 0.5;
+        const JUMP_FORCE = -12;
+        const MOVEMENT_SPEED = 5;
+        const TILE_SIZE = 32;
+
+        // Definição dos níveis (0 = vazio, 1 = plataforma, 2 = chegada)
+        const levels = [
+            {
+                tiles: [
+                    [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+                    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+                    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+                    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,1],
+                    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,1],
+                    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,1],
+                    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+                    [1,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+                    [1,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+                    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+                    [1,0,0,1,1,0,0,0,1,1,0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+                    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+                    [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+                ],
+                spawnPoint: { x: 32, y: 32 * 11 } // Ponto de spawn do jogador no mapa 1
+            },
+            {
+                tiles: [
+                    [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+                    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+                    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+                    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+                    [1,0,0,0,0,0,0,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+                    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+                    [1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,0,0,0,0,0,0,0,0,0,1],
+                    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+                    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+                    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,1],
+                    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,1],
+                    [1,0,0,1,1,0,0,0,0,0,0,0,0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,1],
+                    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+                    [1,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+                    [1,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+                    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,1],
+                    [1,0,0,1,1,0,0,0,1,1,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+                    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,1],
+                    [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+                ],
+                spawnPoint: { x: 32, y: 32 } // Ponto de spawn do jogador no mapa 2
+            }
+        ];
+
+        // Jogador
+        let currentLevel = 0;
+        const player = {
+            x: levels[currentLevel].spawnPoint.x,
+            y: levels[currentLevel].spawnPoint.y,
+            width: 32,
+            height: 32,
+            velX: 0,
+            velY: 0,
+            jumping: false,
+            grounded: false
+        };
+
+        // Câmera
+        const camera = {
+            x: 0,
+            y: 0
+        };
+
+        // Controles
+        const keys = {};
+        document.addEventListener('keydown', (e) => keys[e.key] = true);
+        document.addEventListener('keyup', (e) => keys[e.key] = false);
+
+        function drawLevel() {
+            const level = levels[currentLevel].tiles; // Acessar os tiles do nível atual
+            for (let row = 0; row < level.length; row++) {
+                for (let col = 0; col < level[row].length; col++) {
+                    const tile = level[row][col];
+                    const x = Math.round(col * TILE_SIZE - camera.x);
+                    const y = Math.round(row * TILE_SIZE - camera.y);
+
+                    if (tile === 1) {
+                        ctx.fillStyle = '#666';
+                        ctx.fillRect(x, y, TILE_SIZE, TILE_SIZE);
+                    } else if (tile === 2) {
+                        ctx.fillStyle = '#0f0';
+                        ctx.fillRect(x, y, TILE_SIZE, TILE_SIZE);
+                    }
+                }
+            }
+        }
+
+        function getTileAt(x, y) {
+            const level = levels[currentLevel].tiles; // Acessar os tiles do nível atual
+            const col = Math.floor(x / TILE_SIZE);
+            const row = Math.floor(y / TILE_SIZE);
+            
+            if (row >= 0 && row < level.length && col >= 0 && col < level[0].length) {
+                return level[row][col];
+            }
+            return 1; // Tratar área fora do mapa como sólida
+        }
+
+        function checkCollision(x, y, width, height) {
+            // Verificar os quatro cantos e pontos intermediários
+            const points = [
+                { x: x, y: y }, // Topo esquerdo
+                { x: x + width - 1, y: y }, // Topo direito
+                { x: x, y: y + height - 1 }, // Baixo esquerdo
+                { x: x + width - 1, y: y + height - 1 }, // Baixo direito
+                { x: x + width / 2, y: y }, // Meio topo
+                { x: x + width / 2, y: y + height - 1 }, // Meio baixo
+                { x: x, y: y + height / 2 }, // Meio esquerdo
+                { x: x + width - 1, y: y + height / 2 } // Meio direito
+            ];
+
+            for (const point of points) {
+                const tile = getTileAt(point.x, point.y);
+                if (tile === 2) return 'finish'; // Colisão com o portal
+                if (tile === 1) return 'solid'; // Colisão com tile sólido
+            }
+
+            return false; // Sem colisão
+        }
+
+        function updatePlayer() {
+            // Movimento horizontal
+            if (keys['ArrowRight']) player.velX = MOVEMENT_SPEED;
+            else if (keys['ArrowLeft']) player.velX = -MOVEMENT_SPEED;
+            else player.velX = 0;
+
+            // Reset do estado no chão para nova verificação
+            player.grounded = false;
+            
+            // Verificar se está no chão (antes de pular)
+            const onGroundTest = checkCollision(player.x, player.y + 1, player.width, player.height);
+            if (onGroundTest === 'solid') {
+                player.grounded = true;
+                player.jumping = false;
+            }
+
+            // Pulo - só permite pular se estiver no chão
+            if (keys['ArrowUp'] && player.grounded) {
+                player.velY = JUMP_FORCE;
+                player.jumping = true;
+                player.grounded = false;
+            }
+
+            // Aplicar gravidade apenas se não estiver no chão ou estiver pulando
+            if (!player.grounded || player.jumping) {
+                player.velY += GRAVITY;
+            } else {
+                player.velY = 0; // Zerar a velocidade vertical quando no chão
+            }
+
+            // Movimento horizontal com verificação de colisão mais precisa
+            const newX = player.x + player.velX;
+            const horizontalCollision = checkCollision(newX, player.y, player.width, player.height);
+            if (horizontalCollision !== 'solid') {
+                player.x = newX;
+            } else {
+                // Ajuste fino para encostar na parede
+                if (player.velX > 0) {
+                    player.x = Math.floor((newX + player.width) / TILE_SIZE) * TILE_SIZE - player.width;
+                } else if (player.velX < 0) {
+                    player.x = Math.ceil(newX / TILE_SIZE) * TILE_SIZE;
+                }
+                player.velX = 0; // Zerar a velocidade horizontal ao colidir
+            }
+
+            // Movimento vertical com verificação de colisão mais precisa
+            const newY = player.y + player.velY;
+            const verticalCollision = checkCollision(player.x, newY, player.width, player.height);
+            if (verticalCollision !== 'solid') {
+                player.y = newY;
+            } else {
+                if (player.velY > 0) {
+                    // Ajuste fino para encostar no chão
+                    player.y = Math.floor((newY + player.height) / TILE_SIZE) * TILE_SIZE - player.height;
+                    player.grounded = true;
+                    player.jumping = false;
+                } else if (player.velY < 0) {
+                    // Ajuste fino para encostar no teto
+                    player.y = Math.ceil(newY / TILE_SIZE) * TILE_SIZE;
+                }
+                player.velY = 0; // Zerar a velocidade vertical ao colidir
+            }
+
+            // Verificar colisão com o portal após o movimento
+            const portalCollision = checkCollision(player.x, player.y, player.width, player.height);
+            if (portalCollision === 'finish') {
+                currentLevel++;
+                if (currentLevel >= levels.length) {
+                    currentLevel = 0;
+                }
+
+                // Posicionar o jogador no spawnPoint do novo nível
+                const spawnPoint = levels[currentLevel].spawnPoint;
+                player.x = spawnPoint.x;
+                player.y = spawnPoint.y;
+
+                player.velY = 0;
+                player.jumping = false;
+                return;
+            }
+
+            // Atualizar câmera
+            camera.x = player.x - canvas.width / 2 + player.width / 2;
+            camera.y = player.y - canvas.height / 2 + player.height / 2;
+
+            // Limitar câmera aos limites do nível
+            camera.x = Math.max(0, Math.min(camera.x, levels[currentLevel].tiles[0].length * TILE_SIZE - canvas.width));
+            camera.y = Math.max(0, Math.min(camera.y, levels[currentLevel].tiles.length * TILE_SIZE - canvas.height));
+        }
+
+        function drawHUD() {
+            ctx.fillStyle = 'white';
+            ctx.font = '12px Arial';
+            ctx.fillText(`Grounded: ${player.grounded}, Jumping: ${player.jumping}, Y-vel: ${player.velY.toFixed(2)}`, 10, 20);
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Desenhar nível
+            drawLevel();
+            
+            // Desenhar jogador
+            ctx.fillStyle = '#f00';
+            ctx.fillRect(
+                player.x - camera.x,
+                player.y - camera.y,
+                player.width,
+                player.height
+            );
+            
+            // Opcional: mostrar estado de depuração
+            drawHUD();
+        }
+
+        function gameLoop() {
+            updatePlayer();
+            draw();
+            requestAnimationFrame(gameLoop);
+        }
+
+        gameLoop();
+    </script>
+</body>
+</html>

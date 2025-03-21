@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Metroidvania</title>
+    <style>
+        body {
+            background-color: #000;
+        }
+        canvas {
+            display: block;
+            margin: 0 auto;
+            background-color: #111;
+            image-rendering: pixelated;
+            border: 2px solid #bababa;
+        }
+        h1 {
+            color: #d6d6d6;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <h1>Metroidvania</h1>
+    <canvas id="gameCanvas"></canvas>
+    <script>
+        // ==================== CONFIGURAÇÕES PRINCIPAIS ====================
+        const CANVAS_WIDTH = 800;
+        const CANVAS_HEIGHT = 600;
+        const TILE_SIZE = 32;
+        const PLAYER_SIZE = 32;
+        const GRAVITY = 0.5;
+        const JUMP_FORCE = 12;
+        const PLAYER_SPEED = 5;
+
+        // ==================== INICIALIZAÇÃO DO CANVAS ====================
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = CANVAS_WIDTH;
+        canvas.height = CANVAS_HEIGHT;
+
+        // ==================== MAPAS ====================
+        const map1Grid = [
+            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 0, 0, 0, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+        ];
+
+        const map2Grid = [
+            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+        ];
+
+        const map3Grid = [
+            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+        ];
+
+        const mapTransitions = {
+            map1: {
+                right: { targetMapId: 'map2', exitPosition: { x: 0, y: map2Grid.length - 2 } },
+                bottom: { targetMapId: 'map3', exitPosition: { x: 0, y: 0 } } 
+            },
+            map2: {
+                left: { targetMapId: 'map1', exitPosition: { x: map1Grid[0].length - 1, y: map1Grid.length - 2 } },
+                right: { targetMapId: 'map3', exitPosition: { x: 0, y: map3Grid.length - 2 } }
+            },
+            map3: {
+                left: { targetMapId: 'map2', exitPosition: { x: map2Grid[0].length - 1, y: map2Grid.length - 2 } },
+                top: { targetMapId: 'map1', exitPosition: { x: 0, y: 17 } } 
+            }
+        };
+
+        // ==================== CLASSE DE CÂMERA ====================
+        class Camera {
+            constructor(width, height) {
+                this.x = 0;
+                this.y = 0;
+                this.width = width;
+                this.height = height;
+                this.target = null;
+                this.boundLeft = 0;
+                this.boundRight = 0;
+                this.boundTop = 0;
+                this.boundBottom = 0;
+                this.lerp = 0.1; // Suavização da câmera
+            }
+
+            setTarget(entity) {
+                this.target = entity;
+            }
+
+            setBounds(map) {
+                this.boundLeft = 0;
+                this.boundRight = map.width * TILE_SIZE - this.width;
+                this.boundTop = 0;
+                this.boundBottom = map.height * TILE_SIZE - this.height;
+            }
+
+            update() {
+                if (!this.target) return;
+
+                // Posição alvo (centro da câmera no jogador)
+                const targetX = this.target.x + this.target.width / 2 - this.width / 2;
+                const targetY = this.target.y + this.target.height / 2 - this.height / 2;
+
+                // Interpolação linear para suavizar o movimento da câmera
+                this.x += (targetX - this.x) * this.lerp;
+                this.y += (targetY - this.y) * this.lerp;
+
+                // Limitar a câmera dentro dos limites do mapa
+                this.x = Math.max(this.boundLeft, Math.min(this.x, this.boundRight));
+                this.y = Math.max(this.boundTop, Math.min(this.y, this.boundBottom));
+            }
+
+            transform(ctx) {
+                ctx.translate(-Math.floor(this.x), -Math.floor(this.y));
+            }
+        }
+
+        // ==================== CLASSE DE ENTIDADE BÁSICA ====================
+        class Entity {
+            constructor(x, y, width, height, color = '#fff') {
+                this.x = x;
+                this.y = y;
+                this.width = width;
+                this.height = height;
+                this.color = color;
+                this.velocityX = 0;
+                this.velocityY = 0;
+                this.isGrounded = false; // Indica se o jogador está no chão
+            }
+
+            isOnGround(map) {
+                const bottomTile = Math.floor((this.y + this.height) / TILE_SIZE);
+                const leftTile = Math.floor(this.x / TILE_SIZE);
+                const rightTile = Math.floor((this.x + this.width - 1) / TILE_SIZE);
+
+                if (bottomTile >= 0 && bottomTile < map.height) {
+                    for (let x = leftTile; x <= rightTile; x++) {
+                        if (x >= 0 && x < map.width && map.tiles[bottomTile][x] === 1) {
+                            // Verifica se o jogador está realmente no chão
+                            const playerBottom = this.y + this.height;
+                            const tileTop = bottomTile * TILE_SIZE;
+                            if (playerBottom <= tileTop + this.velocityY) {
+                                return true;
+                            }
+                        }
+                    }
+                }
+                return false;
+            }
+
+            update(map) {
+                // Movimento horizontal
+                this.x += this.velocityX;
+                const horizontalCollision = this.checkCollisionWithMap(map);
+                if (horizontalCollision) {
+                    if (this.velocityX > 0) {
+                        this.x = horizontalCollision.x * TILE_SIZE - this.width;
+                    } else if (this.velocityX < 0) {
+                        this.x = (horizontalCollision.x + 1) * TILE_SIZE;
+                    }
+                    this.velocityX = 0;
+                }
+
+                // Verifica se o jogador está no chão antes de aplicar gravidade
+                const wasGrounded = this.isGrounded; // Salva o estado anterior
+                this.isGrounded = this.isOnGround(map);
+
+                // Aplica gravidade apenas se não estiver no chão
+                if (!this.isGrounded) {
+                    this.velocityY += GRAVITY;
+                }
+                this.y += this.velocityY;
+
+                // Verifica colisão vertical
+                const verticalCollision = this.checkCollisionWithMap(map);
+                if (verticalCollision) {
+                    if (this.velocityY > 0) {
+                        this.y = verticalCollision.y * TILE_SIZE - this.height;
+                        this.isGrounded = true;
+                        this.velocityY = 0;
+                    } else if (this.velocityY < 0) {
+                        this.y = (verticalCollision.y + 1) * TILE_SIZE;
+                        this.velocityY = 0;
+                    }
+                }
+
+                // Reseta o contador de pulos apenas se o jogador acabou de tocar o chão
+                if (this.isGrounded && !wasGrounded) {
+                    this.jumpCount = 0; // Reseta o contador de pulos
+                }
+
+                return null;
+            }
+
+            checkCollisionWithMap(map) {
+                // Verifica colisão com tiles sólidos
+                const leftTile = Math.floor(this.x / TILE_SIZE);
+                const rightTile = Math.floor((this.x + this.width - 1) / TILE_SIZE);
+                const topTile = Math.floor(this.y / TILE_SIZE);
+                const bottomTile = Math.floor((this.y + this.height - 1) / TILE_SIZE);
+
+                for (let y = topTile; y <= bottomTile; y++) {
+                    for (let x = leftTile; x <= rightTile; x++) {
+                        if (y >= 0 && y < map.height && x >= 0 && x < map.width) {
+                            if (map.tiles[y][x] === 1) {
+                                return { x, y }; // Retorna a posição do tile colidido
+                            }
+                        }
+                    }
+                }
+
+                return null; // Sem colisão
+            }
+
+            draw(ctx) {
+                // Desenha a entidade
+                ctx.fillStyle = this.color;
+                ctx.fillRect(this.x, this.y, this.width, this.height);
+            }
+        }
+
+        const elevatorConfigs = {
+            map1: { minY: 4 * TILE_SIZE, maxY: 11 * TILE_SIZE, speed: 1.6 }, 
+            map2: { minY: 2 * TILE_SIZE, maxY: 15 * TILE_SIZE, speed: 1 },  
+            map3: { minY: 5 * TILE_SIZE, maxY: 16 * TILE_SIZE, speed: 2 } 
+        };
+
+        // ==================== CLASSE DO ELEVADOR ====================
+        class Elevator extends Entity {
+            constructor(x, y, minY, maxY, speed) {
+                super(x, y, TILE_SIZE, TILE_SIZE, '#ff9900');
+                this.minY = minY;
+                this.maxY = maxY;
+                this.speed = speed;
+                this.direction = 1;
+                this.previousY = y;
+                this.carryingPlayer = false;
+            }
+
+            update(map) {
+                const player = game.player;
+                
+                // Salvar posição anterior
+                this.previousY = this.y;
+                const wasCarryingPlayer = this.carryingPlayer;
+                this.carryingPlayer = false;
+                
+                // Mover o elevador
+                this.y += this.speed * this.direction;
+                
+                // Verificar limites e mudar direção se necessário
+                if (this.y <= this.minY) {
+                    this.y = this.minY;
+                    this.direction = 1; // Desce
+                } else if (this.y + this.height >= this.maxY) {
+                    this.y = this.maxY - this.height;
+                    this.direction = -1; // Sobe
+                }
+                
+                // Verificar se o jogador estava em cima do elevador no frame anterior
+                if (wasCarryingPlayer && 
+                    player.x + player.width > this.x && 
+                    player.x < this.x + this.width &&
+                    Math.abs((player.y + player.height) - this.y) < 5) {
+                    
+                    player.y = this.y - player.height;
+                    player.velocityY = 0;
+                    player.isGrounded = true;
+                    this.carryingPlayer = true;
+                    return; // Importante: retornar aqui para evitar outras verificações
+                }
+                
+                // Verificar se o jogador está tentando pousar no elevador
+                const playerIsFalling = player.velocityY > 0;
+                const playerBottomY = player.y + player.height;
+                const playerIsAboveElevator = playerBottomY <= this.y + 20; // Tolerância de 20 pixels
+                const playerIsOverElevatorHorizontally = player.x + player.width > this.x && player.x < this.x + this.width;
+                
+                // Verificar colisão com o jogador
+                if (this.isCollidingWith(player)) {
+                    // Calcular sobreposições em todas as direções
+                    const overlapTop = player.y + player.height - this.y;
+                    const overlapBottom = this.y + this.height - player.y;
+                    const overlapLeft = player.x + player.width - this.x;
+                    const overlapRight = this.x + this.width - player.x;
+                    
+                    // Priorizar colisão superior quando o jogador está caindo e está acima do elevador
+                    if (playerIsFalling && playerIsAboveElevator && overlapTop < 20) {
+                        player.y = this.y - player.height;
+                        player.velocityY = 0;
+                        player.isGrounded = true;
+                        this.carryingPlayer = true;
+                    }
+                    // Priorizar colisão inferior quando o jogador está se movendo para cima
+                    else if (overlapBottom < 20 && player.velocityY < 0) {
+                        player.y = this.y + this.height;
+                        player.velocityY = Math.max(0, player.velocityY);
+                    } 
+                    else {
+                        // Determinar a menor sobreposição para outros casos
+                        // Priorizar colisão topo/fundo se o jogador está mais centralizado horizontalmente
+                        const horizontalCenter = Math.abs((player.x + player.width/2) - (this.x + this.width/2));
+                        const isNearHorizontalCenter = horizontalCenter < this.width * 0.4; // 40% do centro
+                        
+                        if (isNearHorizontalCenter && Math.min(overlapTop, overlapBottom) <= Math.min(overlapLeft, overlapRight) * 1.2) {
+                            // Priorizar colisões verticais quando perto do centro
+                            if (overlapTop <= overlapBottom) {
+                                player.y = this.y - player.height;
+                                player.velocityY = 0;
+                                player.isGrounded = true;
+                                this.carryingPlayer = true;
+                            } else {
+                                player.y = this.y + this.height;
+                                player.velocityY = Math.max(0, player.velocityY);
+                            }
+                        } else {
+                            // Priorizar colisão com base na menor sobreposição
+                            const minOverlap = Math.min(overlapTop, overlapBottom, overlapLeft, overlapRight);
+                            
+                            if (minOverlap === overlapTop) {
+                                player.y = this.y - player.height;
+                                player.velocityY = 0;
+                                player.isGrounded = true;
+                                this.carryingPlayer = true;
+                            } else if (minOverlap === overlapBottom) {
+                                player.y = this.y + this.height;
+                                player.velocityY = Math.max(0, player.velocityY);
+                            } else if (minOverlap === overlapLeft) {
+                                player.x = this.x - player.width;
+                                player.velocityX = Math.min(0, player.velocityX);
+                            } else if (minOverlap === overlapRight) {
+                                player.x = this.x + this.width;
+                                player.velocityX = Math.max(0, player.velocityX);
+                            }
+                        }
+                    }
+                } else {
+                    // Verificar se o jogador está quase em cima do elevador (caso não tenha sido detectado por colisão)
+                    if (playerIsFalling && 
+                        playerIsOverElevatorHorizontally &&
+                        Math.abs(playerBottomY - this.y) < 5) {
+                        
+                        player.y = this.y - player.height;
+                        player.velocityY = 0;
+                        player.isGrounded = true;
+                        this.carryingPlayer = true;
+                    }
+                }
+            }
+
+            isCollidingWith(entity) {
+                return (
+                    entity.x < this.x + this.width &&
+                    entity.x + entity.width > this.x &&
+                    entity.y < this.y + this.height &&
+                    entity.y + entity.height > this.y
+                );
+            }
+
+            draw(ctx) {
+                ctx.fillStyle = this.color;
+                ctx.fillRect(this.x, this.y, this.width, this.height);
+                ctx.strokeStyle = '#fff';
+                ctx.strokeRect(this.x, this.y, this.width, this.height);
+            }
+        }
+
+        // ==================== CLASSE DE JOGADOR ====================
+        class Player extends Entity {
+            constructor(x, y) {
+                super(x, y, PLAYER_SIZE, PLAYER_SIZE, '#3498db');
+                this.facingRight = true;
+                this.health = 100;
+                this.maxHealth = 100;
+                this.inventory = [];
+                this.jumpCount = 0; // Contador de pulos
+                this.maxJumpCount = 2; // Número máximo de pulos (2 para pulo duplo)
+                this.hasDoubleJump = true; // Habilidade de pulo duplo ativada
+                this.canJump = true; // Controla se o jogador pode pular
+                this.wasGrounded = false; // Armazena o estado anterior de isGrounded
+            }
+
+            update(map, keys) {
+                // Controles de movimento
+                this.velocityX = 0;
+                if (keys.ArrowLeft) {
+                    this.velocityX = -PLAYER_SPEED;
+                    this.facingRight = false;
+                }
+                if (keys.ArrowRight) {
+                    this.velocityX = PLAYER_SPEED;
+                    this.facingRight = true;
+                }
+
+                // Lógica de pulo
+                if (keys.ArrowUp && this.canJump) {
+                    // Verifica se o jogador está no chão ou pode realizar um pulo duplo
+                    if (this.isGrounded || (this.hasDoubleJump && this.jumpCount < this.maxJumpCount)) {
+                        this.velocityY = -JUMP_FORCE; // Aplica a força do pulo
+                        this.jumpCount++; // Incrementa o contador de pulos
+                        this.canJump = false; // Impede que o jogador pule novamente até que a tecla seja solta
+                    }
+                }
+
+                // Permite que o jogador pule novamente quando a tecla ArrowUp for solta
+                if (!keys.ArrowUp) {
+                    this.canJump = true;
+                }
+
+                // Reseta o contador de pulos quando o jogador toca o chão
+                if (this.isGrounded) {
+                    this.jumpCount = 0;
+                    this.canJump = true;
+
+                    // Se o botão de pular ainda estiver pressionado, o jogador pula novamente
+                    if (keys.ArrowUp && this.canJump) {
+                        this.velocityY = -JUMP_FORCE; // Aplica a força do pulo
+                        this.jumpCount++; // Incrementa o contador de pulos
+                        this.canJump = false; // Impede que o jogador pule novamente até que a tecla seja solta
+                    }
+                }
+
+                // Atualiza a posição e verifica colisões
+                super.update(map);
+            }
+
+            draw(ctx) {
+                // Desenhar jogador
+                ctx.fillStyle = this.isDashing ? '#1abc9c' : this.color;
+                ctx.fillRect(this.x, this.y, this.width, this.height);
+
+                // Desenhar olhos para indicar direção
+                ctx.fillStyle = '#fff';
+                if (this.facingRight) {
+                    ctx.fillRect(this.x + this.width - 10, this.y + 8, 5, 5);
+                } else {
+                    ctx.fillRect(this.x + 5, this.y + 8, 5, 5);
+                }
+            }
+
+            drawHUD(ctx, camera) {
+                // Resetar transformação da câmera para desenhar na tela
+                ctx.setTransform(1, 0, 0, 1, 0, 0);
+
+                // Desenhar barra de vida
+                ctx.fillStyle = '#333';
+                ctx.fillRect(10, 10, 200, 20);
+                ctx.fillStyle = '#e74c3c';
+                ctx.fillRect(10, 10, (this.health / this.maxHealth) * 200, 20);
+                ctx.strokeStyle = '#fff';
+                ctx.strokeRect(10, 10, 200, 20);
+
+                // Desenhar texto de vida
+                ctx.fillStyle = '#fff';
+                ctx.font = '14px Arial';
+                ctx.fillText(`HP: ${this.health}/${this.maxHealth}`, 15, 25);
+                
+                // Informação sobre o mapa atual
+                ctx.fillText(`Mapa: ${game.mapManager.currentMapId}`, 10, 50);
+
+                // Restaurar transformação da câmera
+                camera.transform(ctx);
+            }
+        }
+
+        // ==================== CLASSE DE MAPA ====================
+        class GameMap {
+            constructor(id, width, height) {
+                this.id = id;
+                this.width = width;
+                this.height = height;
+                this.tiles = Array(height).fill().map(() => Array(width).fill(0));
+                this.entities = [];
+                this.backgroundColor = '#000';
+
+                this.leftMapId = null; // ID do mapa à esquerda
+                this.rightMapId = null; // ID do mapa à direita
+                this.topMapId = null; // ID do mapa acima
+                this.bottomMapId = null; // ID do mapa abaixo
+                this.leftExitPosition = { x: 0, y: 0 }; // Posição de saída no mapa à esquerda
+                this.rightExitPosition = { x: 0, y: 0 }; // Posição de saída no mapa à direita
+                this.topExitPosition = { x: 0, y: 0 }; // Posição de saída no mapa acima
+                this.bottomExitPosition = { x: 0, y: 0 }; // Posição de saída no mapa abaixo
+            }
+
+            // Novo método para inicializar tiles e entidades a partir da grid
+            initializeFromGrid(grid, elevatorConfig) {
+                this.tiles = grid.map(row => [...row]); // Copia a grid
+                if (!elevatorConfig) return; // Não cria elevadores se não houver configuração
+
+                for (let y = 0; y < this.height; y++) {
+                    for (let x = 0; x < this.width; x++) {
+                        if (grid[y][x] === 2) {
+                            const elevator = new Elevator(
+                                x * TILE_SIZE,    // Posição x da grid
+                                y * TILE_SIZE,    // Posição y da grid
+                                elevatorConfig.minY,  // Limite superior do mapa
+                                elevatorConfig.maxY,  // Limite inferior do mapa
+                                elevatorConfig.speed  // Velocidade do mapa
+                            );
+                            this.entities.push(elevator);
+                            this.tiles[y][x] = 0; // Remove o marcador da grid
+                        }
+                    }
+                }
+            }
+
+            draw(ctx) {
+                // Desenhar background
+                ctx.fillStyle = this.backgroundColor;
+                ctx.fillRect(0, 0, this.width * TILE_SIZE, this.height * TILE_SIZE);
+
+                // Desenhar tiles
+                for (let y = 0; y < this.height; y++) {
+                    for (let x = 0; x < this.width; x++) {
+                        const tile = this.tiles[y][x];
+                        if (tile === 1) {
+                            ctx.fillStyle = '#555';
+                            ctx.fillRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+                            
+                            // Borda do tile para melhor visualização
+                            ctx.strokeStyle = '#777';
+                            ctx.strokeRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+                        }
+                    }
+                }
+
+                // Desenhar entidades
+                for (const entity of this.entities) {
+                    entity.draw(ctx);
+                }
+            }
+        }
+
+        // ==================== GERENCIADOR DE MAPAS ====================
+        class MapManager {
+            constructor() {
+                this.maps = {};
+                this.currentMapId = null;
+            }
+
+            addMap(map) {
+                this.maps[map.id] = map;
+            }
+
+            getCurrentMap() {
+                return this.maps[this.currentMapId];
+            }
+
+            changeMap(mapId) {
+                if (this.maps[mapId]) {
+                    this.currentMapId = mapId;
+                    return true;
+                }
+                return false;
+            }
+        }
+
+        // ==================== CONTROLES DE TECLADO ====================
+        class InputHandler {
+            constructor() {
+                this.keys = {
+                    ArrowUp: false,
+                    ArrowDown: false,
+                    ArrowLeft: false,
+                    ArrowRight: false,
+                    KeyX: false,
+                    KeyZ: false,
+                    KeyC: false,
+                    Space: false,
+                    Escape: false
+                };
+
+                window.addEventListener('keydown', (e) => {
+                    if (this.keys.hasOwnProperty(e.code)) {
+                        this.keys[e.code] = true;
+                    }
+                });
+
+                window.addEventListener('keyup', (e) => {
+                    if (this.keys.hasOwnProperty(e.code)) {
+                        this.keys[e.code] = false;
+                    }
+                });
+            }
+        }
+
+        // ==================== CLASSE PRINCIPAL DO JOGO ====================
+        class Game {
+            constructor() {
+                this.camera = new Camera(CANVAS_WIDTH, CANVAS_HEIGHT);
+                this.player = new Player(100, 100);
+                this.mapManager = new MapManager();
+                this.input = new InputHandler();
+                this.isTransitioning = false;
+                this.transitionTimer = 0;
+                this.transitionDuration = 30;
+                this.nextMapId = null;
+                this.nextPlayerX = 0;
+                this.nextPlayerY = 0;
+                this.fadeAlpha = 0;
+                this.portalUsed = null;
+                this.debug = false; // Mostrar informações de debug
+                
+                // Inicializar mapas
+                this.setupMaps();
+                
+                // Configurar câmera para seguir o jogador
+                this.camera.setTarget(this.player);
+                this.camera.setBounds(this.mapManager.getCurrentMap());
+            }
+
+            setupMaps() {
+                // Criar mapa 1 (inicial)
+                const map1 = new GameMap('map1', map1Grid[0].length, map1Grid.length);
+                map1.backgroundColor = '#111';
+                map1.tiles = map1Grid;
+                map1.initializeFromGrid(map1Grid, elevatorConfigs.map1);
+
+                // Criar mapa 2
+                const map2 = new GameMap('map2', map2Grid[0].length, map2Grid.length);
+                map2.backgroundColor = '#0a0a20';
+                map2.tiles = map2Grid;
+                map2.initializeFromGrid(map2Grid, elevatorConfigs.map2);
+
+                // Criar mapa 3
+                const map3 = new GameMap('map3', map3Grid[0].length, map3Grid.length);
+                map3.backgroundColor = '#011406';
+                map3.tiles = map3Grid;
+                map3.initializeFromGrid(map3Grid, elevatorConfigs.map3);
+
+                // Configurar transições usando a estrutura de dados
+                this.configureMapTransitions(map1, mapTransitions.map1);
+                this.configureMapTransitions(map2, mapTransitions.map2);
+                this.configureMapTransitions(map3, mapTransitions.map3);
+
+                // Adicionar mapas ao gerenciador
+                this.mapManager.addMap(map1);
+                this.mapManager.addMap(map2);
+                this.mapManager.addMap(map3);
+
+                // Definir mapa inicial
+                this.mapManager.changeMap('map1');
+            }
+
+            configureMapTransitions(map, transitions) {
+                if (transitions.left) {
+                    map.leftMapId = transitions.left.targetMapId;
+                    map.leftExitPosition = transitions.left.exitPosition;
+                }
+                if (transitions.right) {
+                    map.rightMapId = transitions.right.targetMapId;
+                    map.rightExitPosition = transitions.right.exitPosition;
+                }
+                if (transitions.top) {
+                    map.topMapId = transitions.top.targetMapId;
+                    map.topExitPosition = { x: 0, y: transitions.top.exitPosition.y }; // Ignora a posição x
+                }
+                if (transitions.bottom) {
+                    map.bottomMapId = transitions.bottom.targetMapId;
+                    map.bottomExitPosition = { x: 0, y: transitions.bottom.exitPosition.y }; // Ignora a posição x
+                }
+            }
+
+            update() {
+                // Verificar se o jogador está saindo do mapa pela esquerda, direita, cima ou baixo
+                const currentMap = this.mapManager.getCurrentMap();
+                const mapWidth = currentMap.width * TILE_SIZE;
+                const mapHeight = currentMap.height * TILE_SIZE;
+
+                if (this.player.x < 0 && currentMap.leftMapId) {
+                    // Jogador está saindo pela esquerda
+                    this.mapManager.changeMap(currentMap.leftMapId);
+                    this.player.x = currentMap.leftExitPosition.x * TILE_SIZE;
+                    this.player.y = currentMap.leftExitPosition.y * TILE_SIZE;
+                    this.camera.x = this.player.x + this.player.width / 2 - this.camera.width / 2; 
+                    this.camera.y = this.player.y + this.player.height / 2 - this.camera.height / 2;
+                    this.camera.setBounds(this.mapManager.getCurrentMap());
+                } else if (this.player.x + this.player.width > mapWidth && currentMap.rightMapId) {
+                    // Jogador está saindo pela direita
+                    this.mapManager.changeMap(currentMap.rightMapId);
+                    this.player.x = currentMap.rightExitPosition.x * TILE_SIZE;
+                    this.player.y = currentMap.rightExitPosition.y * TILE_SIZE;
+                    this.camera.x = this.player.x + this.player.width / 2 - this.camera.width / 2; 
+                    this.camera.y = this.player.y + this.player.height / 2 - this.camera.height / 2;
+                    this.camera.setBounds(this.mapManager.getCurrentMap());
+                } else if (this.player.y < 0 && currentMap.topMapId) {
+                    // Jogador está saindo por cima
+                    this.mapManager.changeMap(currentMap.topMapId);
+                    // Mantém a posição x do jogador
+                    this.player.x = this.player.x; // Mantém o x atual
+                    // Reposiciona o jogador na parte inferior do novo mapa
+                    this.player.y = (currentMap.topExitPosition.y * TILE_SIZE) - this.player.height;
+                    this.camera.x = this.player.x + this.player.width / 2 - this.camera.width / 2; 
+                    this.camera.y = this.player.y + this.player.height / 2 - this.camera.height / 2;
+                    this.camera.setBounds(this.mapManager.getCurrentMap());
+                } else if (this.player.y + this.player.height > mapHeight && currentMap.bottomMapId) {
+                    // Jogador está saindo por baixo
+                    this.mapManager.changeMap(currentMap.bottomMapId);
+                    // Mantém a posição x do jogador
+                    this.player.x = this.player.x; // Mantém o x atual
+                    // Reposiciona o jogador na parte superior do novo mapa
+                    this.player.y = currentMap.bottomExitPosition.y * TILE_SIZE;
+                    this.camera.x = this.player.x + this.player.width / 2 - this.camera.width / 2; 
+                    this.camera.y = this.player.y + this.player.height / 2 - this.camera.height / 2;
+                    this.camera.setBounds(this.mapManager.getCurrentMap());
+                }
+
+                // Atualizar jogador e verificar colisão com portais
+                this.player.update(this.mapManager.getCurrentMap(), this.input.keys);
+
+                for (const entity of currentMap.entities) {
+                    entity.update(currentMap);
+                }
+
+                // Atualizar câmera
+                this.camera.update();
+            }
+
+            draw() {
+                // Limpar canvas
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                // Aplicar transformação da câmera
+                ctx.save();
+                this.camera.transform(ctx);
+                
+                // Desenhar mapa atual
+                this.mapManager.getCurrentMap().draw(ctx);
+                
+                // Desenhar jogador
+                this.player.draw(ctx);
+                
+                // Restaurar contexto
+                ctx.restore();
+                
+                // Desenhar HUD
+                this.player.drawHUD(ctx, this.camera);
+                
+                // Informações de debug
+                if (this.debug) {
+                    ctx.fillStyle = '#fff';
+                    ctx.font = '12px Arial';
+                    ctx.fillText(`Pos: (${Math.floor(this.player.x)}, ${Math.floor(this.player.y)})`, 10, CANVAS_HEIGHT - 10);
+                    ctx.fillText(`Velocidade: (${this.player.velocityX.toFixed(1)}, ${this.player.velocityY.toFixed(1)})`, 10, CANVAS_HEIGHT - 30);
+                    ctx.fillText(`No chão: ${this.player.isGrounded ? 'Sim' : 'Não'}`, 10, CANVAS_HEIGHT - 50);
+                    ctx.fillText(`Mapa: ${this.mapManager.currentMapId}`, 10, CANVAS_HEIGHT - 70);
+                }
+                
+                // Resetar transformação
+                ctx.setTransform(1, 0, 0, 1, 0, 0);
+            }
+
+            gameLoop() {
+                this.update();
+                this.draw();
+                requestAnimationFrame(() => this.gameLoop());
+            }
+
+            start() {
+                this.gameLoop();
+            }
+        }
+
+        // ==================== INICIAR O JOGO ====================
+        let game;
+        window.onload = () => {
+            game = new Game();
+            game.start();
+        };
+    </script>
+</body>
+</html>
