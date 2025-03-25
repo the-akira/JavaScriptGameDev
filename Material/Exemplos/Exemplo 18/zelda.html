@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RPG Estilo Zelda</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #333;
+        }
+        #gameCanvas {
+            display: block;
+            border: 2px solid #f2fcc7;
+            image-rendering: pixelated;
+            margin: 0 auto;
+        }
+        h1 {
+            text-align: center;
+            color: #f2fcc7;
+        }
+    </style>
+</head>
+<body>
+    <h1>RPG Estilo Zelda</h1>
+    <canvas id="gameCanvas"></canvas>
+    <script>
+        // Configuração do jogo
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Escala do jogo (para simular a resolução do Game Boy)
+        const SCALE = 3;
+        canvas.width = 640;
+        canvas.height = 480;
+        ctx.scale(SCALE, SCALE);
+        
+        // Tamanho dos tiles e configurações do mapa
+        const TILE_SIZE = 16;
+
+        // Cores para simular o Game Boy
+        const COLORS = {
+            lightest: '#9BBC0F',
+            light: '#8BAC0F',
+            dark: '#306230',
+            darkest: '#0F380F',
+            player: '#3f4a04'
+        };
+        
+        // Estado do jogo
+        let currentMapId = 'map1';
+        let isTransitioning = false;
+        let transitionDirection = null;
+        let transitionProgress = 0;
+        
+        // Jogador
+        const player = {
+            x: 5 * TILE_SIZE,
+            y: 5 * TILE_SIZE,
+            width: TILE_SIZE,
+            height: TILE_SIZE,
+            speed: 1.6,
+            moving: false,
+            targetX: null,
+            targetY: null
+        };
+
+        // Câmera
+        const camera = {
+            x: 0,
+            y: 0,
+            width: canvas.width / SCALE,
+            height: canvas.height / SCALE
+        };
+        
+        // Controles
+        const keys = {
+            up: false,
+            down: false,
+            left: false,
+            right: false
+        };
+        
+        // Definição dos mapas
+        const maps = {
+            map1: {
+                tiles: [
+                    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+                    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+                    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+                    [1, 0, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 0, 1],
+                    [1, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 1],
+                    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+                    [1, 0, 0, 0, 0, 0, 0, 6, 6, 5, 4, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+                    [1, 0, 0, 0, 0, 0, 0, 6, 6, 5, 3, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+                    [1, 0, 2, 2, 0, 0, 0, 6, 6, 5, 3, 0, 0, 0, 0, 0, 2, 2, 0, 1],
+                    [1, 0, 2, 0, 0, 0, 0, 0, 0, 6, 4, 0, 0, 0, 0, 0, 0, 2, 0, 1],
+                    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+                    [1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+                    [1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+                    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+                    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+                    [1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+                    [1, 0, 2, 2, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 2, 2, 0, 1],
+                    [1, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 1],
+                    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+                    [1, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 1],
+                    [1, 0, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 0, 1],
+                    [1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+                ],
+                connections: {
+                    top: null,
+                    right: null,
+                    bottom: 'map2',
+                    left: null
+                }
+            },
+            map2: {
+                tiles: [
+                    [1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1],
+                    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+                    [1, 0, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+                    [1, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                    [1, 0, 0, 0, 0, 0, 0, 0, 3, 3, 0, 0, 0, 0, 0, 0, 0],
+                    [1, 0, 2, 2, 0, 0, 0, 0, 3, 3, 0, 0, 0, 0, 0, 0, 1],
+                    [1, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 5, 0, 0, 1],
+                    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 5, 0, 0, 1],
+                    [1, 0, 0, 0, 0, 0, 0, 0, 4, 4, 0, 0, 0, 0, 0, 0, 1],
+                    [1, 0, 2, 2, 0, 0, 0, 0, 4, 4, 0, 0, 0, 0, 0, 0, 1],
+                    [1, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+                    [1, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+                    [1, 0, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+                    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+                ],
+                connections: {
+                    top: 'map1',
+                    right: 'map3',
+                    bottom: null,
+                    left: null
+                }
+            },
+            map3: {
+                tiles: [
+                    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+                    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+                    [1, 0, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 0, 1],
+                    [0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 1],
+                    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+                    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+                    [1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+                    [1, 0, 2, 2, 0, 0, 1, 2, 0, 0, 1, 0, 0, 0, 0, 0, 2, 2, 0, 1],
+                    [1, 0, 2, 0, 0, 0, 1, 3, 4, 0, 1, 0, 0, 0, 0, 0, 0, 2, 0, 1],
+                    [1, 0, 0, 0, 0, 0, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+                    [1, 0, 0, 0, 0, 0, 1, 1, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+                    [1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+                    [1, 0, 2, 2, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 0, 1],
+                    [1, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 1],
+                    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+                    [1, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 1],
+                    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+                    [1, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 1],
+                    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+                    [1, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 1],
+                    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+                    [1, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 1],
+                    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+                    [1, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 1],
+                    [1, 0, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 0, 1],
+                    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+                ],
+                connections: {
+                    top: null,
+                    right: null,
+                    bottom: null,
+                    left: 'map2'
+                }
+            },
+        };
+
+        function calculateMapDimensions() {
+            for (const mapId in maps) {
+                const map = maps[mapId];
+                map.height = map.tiles.length; // Número de linhas
+                map.width = map.tiles.reduce((max, row) => Math.max(max, row.length), 0); // Maior linha
+            }
+        }
+        calculateMapDimensions();
+
+        function getObstacles(map) {
+            const obstacles = [];
+
+            for (let y = 0; y < map.tiles.length; y++) {
+                for (let x = 0; x < map.tiles[y].length; x++) {
+                    if (map.tiles[y][x] === 1) { // Identifica os blocos de parede
+                        obstacles.push({
+                            x: x * TILE_SIZE,
+                            y: y * TILE_SIZE,
+                            width: TILE_SIZE,
+                            height: TILE_SIZE
+                        });
+                    }
+                }
+            }
+
+            return obstacles;
+        }
+
+        function checkCollision(obj1, obj2) {
+            return (
+                obj1.x < obj2.x + obj2.width &&
+                obj1.x + obj1.width > obj2.x &&
+                obj1.y < obj2.y + obj2.height &&
+                obj1.y + obj1.height > obj2.y
+            );
+        }
+        
+        // Verificar se o jogador está na borda do mapa
+        function checkMapTransition() {
+            if (isTransitioning) return;
+
+            const currentMap = maps[currentMapId];
+            
+            // Verificar bordas do mapa com valores exatos para evitar "gaps"
+            if (player.x < 0 && maps[currentMapId].connections.left) {
+                startTransition('left');
+            } else if (player.x + player.width > currentMap.width * TILE_SIZE && maps[currentMapId].connections.right) {
+                startTransition('right');
+            } else if (player.y < 0 && maps[currentMapId].connections.top) {
+                startTransition('top');
+            } else if (player.y + player.height > currentMap.height * TILE_SIZE && maps[currentMapId].connections.bottom) {
+                startTransition('bottom');
+            }
+        }
+        
+        // Iniciar transição entre mapas
+        function startTransition(direction) {
+            isTransitioning = true;
+            transitionDirection = direction;
+            transitionProgress = 0;
+
+            // Armazenar próximo mapa
+            const nextMapId = maps[currentMapId].connections[direction];
+            const nextMap = maps[nextMapId]; // Obter o próximo mapa
+
+            // Ajustar posição do jogador para o próximo mapa
+            switch (direction) {
+                case 'left':
+                    player.targetX = nextMap.width * TILE_SIZE - player.width - 2;
+                    player.targetY = player.y;
+                    break;
+                case 'right':
+                    player.targetX = 2;
+                    player.targetY = player.y;
+                    break;
+                case 'top':
+                    player.targetX = player.x;
+                    player.targetY = nextMap.height * TILE_SIZE - player.height - 2;
+                    break;
+                case 'bottom':
+                    player.targetX = player.x;
+                    player.targetY = 2;
+                    break;
+            }
+
+            setTimeout(() => {
+                currentMapId = nextMapId;
+                player.x = player.targetX;
+                player.y = player.targetY;
+                isTransitioning = false;
+            }, 500);  // Tempo da transição em milissegundos
+        }
+        
+        // Desenhar um tile específico
+        function drawTile(tileType, x, y) {
+            switch (tileType) {
+                case 0:  // Grama
+                    ctx.fillStyle = COLORS.light;
+                    ctx.fillRect(x, y, TILE_SIZE, TILE_SIZE);
+                    break;
+                case 1:  // Parede
+                    ctx.fillStyle = COLORS.darkest;
+                    ctx.fillRect(x, y, TILE_SIZE, TILE_SIZE);
+                    break;
+                case 2:  // Árvore
+                    ctx.fillStyle = COLORS.light;
+                    ctx.fillRect(x, y, TILE_SIZE, TILE_SIZE);
+                    ctx.fillStyle = COLORS.dark;
+                    ctx.fillRect(x + 3, y + 5, TILE_SIZE - 6, TILE_SIZE - 5);
+                    ctx.fillStyle = COLORS.darkest;
+                    ctx.fillRect(x + 5, y, TILE_SIZE - 10, 5);
+                    break;
+                case 3:  // Água
+                    ctx.fillStyle = COLORS.dark;
+                    ctx.fillRect(x, y, TILE_SIZE, TILE_SIZE);
+                    ctx.fillStyle = COLORS.light;
+                    ctx.fillRect(x + 2, y + 2, 2, 2);
+                    ctx.fillRect(x + 10, y + 8, 2, 2);
+                    break;
+                case 4:  // Pedras
+                    ctx.fillStyle = COLORS.light;
+                    ctx.fillRect(x, y, TILE_SIZE, TILE_SIZE);
+                    ctx.fillStyle = COLORS.dark;
+                    ctx.fillRect(x + 3, y + 3, 5, 5);
+                    ctx.fillRect(x + 10, y + 8, 4, 4);
+                    break;
+                case 5:  // Areia
+                    ctx.fillStyle = COLORS.lightest;
+                    ctx.fillRect(x, y, TILE_SIZE, TILE_SIZE);
+                    ctx.fillStyle = COLORS.light;
+                    ctx.fillRect(x + 4, y + 4, 2, 2);
+                    ctx.fillRect(x + 10, y + 8, 2, 2);
+                    break;
+                case 6:  // Flores
+                    ctx.fillStyle = COLORS.light;
+                    ctx.fillRect(x, y, TILE_SIZE, TILE_SIZE);
+                    ctx.fillStyle = COLORS.lightest;
+                    ctx.fillRect(x + 4, y + 4, 3, 3);
+                    ctx.fillRect(x + 10, y + 8, 3, 3);
+                    ctx.fillRect(x + 8, y + 2, 3, 3);
+                    ctx.fillRect(x + 2, y + 10, 3, 3);
+                    break;
+                default:
+                    ctx.fillStyle = COLORS.light;
+                    ctx.fillRect(x, y, TILE_SIZE, TILE_SIZE);
+            }
+            ctx.strokeStyle = COLORS.darkest;
+            ctx.lineWidth = 0.01; // Espessura da linha
+            ctx.strokeRect(x, y, TILE_SIZE, TILE_SIZE);
+        }
+        
+        // Desenhar o mapa atual
+        function drawMap() {
+            const currentMap = maps[currentMapId];
+
+            for (let y = 0; y < currentMap.height; y++) {
+                for (let x = 0; x < currentMap.width; x++) {
+                    const tileX = Math.round(x * TILE_SIZE - camera.x);
+                    const tileY = Math.round(y * TILE_SIZE - camera.y);
+                    drawTile(currentMap.tiles[y][x], tileX, tileY);
+                }
+            }
+        }
+        
+        // Desenhar o jogador
+        function drawPlayer() {
+            ctx.fillStyle = COLORS.player;
+
+            // Arredonda os valores APENAS na hora de desenhar o jogador
+            const x = Math.round(player.x - camera.x);
+            const y = Math.round(player.y - camera.y);
+
+            ctx.fillRect(x, y, player.width, player.height);
+        }
+        
+        // Desenhar interface do usuário
+        function drawUI() {
+            ctx.fillStyle = '#f2fcc7';
+            ctx.font = '8px Arial';
+            ctx.fillText(`Mapa: ${currentMapId}`, 5, 11);
+        }
+
+        // Função para atualizar a câmera
+        function updateCamera() {
+            const currentMap = maps[currentMapId];
+
+            camera.x = player.x - camera.width / 2 + player.width / 2;
+            camera.y = player.y - camera.height / 2 + player.height / 2;
+            
+            camera.x = Math.max(0, Math.min(camera.x, currentMap.width * TILE_SIZE - camera.width));
+            camera.y = Math.max(0, Math.min(camera.y, currentMap.height * TILE_SIZE - camera.height));
+        }
+        
+        // Atualizar posição do jogador
+        function updatePlayer() {
+            if (isTransitioning) return;
+
+            const obstacles = getObstacles(maps[currentMapId]);
+            let dx = 0;
+            let dy = 0;
+
+            if (keys.up) {
+                dy -= player.speed;
+            }
+            if (keys.down) {
+                dy += player.speed;
+            }
+            if (keys.left) {
+                dx -= player.speed;
+            }
+            if (keys.right) {
+                dx += player.speed;
+            }
+
+            if (dx !== 0 && dy !== 0) {
+                dx /= Math.sqrt(2);
+                dy /= Math.sqrt(2);
+            }
+
+            // Verificar colisões para movimento horizontal
+            if (dx !== 0) {
+                player.x += dx;
+
+                // Check for obstacles
+                for (const obstacle of obstacles) {
+                    if (checkCollision(player, obstacle)) {
+                        if (dx > 0) {
+                            player.x = obstacle.x - player.width;
+                        } else {
+                            player.x = obstacle.x + obstacle.width;
+                        }
+                    }
+                }
+            }
+
+            // Move Y and check collisions
+            if (dy !== 0) {
+                player.y += dy;
+
+                // Check for obstacles
+                for (const obstacle of obstacles) {
+                    if (checkCollision(player, obstacle)) {
+                        if (dy > 0) {
+                            player.y = obstacle.y - player.height;
+                        } else {
+                            player.y = obstacle.y + obstacle.height;
+                        }
+                    }
+                }
+            }
+            
+            // Verificar transição entre mapas
+            updateCamera();
+            checkMapTransition();
+        }
+        
+        // Desenhar transição entre mapas
+        function drawTransition() {
+            if (!isTransitioning) return;
+            
+            transitionProgress += 0.05;
+            
+            // Efeito de fade para transição
+            ctx.fillStyle = `rgba(15, 56, 15, ${Math.min(transitionProgress, 1)})`;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
+        
+        // Loop principal do jogo
+        function gameLoop() {
+            // Limpar a tela
+            ctx.fillStyle = COLORS.darkest;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Atualizar
+            updatePlayer();
+            
+            // Renderizar
+            drawMap();
+            drawPlayer();
+            drawUI();
+            drawTransition();
+            
+            // Continuar o loop
+            requestAnimationFrame(gameLoop);
+        }
+        
+        // Detectar teclas pressionadas
+        document.addEventListener('keydown', (e) => {
+            switch (e.key) {
+                case 'ArrowUp':
+                case 'w':
+                    keys.up = true;
+                    break;
+                case 'ArrowDown':
+                case 's':
+                    keys.down = true;
+                    break;
+                case 'ArrowLeft':
+                case 'a':
+                    keys.left = true;
+                    break;
+                case 'ArrowRight':
+                case 'd':
+                    keys.right = true;
+                    break;
+            }
+        });
+        
+        // Detectar teclas liberadas
+        document.addEventListener('keyup', (e) => {
+            switch (e.key) {
+                case 'ArrowUp':
+                case 'w':
+                    keys.up = false;
+                    break;
+                case 'ArrowDown':
+                case 's':
+                    keys.down = false;
+                    break;
+                case 'ArrowLeft':
+                case 'a':
+                    keys.left = false;
+                    break;
+                case 'ArrowRight':
+                case 'd':
+                    keys.right = false;
+                    break;
+            }
+        });
+        
+        // Iniciar o jogo
+        gameLoop();
+    </script>
+</body>
+</html>
