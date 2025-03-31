@@ -3,23 +3,33 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Simulação de Paginação</title>
+    <title>Posts</title>
     <style>
-        .post {
+        .post, .full-post {
             border: 1px solid #ccc;
             padding: 10px;
             margin-bottom: 10px;
         }
+        #full-post {
+            margin-left: 10px;
+        }
+        .hidden {
+            display: none;
+        }
         .pagination {
-            margin-top: 20px;
+            margin-top: 15px;
         }
         .pagination button {
             margin: 0 5px;
         }
+        .post > h2 {
+            margin-top: 0px;
+        }
     </style>
 </head>
 <body>
-<div id="blog-posts"></div>
+<div id="blog-list"></div>
+<div id="full-post" class="hidden"></div>
 <div class="pagination">
     <button id="first-page">Primeira Página</button>
     <button id="prev-page">Anterior</button>
@@ -31,67 +41,74 @@
 <script type="text/javascript">
     const postsPerPage = 5;
     let currentPage = 1;
-    const totalPosts = 100;
+    const totalPosts = 20;
     
-    // Criando posts fictícios
-    const fakePosts = Array.from({ length: totalPosts }, (_, i) => ({
+    const posts = Array.from({ length: totalPosts }, (_, i) => ({
         id: i + 1,
         title: `Post ${i + 1}`,
-        body: `Este é o conteúdo do post número ${i + 1}.`
+        excerpt: `Este é um resumo do post número ${i + 1}.`,
+        body: `Este é o conteúdo completo do post número ${i + 1}. Aqui temos mais detalhes sobre o assunto tratado.`
     }));
 
-    function renderizarPosts(posts) {
-        const blogPosts = document.getElementById('blog-posts');
-        blogPosts.innerHTML = '';
+    function renderPosts() {
+        const blogList = document.getElementById('blog-list');
+        blogList.innerHTML = '';
+        const startIndex = (currentPage - 1) * postsPerPage;
+        const selectedPosts = posts.slice(startIndex, startIndex + postsPerPage);
 
-        posts.forEach(post => {
+        selectedPosts.forEach(post => {
             const postDiv = document.createElement('div');
             postDiv.classList.add('post');
             postDiv.innerHTML = `
                 <h2>${post.title}</h2>
-                <p>${post.body}</p>
+                <p>${post.excerpt}</p>
+                <button onclick="showFullPost(${post.id})">Ler mais</button>
             `;
-            blogPosts.appendChild(postDiv);
+            blogList.appendChild(postDiv);
         });
     }
 
-    function updatePaginationUI(currentPage, totalPages) {
+    function updatePaginationUI() {
+        const totalPages = Math.ceil(totalPosts / postsPerPage);
         document.getElementById('current-page').innerText = currentPage;
         document.getElementById('total-pages').innerText = totalPages;
     }
 
     function goToPage(page) {
         const totalPages = Math.ceil(totalPosts / postsPerPage);
-        const startIndex = (page - 1) * postsPerPage;
-        const selectedPosts = fakePosts.slice(startIndex, startIndex + postsPerPage);
-
-        renderizarPosts(selectedPosts);
-        updatePaginationUI(page, totalPages);
+        if (page < 1 || page > totalPages) return;
         currentPage = page;
+        renderPosts();
+        updatePaginationUI();
     }
 
-    document.getElementById('first-page').addEventListener('click', () => {
-        goToPage(1);
-    });
+    function showFullPost(postId) {
+        const post = posts.find(p => p.id === postId);
+        const fullPost = document.getElementById('full-post');
+        const blogList = document.getElementById('blog-list');
 
-    document.getElementById('prev-page').addEventListener('click', () => {
-        if (currentPage > 1) {
-            goToPage(currentPage - 1);
-        }
-    });
+        fullPost.innerHTML = `
+            <h2>${post.title}</h2>
+            <p>${post.body}</p>
+            <button onclick="goBack()">Voltar</button>
+        `;
 
-    document.getElementById('next-page').addEventListener('click', () => {
-        const totalPages = Math.ceil(totalPosts / postsPerPage);
-        if (currentPage < totalPages) {
-            goToPage(currentPage + 1);
-        }
-    });
+        blogList.classList.add('hidden');
+        document.querySelector('.pagination').classList.add('hidden');
+        fullPost.classList.remove('hidden');
+    }
 
-    document.getElementById('last-page').addEventListener('click', () => {
-        goToPage(Math.ceil(totalPosts / postsPerPage));
-    });
+    function goBack() {
+        document.getElementById('blog-list').classList.remove('hidden');
+        document.querySelector('.pagination').classList.remove('hidden');
+        document.getElementById('full-post').classList.add('hidden');
+    }
 
-    // Inicializar com a primeira página
+    document.getElementById('first-page').addEventListener('click', () => goToPage(1));
+    document.getElementById('prev-page').addEventListener('click', () => goToPage(currentPage - 1));
+    document.getElementById('next-page').addEventListener('click', () => goToPage(currentPage + 1));
+    document.getElementById('last-page').addEventListener('click', () => goToPage(Math.ceil(totalPosts / postsPerPage)));
+
     goToPage(1);
 </script>
 </body>
