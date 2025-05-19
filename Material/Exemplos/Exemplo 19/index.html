@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RPG de Tabuleiro</title>
+    <link rel="stylesheet" type="text/css" href="styles.css">
+</head>
+<body>
+    <h1>RPG de Tabuleiro</h1>
+    <div class="game-container">
+        <div class="canvas-container">
+            <canvas id="gameCanvas" width="800" height="600"></canvas>
+        </div>
+        
+        <div class="sidebar">
+            <h2>Heróis</h2>
+            <div id="heroesInfo"></div>
+            
+            <h3>Informações</h3>
+            <p>Herói atual: <span id="currentHero">Guerreiro</span></p>
+            <p>Posição: <span id="heroPos">0,0</span></p>
+            <p>Mapa atual: <span id="currentMap">0</span></p>
+            <p>Inimigos: <span id="enemyCount">0</span></p>
+            <p>Portais: <span id="portalCount">0</span></p>
+            <p>Movimentos restantes: <span id="movesLeft">0</span></p>
+
+            <button id="rollDiceBtn">Rolar Dado</button>
+            <button id="endTurnBtn">Passar Turno</button>
+            <button id="nextPlayerBtn">Próximo Jogador</button>
+        </div>
+    </div>
+
+    <div id="combatActions" class="combat-actions"></div>
+    
+    <div class="combat-log" id="combatLog">
+        <p class="log-system">Bem-vindo ao RPG de Tabuleiro!</p>
+        <p class="log-system">Você pode rolar o dado uma vez por turno para obter movimentos!</p>
+        <p class="log-system">Use as setas para mover o herói atual e WASD para mover a câmera.</p>
+        <p class="log-system">Encontre os portais para trocar de mapa.</p>
+    </div>
+
+    <script type="text/javascript" src="game.js"></script>
+</body>
+</html>

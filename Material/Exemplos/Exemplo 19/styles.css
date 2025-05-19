@@ -1,0 +1,189 @@
+body {
+    margin: 0;
+    background-color: #222;
+    font-family: Arial, sans-serif;
+    color: white;
+}
+
+h1 {
+    text-align: center;
+    margin-top: 20px;
+}
+
+.game-container {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.canvas-container {
+    position: relative;
+}
+
+#gameCanvas {
+    border: 2px solid #a1a1a1;
+}
+
+.sidebar {
+    background-color: #333;
+    padding: 15px;
+    height: 575px;
+}
+
+.sidebar > h2 {
+    margin-top: 0px;
+    margin-bottom: 15px;
+}
+
+.sidebar > p {
+    margin-top: 13.25px;
+    margin-bottom: 13.25px;
+}
+
+.hero-info {
+    background-color: #444;
+    padding: 7px;
+    margin-bottom: 10px;
+    border: 2px solid #444;
+    cursor: pointer;
+}
+
+.hero-info.active {
+    border: 2px solid gold;
+}
+
+.hero-info.in-combat {
+    border: 2px solid red;
+}
+
+.hero-info.active.in-combat {
+    border: 2px solid gold;
+    box-shadow: 0 0 10px gold;
+}
+
+.hero-hp {
+    height: 15px;
+    background-color: #444;
+    margin-top: 5px;
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.hero-hp-fill {
+    height: 100%;
+    background-color: #e74c3c;
+    width: 100%;
+    transition: width 0.3s;
+}
+
+.end-turn-btn {
+    margin-top: 10px;
+    background-color: #e67e22;
+    border: none;
+    padding: 8px 15px;
+    color: white;
+    border-radius: 3px;
+    cursor: pointer;
+    display: block;
+    width: 100%;
+}
+
+.end-turn-btn:hover {
+    background-color: #d35400;
+}
+
+.combat-log {
+    height: 130px;
+    width: 1155px;
+    overflow-y: auto;
+    padding: 10px;
+    margin: 0 auto;
+    margin-top: 15px;
+    font-size: 14px;
+    background-color: black;
+    margin-bottom: 20px;
+}
+
+.combat-log p {
+    margin: 5px 0;
+    padding: 0;
+}
+
+.log-hero { 
+    color: #3498db; 
+}
+
+.log-enemy { 
+    color: #e74c3c; 
+}
+
+.log-system { 
+    color: #2ecc71; 
+}
+
+#rollDiceBtn, 
+#endTurnBtn, 
+#nextPlayerBtn {
+    background-color: #3498db;
+    border: none;
+    padding: 8px 15px;
+    margin-right: 5px;
+    margin-bottom: 5px;
+    color: white;
+    border-radius: 3px;
+    cursor: pointer;
+}
+
+#rollDiceBtn, 
+#endTurnBtn, 
+#nextPlayerBtn {
+    padding: 6px 10px;
+    font-size: 0.8rem;
+}
+
+.combat-actions {
+    margin-top: 15px;
+    display: none; /* Inicialmente oculto */
+    text-align: center;
+}
+
+.combat-actions button {
+    background-color: #e74c3c;
+    border: none;
+    padding: 8px 15px;
+    margin-right: 5px;
+    margin-bottom: 5px;
+    color: white;
+    border-radius: 3px;
+    cursor: pointer;
+}
+
+.combat-actions button:hover {
+    background-color: #c0392b;
+}
+
+.portal {
+    position: absolute;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: radial-gradient(circle, #9b59b6 0%, #8e44ad 100%);
+    animation: pulse 1.5s infinite alternate;
+}
+
+@keyframes pulse {
+    from { box-shadow: 0 0 5px 2px rgba(155, 89, 182, 0.7); }
+    to { box-shadow: 0 0 15px 5px rgba(155, 89, 182, 0.9); }
+}
+
+.enemy-path {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    background-color: rgba(255, 255, 0, 0.7);
+    border-radius: 50%;
+    transform: translate(-5px, -5px);
+    pointer-events: none;
+}
