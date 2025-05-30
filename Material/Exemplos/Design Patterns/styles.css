@@ -1,0 +1,95 @@
+body {
+    margin: 0;
+    padding: 0;
+    background: #09000f;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    font-family: Arial, sans-serif;
+    color: white;
+}
+
+#gameContainer {
+    text-align: center;
+}
+
+canvas {
+    border: 2px solid #3f0063;
+    background: linear-gradient(to bottom, #001122, #000033);
+}
+
+#ui {
+    margin-top: 10px;
+    display: flex;
+    justify-content: space-between;
+    width: 800px;
+}
+
+#controls {
+    text-align: left;
+    font-size: 12px;
+}
+
+#score {
+    font-size: 18px;
+}
+
+#gameOver {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 800px;  
+    height: 600px; 
+    background: rgba(0, 0, 0, 0.85);
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 100; 
+    border: 2px solid #ff0000; 
+    box-shadow: 0 0 10px rgba(255, 0, 0, 0.5);
+}
+
+#gameOver h2 {
+    color: #ff5555;
+    font-size: 3em;
+    text-shadow: 0 0 10px #ff0000;
+    margin-bottom: 20px;
+    margin-top: 215px;
+}
+
+#gameOver p {
+    color: #ffffff;
+    font-size: 1.5em;
+    margin: 10px 0;
+}
+
+#gameContainer {
+    text-align: center;
+    position: relative;
+}
+
+#healthContainer {
+    width: 200px;
+    height: 20px;
+    border: 2px solid #3f0063;
+    background: #222;
+    margin: 0 10px;
+    position: relative;
+}
+
+#healthBar {
+    height: 100%;
+    width: 100%;
+    background: #00ff00;
+    transition: width 0.3s, background-color 0.3s;
+}
+
+#ui {
+    margin-top: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 800px;
+}

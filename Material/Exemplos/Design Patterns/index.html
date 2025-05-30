@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Space Shooter - Design Patterns</title>
+    <link rel="stylesheet" type="text/css" href="styles.css">
+</head>
+<body>
+    <div id="gameContainer">
+        <canvas id="gameCanvas" width="800" height="600"></canvas>
+        <div id="ui">
+            <div id="controls">
+                <div><b>WASD</b> - Mover | <b>SPACE</b> - Atirar | <b>E</b> - Tiro Laser</div>
+                <div><b>R</b> - Reiniciar quando Game Over</div>
+            </div>
+            <div id="healthContainer">
+                <div id="healthBar"></div>
+            </div>
+            <div id="score"><b>Score:</b> 0</div>
+        </div>
+        <div id="gameOver">
+            <h2>Game Over!</h2>
+            <p><b>Score Final:</b> <span id="finalScore">0</span></p>
+            <p>Pressione <b>R</b> para reiniciar</p>
+        </div>
+    </div>
+    <script src="game.js"></script>
+</body>
+</html>
