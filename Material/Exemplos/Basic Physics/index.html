@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Física Básica</title>
+    <link rel="stylesheet" type="text/css" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Física Básica Interativa</h1>
+        <p class="subtitle">Demonstração visual de conceitos físicos fundamentais</p>
+        
+        <div class="instructions">
+            <strong>Como usar:</strong> Clique no canvas para adicionar objetos • Use os botões para controlar a simulação
+        </div>
+        
+        <canvas id="gameCanvas" width="800" height="600"></canvas>
+        
+        <div class="controls">
+            <button onclick="addBall()">Adicionar Bola</button>
+            <button onclick="addBouncyBall()">Bola Elástica</button>
+            <button id="btnExplosion" onclick="createParticleExplosion()">Explosão</button>
+            <button onclick="toggleGravity()">Gravidade: <span id="gravityStatus">ON</span></button>
+            <button onclick="toggleParticles()">Partículas: <span id="particleStatus">ON</span></button>
+            <button onclick="toggleTrails()">Rastros: <span id="trailStatus">ON</span></button>
+            <button onclick="clearCanvas()">Limpar</button>
+        </div>
+        
+        <div class="info-panel">
+            <div class="info-card">
+                <h3>Gravidade e Queda</h3>
+                <p>Força constante puxando objetos para baixo. Acelera todos os corpos igualmente, independente da massa.</p>
+            </div>
+            
+            <div class="info-card">
+                <h3>Fricção e Resistência</h3>
+                <p>Força que se opõe ao movimento. Reduz gradualmente a velocidade dos objetos em contato com superfícies.</p>
+            </div>
+            
+            <div class="info-card">
+                <h3>Impulso e Rebatimento</h3>
+                <p>Conservação de energia cinética. Objetos ricocheteiam perdendo parte da energia a cada colisão.</p>
+            </div>
+            
+            <div class="info-card">
+                <h3>Física de Partículas</h3>
+                <p>Sistemas de múltiplos objetos pequenos simulando efeitos como explosões, chuva ou fumaça.</p>
+            </div>
+            
+            <div class="info-card">
+                <h3>Colisão de Círculos</h3>
+                <p>Detecção baseada em distância. Quando dois círculos se tocam, calculamos a resposta física adequada.</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="main.js"></script>
+</body>
+</html>
