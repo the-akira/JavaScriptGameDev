@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Space Invaders - SOLID Principles</title>
+    <link rel="stylesheet" type="text/css" href="styles.css">
+</head>
+<body>
+    <canvas id="matrixRain" class="matrix-rain"></canvas>
+    
+    <h1>Space Invaders</h1>
+    <div class="controls">
+        <strong>Controles:</strong> ← → para mover | ESPAÇO para atirar | R para reiniciar
+    </div>
+    
+    <canvas id="gameCanvas" width="800" height="600"></canvas>
+    
+    <div class="info">
+        <h2>Princípios SOLID Demonstrados no Game</h2>
+        <div class="solid-principles">
+            <div class="principle">
+                <h4>S - Single Responsibility</h4>
+                <p>Cada classe tem uma única responsabilidade: Player, Bullet, Enemy</p>
+            </div>
+            <div class="principle">
+                <h4>O - Open/Closed</h4>
+                <p>Novos projéteis e inimigos podem ser adicionados sem modificar código existente</p>
+            </div>
+            <div class="principle">
+                <h4>L - Liskov Substitution</h4>
+                <p>Diferentes tipos de projéteis podem substituir uns aos outros</p>
+            </div>
+            <div class="principle">
+                <h4>I - Interface Segregation</h4>
+                <p>Interfaces específicas: Drawable, Movable, Collidable</p>
+            </div>
+            <div class="principle">
+                <h4>D - Dependency Inversion</h4>
+                <p>Game depende de abstrações, não de implementações concretas</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="game.js"></script>
+</body>
+</html>
