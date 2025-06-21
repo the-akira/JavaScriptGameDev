@@ -1892,7 +1892,7 @@ canvas.addEventListener('click', (event) => {
             dy: Math.sin(angle) * speed,
             sprite: new Image()
         });
-        spells[spells.length - 1].sprite.src = 'sprites/spells/spell.png'; // Define o sprite da magia
+        spells[spells.length - 1].sprite.src = 'sprites/spells/fireball.png'; // Define o sprite da magia
         lastMagicTime = currentTime;
     }
 });
