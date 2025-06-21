@@ -1884,7 +1884,7 @@ canvas.addEventListener('click', (event) => {
 
         // Adiciona a magia à lista
         spells.push({
-            x: player.x + player.width / 2, // Inicia do centro do player
+            x: player.x + player.width / 2 - 10, // Inicia do centro do player
             y: player.y + player.height / 2,
             width: 24,
             height: 24,
