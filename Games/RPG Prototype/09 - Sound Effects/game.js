@@ -1813,6 +1813,7 @@ function restartGame() {
     curseRemainingTime = CURSE_INTERVAL; // Reseta o tempo restante
     pauseStartTime = 0;
     totalPausedTime = 0;
+    oldMap = '';
 
     owlModeStartTime = 0;
     owlModeCooldownStartTime = 0;
