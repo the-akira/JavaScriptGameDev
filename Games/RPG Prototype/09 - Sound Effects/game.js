@@ -2341,6 +2341,9 @@ setGlobalVolume(volumeControl.value);
 volumeControl.addEventListener('input', (event) => {
     const volume = parseFloat(event.target.value);
     setGlobalVolume(volume);
+    if (currentMusic) {
+        currentMusic.volume = volume; // Atualiza o volume da música atual imediatamente
+    }
 });
 
 function playMapMusic(map) {
@@ -2351,7 +2354,7 @@ function playMapMusic(map) {
     if (map.music) {
         currentMusic = new Audio(map.music); // Cria um novo objeto de áudio com a música do mapa
         currentMusic.loop = true; // Faz a música repetir em loop
-        currentMusic.volume = 0.1;
+        currentMusic.volume = volumeControl.value; // Aplica o volume atual do controle
 
         // Adiciona um delay antes de iniciar a música
         setTimeout(() => {
