@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tic-Tac-Toe</title>
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;700&family=Orbitron:wght@500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Tic-Tac-Toe</h1>
+        <div class="game-info">
+            <div id="currentPlayer">Vez do Jogador: X</div>
+            <div id="gameStatus"></div>
+        </div>
+        <canvas id="gameCanvas" width="360" height="360"></canvas>
+        <div class="controls">
+            <button onclick="resetGame()">Novo Jogo</button>
+            <button onclick="clearScore()">Limpar Placar</button>
+        </div>
+        <div class="score">
+            <div class="score-item">
+                <div>Jogador X</div>
+                <div id="scoreX">0</div>
+            </div>
+            <div class="score-item">
+                <div>Empates</div>
+                <div id="scoreTie">0</div>
+            </div>
+            <div class="score-item">
+                <div>Jogador O</div>
+                <div id="scoreO">0</div>
+            </div>
+        </div>
+    </div>
+    <script src="game.js"></script>
+</body>
+</html>
