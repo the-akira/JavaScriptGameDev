@@ -99,8 +99,10 @@ class Character {
 
         this.currentSprites = this.idleSprites; 
         this.spriteIndex = 0; 
-        this.animationSpeed = 0.1; 
         this.frameCounter = 0;
+
+        this.walkingAnimationSpeed = 3;
+        this.idleAnimationSpeed = 0.25;
 
         this.direction = 'right';
     }
@@ -108,13 +110,13 @@ class Character {
     loadSprites() {
         for (let i = 1; i <= 4; i++) {
             const img = new Image();
-            img.src = `assets/character/idle/idle${i}.png`;
+            img.src = `assets/hero/idle/idle${i}.png`;
             this.idleSprites.push(img);
         }
 
-        for (let i = 1; i <= 8; i++) {
+        for (let i = 1; i <= 6; i++) {
             const img = new Image();
-            img.src = `assets/character/walking/walking${i}.png`;
+            img.src = `assets/hero/walking/walking${i}.png`;
             this.walkingSprites.push(img);
         }
     }
@@ -122,17 +124,21 @@ class Character {
     update() {
         if (this.isMoving) {
             this.currentSprites = this.walkingSprites;
+            this.animationSpeed = this.walkingAnimationSpeed;
         } else {
             if (this.currentSprites !== this.idleSprites) {
                 this.spriteIndex = 0;
             }
             this.currentSprites = this.idleSprites;
+            this.animationSpeed = this.idleAnimationSpeed;
         }
 
         this.frameCounter++;
 
-        if (this.frameCounter % 5 === 0) {
+        // Usa Math.floor para suavizar a animação com velocidade reduzida
+        if (this.frameCounter >= 10 / this.animationSpeed) {
             this.spriteIndex = (this.spriteIndex + 1) % this.currentSprites.length;
+            this.frameCounter = 0;
         }
     }
 

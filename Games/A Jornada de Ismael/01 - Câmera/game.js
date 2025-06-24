@@ -74,7 +74,7 @@ class Character {
         this.height = height;
         this.speed = speed; 
         this.image = new Image();
-        this.image.src = "assets/player.png"
+        this.image.src = "assets/hero.png"
         this.direction = "right";
     }
 
