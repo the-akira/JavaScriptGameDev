@@ -27,6 +27,8 @@ const themeMusic = new Audio('audio/Dvorak.mp3');
 themeMusic.loop = true;
 themeMusic.volume = 0.035;
 
+let DEBUG = false;
+
 class Serpent {
     constructor(y, speed, numFrames) {
         this.x = canvas.width; // Começa fora do canvas à esquerda
@@ -72,9 +74,11 @@ class Serpent {
         // Desenhar o frame atual da animação
         ctx.drawImage(this.frames[this.frameIndex], this.x, this.y, this.width, this.height);
 
-        // ctx.strokeStyle = "blue"; // Cor da borda da hitbox
-        // ctx.lineWidth = 2;       // Espessura da borda
-        // ctx.strokeRect(this.hitbox.x, this.hitbox.y, this.hitbox.width, this.hitbox.height);
+        if (DEBUG) {
+            ctx.strokeStyle = "blue"; // Cor da borda da hitbox
+            ctx.lineWidth = 2;       // Espessura da borda
+            ctx.strokeRect(this.hitbox.x, this.hitbox.y, this.hitbox.width, this.hitbox.height);   
+        }
     }
 
     updateAnimation() {
@@ -267,9 +271,11 @@ class Dragon {
     draw(ctx) {
         ctx.drawImage(this.sprites[this.spriteIndex], this.x, this.y, this.width, this.height);
 
-        // ctx.strokeStyle = "red"; // Cor da borda da hitbox
-        // ctx.lineWidth = 2;       // Espessura da borda
-        // ctx.strokeRect(this.hitbox.x, this.hitbox.y, this.hitbox.width, this.hitbox.height);
+        if (DEBUG) {
+            ctx.strokeStyle = "red"; // Cor da borda da hitbox
+            ctx.lineWidth = 2;       // Espessura da borda
+            ctx.strokeRect(this.hitbox.x, this.hitbox.y, this.hitbox.width, this.hitbox.height);
+        }
     }
 
     updateHitbox() {
