@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Underground Battle</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" type="text/css" href="styles.css">
+</head>
+<body>
+    <h1 id="gameTitle">Underground Battle</h1>
+    
+    <div id="gameInfo" class="info">
+        <div>Pontuação: <span id="score">0</span></div>
+        <div>Vidas: <span id="lives">3</span></div>
+        <div>Inimigos: <span id="enemies">0</span></div>
+    </div>
+
+    <div id="startScreen">
+        <img class="avatar" src="avatar.png">
+        <h1>Underground Battle</h1>
+        <button onclick="startIntro()" style="font-size: 24px; padding: 15px 40px;">Start Game</button>
+    </div>
+
+    <div id="introScreen">
+        <h2>Underground Battle</h2>
+        <div id="introText"></div>
+        <div class="progress-container">
+            <div class="progress-bar" id="progressBar"></div>
+        </div>
+        <div class="intro-buttons">
+            <button id="skipIntro" class="intro-button" onclick="skipIntro()">Pular Introdução</button>
+            <button id="viewControlsBtn" class="intro-button" onclick="showControls()">Ver Controles</button>
+        </div>
+    </div>
+
+    <div id="controlsModal" onclick="handleModalClick(event)">
+        <div id="controlsContent" onclick="event.stopPropagation()">
+            <h3>Controles do Jogo</h3>
+            <p><strong>Movimento:</strong> WASD ou Setas do teclado</p>
+            <p><strong>Atirar:</strong> Barra de Espaço</p>
+            <p><strong>Escudo (E):</strong> Ativa proteção temporária</p>
+            <p><strong>Turbo (Q):</strong> Aumenta velocidade temporariamente</p>
+            <p><strong>Mísseis (F):</strong> Dispara projéteis especiais</p>
+            <p><strong>Orbe (C):</strong> Ativa poder especial</p>
+            <p><strong>Drone (V):</strong> Ativa drone de ataque</p>
+            <p><strong>Bomba (B):</strong> Dispara bomba de área</p>
+            <p><strong>Cristal (G):</strong> Congela inimigos</p>
+            <p><strong>Reiniciar:</strong> Tecla R</p>
+            <button id="closeControls" onclick="hideControls()">Fechar</button>
+        </div>
+    </div>
+    
+    <div id="lowHealthOverlay" class="low-health-overlay"></div>
+    <canvas id="gameCanvas" width="800" height="600"></canvas>
+    
+    <div id="controls" class="controls">
+        <p><strong>Controles do Jogo</strong></p>
+        <p>WASD ou Setas - Mover | Espaço - Atirar | R - Reiniciar | E - Escudo | Q - Turbo | F - Mísseis | C - Orbe | V - Drone | B - Bomba | G - Cristal</p>
+    </div>
+
+    <div id="gameCooldowns">
+        <div class="shield-cooldown">
+            <div class="shield-cooldown-fill" id="shieldCooldownFill"><i class="fas fa-shield"></i></div>
+        </div>
+
+        <div class="speed-boost-cooldown">
+            <div class="speed-boost-cooldown-fill" id="speedBoostCooldownFill"><i class="fas fa-bolt"></i></div>
+        </div>
+
+        <div class="multi-shot-cooldown">
+            <div class="multi-shot-cooldown-fill" id="multiShotCooldownFill"><i class="fas fa-bullseye"></i></div>
+        </div>
+
+        <div class="ricochet-cooldown">
+            <div class="ricochet-cooldown-fill" id="ricochetCooldownFill"><i class="fas fa-reply-all"></i></div>
+        </div>
+
+        <div class="drone-cooldown">
+            <div class="drone-cooldown-fill" id="droneCooldownFill"><i class="fas fa-robot"></i></div>
+        </div>
+
+        <div class="triple-shot-cooldown">
+            <div class="triple-shot-cooldown-fill" id="tripleShotCooldownFill"><i class="fas fa-fire"></i></div>
+        </div>
+
+        <div class="immunity-cooldown">
+            <div class="immunity-cooldown-fill" id="immunityCooldownFill"><i class="fas fa-shield-alt"></i></div>
+        </div>
+
+        <div class="area-bomb-cooldown">
+            <div class="area-bomb-cooldown-fill" id="areaBombCooldownFill"><i class="fas fa-bomb"></i></div>
+        </div>
+
+        <div class="freeze-cooldown">
+            <div class="freeze-cooldown-fill" id="freezeCooldownFill"><i class="fas fa-snowflake"></i></div>
+        </div>
+    </div>
+    
+    <div class="game-over" id="gameOver">
+        <h2 id="gameOverTitle">GAME OVER</h2>
+        <p id="gameOverMessage">Sua pontuação final: <span id="finalScore">0</span></p>
+        <button onclick="startGame()">Jogar Novamente</button>
+    </div>
+
+    <script src="game.js"></script>
+</body>
+</html>

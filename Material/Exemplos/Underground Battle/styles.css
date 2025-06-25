@@ -1,0 +1,487 @@
+body {
+    margin: 0;
+    padding: 20px;
+    background: #000;
+    color: #fff;
+    font-family: 'Courier New', monospace;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+}
+
+h1 {
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+
+#gameTitle {
+    display: none;
+}
+
+canvas {
+    border: 3px solid #fff;
+    background: #222;
+    image-rendering: pixelated;
+    image-rendering: -moz-crisp-edges;
+    image-rendering: crisp-edges;
+    display: none;
+}
+
+.controls {
+    margin-top: 5px;
+    text-align: center;
+    display: none;
+}
+
+.info {
+    gap: 30px;
+    font-size: 18px;
+    margin-bottom: 15px;
+    display: none;
+}
+
+#gameCooldowns {
+    display: none;
+}
+
+.game-over {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0, 0, 0, 0.9);
+    padding: 30px;
+    border: 3px solid #fff;
+    text-align: center;
+    display: none;
+}
+
+button {
+    background: #333;
+    color: #fff;
+    border: 2px solid #fff;
+    padding: 10px 20px;
+    font-family: inherit;
+    font-size: 16px;
+    cursor: pointer;
+    margin: 10px;
+}
+
+button:hover {
+    background: #555;
+}
+
+.shield-cooldown {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 120px;
+    height: 20px;
+    background: #333;
+    border: 1px solid #fff;
+    display: flex;
+    align-items: center;
+    padding: 2px;
+}
+
+.shield-cooldown-fill {
+    height: 100%;
+    background: #00a8ff;
+    width: 0%;
+    transition: width 0.1s linear;
+}
+
+#startScreen {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: #000;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 10;
+}
+
+#startScreen > h1 {
+    font-size: 48px;
+    margin-bottom: 30px;
+    text-align: center;
+}
+
+.avatar {
+    text-align: center;
+    width: 256px;
+    height: 256px;
+    margin-bottom: 25px;
+    border: 2px solid #FFFFFF;
+}
+
+.speed-boost-cooldown {
+    position: absolute;
+    top: 40px;
+    right: 10px;
+    width: 120px;
+    height: 20px;
+    background: #333;
+    border: 1px solid #fff;
+    display: flex;
+    align-items: center;
+    padding: 2px;
+}
+
+.speed-boost-cooldown-fill {
+    height: 100%;
+    background: #ff9900;
+    width: 0%;
+    transition: width 0.1s linear;
+}
+
+.multi-shot-cooldown {
+    position: absolute;
+    top: 70px;
+    right: 10px;
+    width: 120px;
+    height: 20px;
+    background: #333;
+    border: 1px solid #fff;
+    display: flex;
+    align-items: center;
+    padding: 2px;
+}
+
+.multi-shot-cooldown-fill {
+    height: 100%;
+    background: #9c27b0;
+    width: 0%;
+    transition: width 0.1s linear;
+}
+
+.multi-shot-cooldown i {
+    margin-top: 1.65px;
+    margin-left: 52.5px;
+}
+
+.ricochet-cooldown {
+    position: absolute;
+    top: 100px;
+    right: 10px;
+    width: 120px;
+    height: 20px;
+    background: #333;
+    border: 1px solid #fff;
+    display: flex;
+    align-items: center;
+    padding: 2px;
+}
+
+.ricochet-cooldown-fill {
+    height: 100%;
+    background: #00bcd4;
+    width: 0%;
+    transition: width 0.1s linear;
+}
+
+.ricochet-cooldown i {
+    margin-top: 1.65px;
+    margin-left: 52.5px;
+}
+
+.drone-cooldown {
+    position: absolute;
+    top: 130px;
+    right: 10px;
+    width: 120px;
+    height: 20px;
+    background: #333;
+    border: 1px solid #fff;
+    display: flex;
+    align-items: center;
+    padding: 2px;
+}
+
+.drone-cooldown-fill {
+    height: 100%;
+    background: #4CAF50;
+    width: 0%;
+    transition: width 0.1s linear;
+}
+
+.drone-cooldown i {
+    margin-top: 1.65px;
+    margin-left: 52.5px;
+}
+
+.triple-shot-cooldown {
+    position: absolute;
+    top: 160px;
+    right: 10px;
+    width: 120px;
+    height: 20px;
+    background: #333;
+    border: 1px solid #fff;
+    display: flex;
+    align-items: center;
+    padding: 2px;
+}
+
+.triple-shot-cooldown-fill {
+    height: 100%;
+    background: #ffeb3b;
+    width: 0%;
+    transition: width 0.1s linear;
+}
+
+.triple-shot-cooldown i {
+    margin-top: 1.65px;
+    margin-left: 52.5px;
+}
+
+.immunity-cooldown {
+    position: absolute;
+    top: 190px;
+    right: 10px;
+    width: 120px;
+    height: 20px;
+    background: #333;
+    border: 1px solid #fff;
+    display: flex;
+    align-items: center;
+    padding: 2px;
+}
+
+.immunity-cooldown-fill {
+    height: 100%;
+    background: #00a8ff;
+    width: 0%;
+    transition: width 0.1s linear;
+}
+
+.immunity-cooldown i {
+    margin-top: 1.65px;
+    margin-left: 52.5px;
+}
+
+.area-bomb-cooldown {
+    position: absolute;
+    top: 220px;
+    right: 10px;
+    width: 120px;
+    height: 20px;
+    background: #333;
+    border: 1px solid #fff;
+    display: flex;
+    align-items: center;
+    padding: 2px;
+}
+
+.area-bomb-cooldown-fill {
+    height: 100%;
+    background: #ff5722;
+    width: 0%;
+    transition: width 0.1s linear;
+}
+
+.area-bomb-cooldown i {
+    margin-top: 1.65px;
+    margin-left: 52.5px;
+}
+
+.freeze-cooldown {
+    position: absolute;
+    top: 250px;
+    right: 10px;
+    width: 120px;
+    height: 20px;
+    background: #333;
+    border: 1px solid #fff;
+    display: flex;
+    align-items: center;
+    padding: 2px;
+}
+
+.freeze-cooldown-fill {
+    height: 100%;
+    background: #00a8ff;
+    width: 0%;
+    transition: width 0.1s linear;
+}
+
+.freeze-cooldown i {
+    margin-top: 1.65px;
+    margin-left: 52.5px;
+}
+
+i {
+    margin-top: 1.65px;
+    margin-left: 52.5px;
+}
+
+.low-health-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    pointer-events: none;
+    z-index: 5;
+    display: none;
+    background: rgba(255, 0, 0, 0.1);
+    box-shadow: inset 0 0 50px 20px rgba(255, 0, 0, 0.3);
+    overflow: hidden;
+}
+
+.low-health-pulse {
+    animation: pulse 1s infinite alternate;
+}
+
+@keyframes pulse {
+    0% { opacity: 0.3; }
+    100% { opacity: 0.7; }
+}
+
+.low-health-glitch {
+    animation: glitch 0.5s infinite;
+}
+
+@keyframes glitch {
+    0% { transform: translate(0); }
+    20% { transform: translate(-1px, 1px); }
+    40% { transform: translate(-1px, -1px); }
+    60% { transform: translate(1px, 1px); }
+    80% { transform: translate(1px, -1px); }
+    100% { transform: translate(0); }
+}
+
+#introScreen {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.9);
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 20;
+    color: white;
+    font-family: 'Courier New', monospace;
+    padding: 20px;
+    box-sizing: border-box;
+    text-align: center;
+}
+
+#introScreen > h2 {
+    font-size: 2rem;
+}
+
+#introText {
+    max-width: 800px;
+    font-size: 18px;
+    line-height: 1.6;
+    min-height: 150px;
+}
+
+#skipIntro {
+    background: #333;
+    color: #fff;
+    border: 2px solid #fff;
+    padding: 10px 20px;
+    font-family: inherit;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+#skipIntro:hover {
+    background: #555;
+}
+
+.intro-button {
+    background: #333;
+    color: #fff;
+    border: 2px solid #fff;
+    padding: 10px 20px;
+    font-family: inherit;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+.intro-button:hover {
+    background: #555;
+}
+
+.typing-cursor {
+    display: inline-block;
+    width: 10px;
+    height: 20px;
+    background: #fff;
+    animation: blink 0.7s infinite;
+    vertical-align: middle;
+    margin-left: 5px;
+}
+
+#controlsModal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    z-index: 30;
+    justify-content: center;
+    align-items: center;
+}
+
+#controlsContent {
+    background: #121212;
+    padding: 30px;
+    border: 3px solid #fff;
+    max-width: 600px;
+    text-align: center;
+}
+
+#controlsContent > h3 {
+    margin-bottom: 25px;
+}
+
+#closeControls {
+    background: #333;
+    color: #fff;
+    border: 2px solid #fff;
+    padding: 8px 16px;
+    margin-top: 10px;
+    cursor: pointer;
+}
+
+#closeControls:hover {
+    background: #555;
+}
+
+.progress-container {
+    width: 80%;
+    max-width: 500px;
+    height: 10px;
+    background: #333;
+    border: 1px solid #555;
+    margin: 20px 0px;
+    border-radius: 5px;
+    overflow: hidden;
+}
+
+.progress-bar {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(to right, #D8A872, #B98759);
+    transition: width 0.1s linear;
+    border-radius: 5px;
+}
+
+@keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+}
