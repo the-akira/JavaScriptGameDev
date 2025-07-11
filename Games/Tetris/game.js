@@ -225,6 +225,8 @@ function drawMatrixRain() {
     rainCtx.font = fontSize + 'px monospace';
 
     matrixSymbols.forEach(symbol => {
+        symbol.first = (symbol.y <= fontSize);
+
         if (symbol.first) {
             rainCtx.fillStyle = '#62ff00';
         } else {
