@@ -12,6 +12,7 @@ Projeto educativo que propõe o ensino da programação através da construção
 - [Material Didático](https://github.com/the-akira/JavaScriptGameDev/blob/master/Material/Introduction.pdf)
 - [Exemplos Práticos](https://github.com/the-akira/JavaScriptGameDev/tree/master/Material/Exemplos)
 - [Roteiro Completo](https://roteirogamedev.netlify.app/)
+- [Aventura JS](https://jsquest.netlify.app/)
 
 ## Games Criados
 
