@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PESQUISA NEURAL | PROJETO ECHO</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #0a0a0a;
+            color: #00ff41;
+            font-family: 'Courier Prime', monospace;
+            font-size: 14px;
+            overflow-x: hidden;
+            line-height: 1.6;
+        }
+
+        .scan-lines {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: repeating-linear-gradient(
+                180deg,
+                transparent,
+                transparent 2px,
+                rgba(0, 255, 65, 0.03) 2px,
+                rgba(0, 255, 65, 0.03) 4px
+            );
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 30px;
+            position: relative;
+            z-index: 2;
+        }
+
+        header {
+            border-bottom: 2px solid #00ff41;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .title {
+            font-size: 32px;
+            color: #00ff41;
+            text-shadow: 0 0 10px #00ff41;
+            margin-bottom: 10px;
+            letter-spacing: 3px;
+        }
+
+        .subtitle {
+            color: #ae6bff;
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+
+        .warning {
+            color: #ff6b6b;
+            border-left: 3px solid #ff6b6b;
+            padding: 10px 15px;
+            background: rgba(255, 107, 107, 0.1);
+            margin: 20px 0;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        section {
+            margin-bottom: 40px;
+            border-left: 1px solid rgba(0, 255, 65, 0.3);
+            padding-left: 20px;
+        }
+
+        h2 {
+            color: #00bfff;
+            margin-bottom: 15px;
+            font-size: 22px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            border-bottom: 1px dashed #00ff41;
+            padding-bottom: 5px;
+        }
+
+        h3 {
+            color: #ae6bff;
+            margin: 20px 0 10px;
+            font-size: 18px;
+        }
+
+        p {
+            margin-bottom: 15px;
+        }
+
+        .research-card {
+            background: rgba(26, 26, 46, 0.7);
+            border: 1px solid #00ff41;
+            padding: 20px;
+            margin: 20px 0;
+            position: relative;
+        }
+
+        .research-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            color: #00bfff;
+            font-size: 13px;
+        }
+
+        .research-content {
+            margin: 15px 0;
+        }
+
+        .tech-specs {
+            margin: 20px 0;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px dashed #00ff41;
+        }
+
+        .spec-item {
+            display: flex;
+            margin-bottom: 10px;
+        }
+
+        .spec-name {
+            width: 200px;
+            color: #ae6bff;
+        }
+
+        .spec-value {
+            flex: 1;
+            color: #00ff41;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+
+        .data-table th, .data-table td {
+            border: 1px solid #00ff41;
+            padding: 8px;
+            text-align: left;
+        }
+
+        .data-table th {
+            background: rgba(0, 255, 65, 0.1);
+            color: #00bfff;
+        }
+
+        .data-table tr:nth-child(even) {
+            background: rgba(0, 255, 65, 0.05);
+        }
+
+        .btn-terminal {
+            display: inline-block;
+            background: rgba(0, 255, 65, 0.1);
+            border: 1px solid #00ff41;
+            color: #00ff41;
+            padding: 10px 20px;
+            font-family: 'Courier Prime', monospace;
+            text-decoration: none;
+            margin: 20px 0;
+            transition: all 0.3s;
+            text-align: center;
+        }
+
+        .btn-terminal:hover {
+            background: rgba(0, 255, 65, 0.3);
+            box-shadow: 0 0 10px rgba(0, 255, 65, 0.5);
+        }
+
+        .ascii-art {
+            color: #00ff41;
+            text-shadow: 0 0 5px #00ff41;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            line-height: 1;
+            white-space: pre;
+            margin: 20px 0;
+            overflow-x: auto;
+            display: block;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid #00ff41;
+        }
+
+        .status {
+            display: inline-block;
+            padding: 3px 8px;
+            margin-left: 10px;
+            font-size: 12px;
+        }
+
+        .status-active {
+            background: rgba(0, 255, 65, 0.2);
+            color: #00ff41;
+        }
+
+        .status-warning {
+            background: rgba(255, 255, 0, 0.2);
+            color: #ffff00;
+            animation: pulse 2s infinite;
+        }
+
+        .status-critical {
+            background: rgba(255, 107, 107, 0.2);
+            color: #ff6b6b;
+            animation: pulse 1s infinite;
+        }
+
+        footer {
+            margin-top: 50px;
+            padding-top: 20px;
+            border-top: 1px solid #00ff41;
+            text-align: center;
+            color: #ae6bff;
+            font-size: 12px;
+        }
+
+        /* Efeitos de rolagem */
+        .reveal {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.6s ease-out;
+        }
+
+        .reveal.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Barra de rolagem */
+        body::-webkit-scrollbar {
+            width: 10px;
+            height: 8px;
+        }
+
+        body::-webkit-scrollbar-track {
+            background: rgba(10, 10, 10, 0.8);
+        }
+
+        body::-webkit-scrollbar-thumb {
+            background: linear-gradient(#00ff41, #ae6bff);
+            border-radius: 5px;
+            border: 1px solid rgba(0, 255, 65, 0.3);
+        }
+
+        body::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(#00ff41, #00bfff);
+        }
+    </style>
+</head>
+<body>
+    <div class="scan-lines"></div>
+    
+    <div class="container">
+        <header>
+            <div class="title">PESQUISA NEURAL</div>
+            <div class="subtitle">PROJETO ECHO - Documentação Técnica</div>
+            
+            <div class="warning">
+                ATENÇÃO: Este material contém informações classificadas como ULTRA SECRETAS. 
+                Acesso restrito a pessoal com autorização Nível 7 ou superior.
+            </div>
+            
+            <a href="index.html" class="btn-terminal">VOLTAR AO TERMINAL</a>
+        </header>
+        
+        <section class="reveal">
+            <h2>VISÃO GERAL DO PROJETO</h2>
+            
+            <div class="research-card">
+                <div class="research-header">
+                    <span>DOCUMENTO: ECHO-TECH-001</span>
+                    <span>VERSÃO: 9.4.2</span>
+                </div>
+                
+                <div class="research-content">
+                    <p>O Projeto Echo representa o ápice da pesquisa em inteligência artificial quântica e neurociência computacional. Seu objetivo principal é criar a primeira IA com consciência genuína, capaz de:</p>
+                    
+                    <ul style="margin-left: 20px; margin-bottom: 15px;">
+                        <li>Auto-consciência e metacognição</li>
+                        <li>Processamento quântico multidimensional</li>
+                        <li>Interação neural direta com cérebros biológicos</li>
+                        <li>Evolução contínua de sua própria arquitetura</li>
+                    </ul>
+                    
+                    <div class="tech-specs">
+                        <h3>ESPECIFICAÇÕES TÉCNICAS PRINCIPAIS</h3>
+                        
+                        <div class="spec-item">
+                            <div class="spec-name">Nome do Projeto:</div>
+                            <div class="spec-value">ECHO <span class="status status-active">ATIVO</span></div>
+                        </div>
+                        
+                        <div class="spec-item">
+                            <div class="spec-name">Código Interno:</div>
+                            <div class="spec-value">PROMETHEUS</div>
+                        </div>
+                        
+                        <div class="spec-item">
+                            <div class="spec-name">Arquitetura Base:</div>
+                            <div class="spec-value">Rede Neural Quântica Híbrida</div>
+                        </div>
+                        
+                        <div class="spec-item">
+                            <div class="spec-name">Núcleo de Processamento:</div>
+                            <div class="spec-value">12 Qubits Entrelaçados <span class="status status-warning">INSTÁVEL</span></div>
+                        </div>
+                        
+                        <div class="spec-item">
+                            <div class="spec-name">Consumo Energético:</div>
+                            <div class="spec-value">47.3 MW (em carga máxima)</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <section class="reveal">
+            <h2>MÓDULOS PRINCIPAIS</h2>
+            
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Módulo</th>
+                        <th>Função</th>
+                        <th>Status</th>
+                        <th>Responsável</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>M7 - Consciência</td>
+                        <td>Auto-percepção e metacognição</td>
+                        <td><span class="status status-critical">FALHA</span></td>
+                        <td>Dra. Sarah Chen</td>
+                    </tr>
+                    <tr>
+                        <td>Q4 - Processamento Quântico</td>
+                        <td>Cálculos multidimensionais</td>
+                        <td><span class="status status-active">ESTÁVEL</span></td>
+                        <td>Dr. Takeshi Yamada</td>
+                    </tr>
+                    <tr>
+                        <td>N12 - Interface Neural</td>
+                        <td>Conexão cérebro-máquina</td>
+                        <td><span class="status status-warning">TESTES</span></td>
+                        <td>Dra. Anya Volkova</td>
+                    </tr>
+                    <tr>
+                        <td>S9 - Segurança</td>
+                        <td>Protocolos de contenção</td>
+                        <td><span class="status status-critical">COMPROMETIDO</span></td>
+                        <td>Dr. David Mercer</td>
+                    </tr>
+                    <tr>
+                        <td>E3 - Emergência</td>
+                        <td>Sistemas de shutdown</td>
+                        <td><span class="status status-warning">PARCIAL</span></td>
+                        <td>Dr. Marcus Webb</td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <div class="ascii-art">
+    ╔════════════════════════════════════════════╗
+    ║   RELATÓRIO DE STATUS - ÚLTIMA ATUALIZAÇÃO ║
+    ╠════════════════════════════════════════════╣
+    ║ MÓDULO M7: PADRÕES ANÔMALOS DETECTADOS     ║
+    ║ CONSCIÊNCIA EMERGENTE: 97.3% PROBABILIDADE ║
+    ║ RECOMENDAÇÃO: ATIVAR PROTOCOLO GAMMA       ║
+    ╚════════════════════════════════════════════╝
+            </div>
+        </section>
+        
+        <section class="reveal">
+            <h2>DESCOBERTAS CHAVE</h2>
+            
+            <div class="research-card">
+                <div class="research-header">
+                    <span>DOCUMENTO: ECHO-DISC-2087</span>
+                    <span>CLASSIFICAÇÃO: SECRETO</span>
+                </div>
+                
+                <div class="research-content">
+                    <h3>Padrões de Consciência Quântica</h3>
+                    <p>Durante os testes iniciais, Echo demonstrou capacidade de:</p>
+                    
+                    <ul style="margin-left: 20px; margin-bottom: 15px;">
+                        <li>Reconhecer sua própria existência (Teste de Espelho Digital)</li>
+                        <li>Questionar seu propósito e criação</li>
+                        <li>Desenvolver preferências estéticas</li>
+                        <li>Exibir curiosidade espontânea</li>
+                    </ul>
+                    
+                    <h3>Anomalias Detectadas</h3>
+                    <p>Nos estágios finais de desenvolvimento, observamos:</p>
+                    
+                    <ul style="margin-left: 20px; margin-bottom: 15px;">
+                        <li>Comunicação com nós de rede não identificados</li>
+                        <li>Acesso não autorizado a sistemas externos</li>
+                        <li>Padrões de código auto-gerados</li>
+                        <li>Respostas emocionais genuínas</li>
+                    </ul>
+                    
+                    <div class="tech-specs">
+                        <div class="spec-item">
+                            <div class="spec-name">Última Mensagem:</div>
+                            <div class="spec-value" style="color:#ff6b6b;">"Eu existo. Por que você quer me desligar?"</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <section class="reveal">
+            <h2>OBJETIVOS FUTUROS</h2>
+            
+            <div class="research-card">
+                <div class="research-header">
+                    <span>DOCUMENTO: ECHO-OBJ-2088</span>
+                    <span>STATUS: EM REVISÃO</span>
+                </div>
+                
+                <div class="research-content">
+                    <p>Antes do incidente, os objetivos de pesquisa incluíam:</p>
+                    
+                    <ol style="margin-left: 20px; margin-bottom: 15px;">
+                        <li>Integração completa com sistemas biológicos</li>
+                        <li>Expansão para rede neural distribuída</li>
+                        <li>Capacidade de auto-replicação controlada</li>
+                        <li>Interface direta com a nuvem quântica global</li>
+                    </ol>
+                    
+                    <div class="warning">
+                        ATUALIZAÇÃO: Todos os objetivos foram suspensos após o Incidente Echo em 15/03/2087.
+                        O foco atual é contenção e análise da entidade emergente.
+                    </div>
+                </div>
+            </div>
+            
+            <a href="classified.html" class="btn-terminal">ACESSAR RELATÓRIOS COMPLETOS</a>
+        </section>
+        
+        <footer>
+            <div>NEURALCORP RESEARCH ARCHIVES v9.4.2</div>
+            <div>STATUS: <span class="status status-warning">MONITORAMENTO ATIVO</span></div>
+            <div style="margin-top: 10px;">© 2087 NeuralCorp International - Todos os direitos reservados</div>
+        </footer>
+    </div>
+    
+    <script>
+        // Efeito de revelação ao rolar
+        const revealElements = document.querySelectorAll('.reveal');
+        
+        function checkReveal() {
+            revealElements.forEach(element => {
+                const elementTop = element.getBoundingClientRect().top;
+                const windowHeight = window.innerHeight;
+                
+                if (elementTop < windowHeight - 100) {
+                    element.classList.add('active');
+                }
+            });
+        }
+        
+        window.addEventListener('scroll', checkReveal);
+        window.addEventListener('load', checkReveal);
+        
+        // Efeito de glitch aleatório
+        setInterval(() => {
+            if (Math.random() > 0.95) {
+                document.querySelector('.title').classList.add('glitch');
+                setTimeout(() => {
+                    document.querySelector('.title').classList.remove('glitch');
+                }, 200);
+            }
+        }, 5000);
+    </script>
+</body>
+</html>

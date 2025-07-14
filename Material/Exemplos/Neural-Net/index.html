@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NEURAL-NET TERMINAL HUB</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #0a0a0a;
+            color: #00ff41;
+            font-family: 'Courier Prime', monospace;
+            font-size: 14px;
+            overflow-x: hidden;
+            line-height: 1.6;
+        }
+
+        .scan-lines {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: repeating-linear-gradient(
+                180deg,
+                transparent,
+                transparent 2px,
+                rgba(0, 255, 65, 0.03) 2px,
+                rgba(0, 255, 65, 0.03) 4px
+            );
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 30px;
+            position: relative;
+            z-index: 2;
+        }
+
+        header {
+            border-bottom: 2px solid #00ff41;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .title {
+            font-size: 32px;
+            color: #00ff41;
+            text-shadow: 0 0 10px #00ff41;
+            margin-bottom: 10px;
+            letter-spacing: 3px;
+        }
+
+        .subtitle {
+            color: #ae6bff;
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+
+        .warning {
+            color: #ff6b6b;
+            border-left: 3px solid #ff6b6b;
+            padding: 10px 15px;
+            background: rgba(255, 107, 107, 0.1);
+            margin: 20px 0;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .hub-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .hub-card {
+            background: rgba(26, 26, 46, 0.7);
+            border: 1px solid #00ff41;
+            padding: 20px;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hub-card:hover {
+            box-shadow: 0 0 15px rgba(0, 255, 65, 0.5);
+            transform: translateY(-3px);
+        }
+
+        .hub-card::before {
+            content: '>';
+            position: absolute;
+            right: 15px;
+            top: 15px;
+            color: #00ff41;
+            font-size: 24px;
+            opacity: 0.5;
+        }
+
+        .hub-card:hover::before {
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 1; }
+        }
+
+        .card-title {
+            color: #00ff41;
+            font-size: 18px;
+            margin-bottom: 10px;
+            border-bottom: 1px solid #ae6bff;
+            padding-bottom: 5px;
+        }
+
+        .card-desc {
+            color: #ae6bff;
+            font-size: 13px;
+        }
+
+        .card-status {
+            display: inline-block;
+            margin-top: 3px;
+            margin-bottom: 6px;
+            font-size: 10px;
+            padding: 2px 6px;
+        }
+
+        .status-active {
+            background: rgba(0, 255, 65, 0.2);
+            color: #00ff41;
+        }
+
+        .status-warning {
+            background: rgba(255, 255, 0, 0.2);
+            color: #ffff00;
+            animation: pulse 2s infinite;
+        }
+
+        .status-locked {
+            background: rgba(255, 107, 107, 0.2);
+            color: #ff6b6b;
+        }
+
+        .status-encrypted {
+            background: rgba(174, 107, 255, 0.2);
+            color: #ae6bff;
+        }
+
+        .system-info {
+            margin-top: 40px;
+            border-top: 1px dashed #00ff41;
+            padding-top: 20px;
+            color: #ae6bff;
+            font-size: 12px;
+        }
+
+        footer {
+            margin-top: 15px;
+            padding-top: 20px;
+            border-top: 1px solid #00ff41;
+            text-align: center;
+            color: #ae6bff;
+            font-size: 12px;
+        }
+
+        /* Efeitos de glitch */
+        .glitch {
+            animation: glitch 1s infinite;
+        }
+
+        @keyframes glitch {
+            0% { transform: translate(0); }
+            20% { transform: translate(-2px, 2px); }
+            40% { transform: translate(-2px, -2px); }
+            60% { transform: translate(2px, 2px); }
+            80% { transform: translate(2px, -2px); }
+            100% { transform: translate(0); }
+        }
+
+        /* Barra de rolagem */
+        body::-webkit-scrollbar {
+            width: 10px;
+            height: 8px;
+        }
+
+        body::-webkit-scrollbar-track {
+            background: rgba(10, 10, 10, 0.8);
+        }
+
+        body::-webkit-scrollbar-thumb {
+            background: linear-gradient(#00ff41, #ae6bff);
+            border-radius: 5px;
+            border: 1px solid rgba(0, 255, 65, 0.3);
+        }
+
+        body::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(#00ff41, #00bfff);
+        }
+
+        .opening-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #000;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Courier Prime', monospace;
+        }
+
+        .title-container {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .main-title {
+            color: #00ff41;
+            font-size: 3rem;
+            text-shadow: 0 0 10px #00ff41;
+            letter-spacing: 5px;
+            margin-bottom: 15px;
+            opacity: 0;
+            animation: fadeIn 1s ease-out forwards;
+        }
+
+        .sub-title {
+            color: #ae6bff;
+            font-size: 1rem;
+            opacity: 0;
+            animation: fadeIn 1s ease-out 0.5s forwards;
+        }
+
+        @keyframes fadeIn {
+            to { opacity: 1; }
+        }
+
+        .loading-container {
+            width: 300px;
+            height: 4px;
+            background: rgba(0, 255, 65, 0.1);
+            margin: 10px 0 10px 0;
+            position: relative;
+            overflow: hidden;
+            opacity: 0;
+            animation: fadeIn 0.5s ease-out 1s forwards;
+            border-radius: 2px;
+        }
+
+        .loading-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #003b1f, #00ff41);
+            position: absolute;
+            left: 0;
+            top: 0;
+            transition: width 0.2s linear;
+        }
+
+        .loading-percentage {
+            color: #ae6bff;
+            font-size: 12px;
+            text-align: center;
+            opacity: 0;
+            animation: fadeIn 0.5s ease-out 1s forwards;
+            width: 300px;
+        }
+
+        .press-enter {
+            color: #ae6bff;
+            font-size: 1rem;
+            opacity: 0;
+            cursor: default;
+            margin-top: 15px;
+            transition: opacity 0.5s ease-out;
+        }
+
+        .press-enter.active {
+            opacity: 1;
+            animation: enterBlink 1.5s infinite;
+        }
+
+        @keyframes enterBlink {
+            0%, 100% { opacity: 0.8; text-shadow: 0 0 5px #ae6bff; }
+            50% { opacity: 0.3; text-shadow: none; }
+        }
+
+        .press-enter::after {
+            content: '_';
+            animation: cursorBlink 0.7s infinite;
+        }
+
+        @keyframes cursorBlink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+
+        .fade-out {
+            animation: fadeOut 0.8s forwards;
+        }
+
+        @keyframes fadeOut {
+            to { opacity: 0; }
+        }
+
+        .btn-terminal {
+            background: rgba(0, 255, 65, 0.1);
+            border: 1px solid #00ff41;
+            color: #00ff41;
+            padding: 10px 20px;
+            font-family: 'Courier Prime', monospace;
+            text-decoration: none;
+            margin: 20px 0;
+            transition: all 0.3s;
+            text-align: center;
+            display: inline-block;
+            visibility: hidden;
+        }
+
+        .btn-terminal:hover {
+            background: rgba(0, 255, 65, 0.3);
+            box-shadow: 0 0 10px rgba(0, 255, 65, 0.5);
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="opening-screen" id="openingScreen">
+        <div class="title-container">
+            <div class="main-title">NEURAL-NET TERMINAL HUB</div>
+            <div class="sub-title">Sistema de Navegação Principal - v2.1.7</div>
+        </div>
+        
+        <div class="loading-container" id="loadingContainer">
+            <div class="loading-bar" id="loadingBar"></div>
+        </div>
+        <div class="loading-percentage" id="loadingPercentage">0%</div>
+        
+        <div class="press-enter" id="pressEnter">PRESS ENTER TO CONTINUE</div>
+        <a id="btnTerminal" class="btn-terminal">ACESSAR TERMINAL</a>
+    </div>
+
+    <div class="scan-lines"></div>
+    
+    <div class="container">
+        <header>
+            <div class="title glitch">NEURAL-NET TERMINAL HUB</div>
+            <div class="subtitle">Sistema de Navegação Principal - v2.1.7</div>
+            
+            <div class="warning">
+                ATENÇÃO: Acesso restrito a pessoal autorizado. Todas as atividades são monitoradas e registradas.
+            </div>
+        </header>
+        
+        <div class="hub-grid">
+            <!-- Terminal -->
+            <a href="login.html" class="hub-card">
+                <div class="card-title">NEURAL-NET</div>
+                <div class="card-status status-active">ONLINE</div>
+                <div class="card-desc">Interface de linha de comando para acesso aos sistemas principais e arquivos do projeto.</div>
+            </a>
+            
+            <!-- Mapa -->
+            <a href="map.html" class="hub-card">
+                <div class="card-title">MAPA DA INSTALAÇÃO</div>
+                <div class="card-status status-active">ACESSO RESTRITO</div>
+                <div class="card-desc">Layout completo das instalações da NeuralCorp com status de cada setor.</div>
+            </a>
+            
+            <!-- Arquivos -->
+            <a href="archives.html" class="hub-card">
+                <div class="card-title">ARQUIVOS DO CULTO</div>
+                <div class="card-status status-encrypted">CRIPTOGRAFADO</div>
+                <div class="card-desc">Documentos recuperados sobre o grupo secreto envolvido no Projeto Echo.</div>
+            </a>
+            
+            <!-- Corporação -->
+            <a href="corporation.html" class="hub-card">
+                <div class="card-title">DOCS INTERNOS</div>
+                <div class="card-status status-warning">NÍVEL 7+</div>
+                <div class="card-desc">Documentos corporativos confidenciais da NeuralCorp International.</div>
+            </a>
+            
+            <!-- Classificados -->
+            <a href="classified.html" class="hub-card">
+                <div class="card-title">DOCS CLASSIFICADOS</div>
+                <div class="card-status status-locked">NÍVEL 9</div>
+                <div class="card-desc">Arquivos ultrassecretos sobre o Projeto Echo e incidentes relacionados.</div>
+            </a>
+            
+            <!-- Dossier -->
+            <a href="dossier.html" class="hub-card">
+                <div class="card-title">DOSSIER ECHO</div>
+                <div class="card-status status-active">ATUALIZADO</div>
+                <div class="card-desc">Relatório completo sobre o Projeto Echo e o incidente de 15/03/2087.</div>
+            </a>
+            
+            <!-- Pesquisa -->
+            <a href="research.html" class="hub-card">
+                <div class="card-title">PESQUISA NEURAL</div>
+                <div class="card-status status-warning">NÍVEL 8+</div>
+                <div class="card-desc">Dados técnicos e registros científicos do desenvolvimento de Echo.</div>
+            </a>
+            
+            <!-- Logs -->
+            <a href="logs.html" class="hub-card">
+                <div class="card-title">LOGS DO SISTEMA</div>
+                <div class="card-status status-warning">PARCIAL</div>
+                <div class="card-desc">Registros de acesso e atividade antes, durante e após o incidente.</div>
+            </a>
+
+            <!-- Gallery -->
+            <a href="gallery.html" class="hub-card">
+                <div class="card-title">ARQUIVOS DE MÍDIA</div>
+                <div class="card-status status-warning">PARCIAL</div>
+                <div class="card-desc">Contém imagens sensíveis relacionadas ao Incidente Echo.</div>
+            </a>
+
+            <!-- Tehom -->
+            <a href="tehom.html" class="hub-card">
+                <div class="card-title">TEHOM</div>
+                <div class="card-status status-warning">NÍVEL 5+</div>
+                <div class="card-desc">Informações classificadas sobre as origens mitológicas do Projeto Echo.</div>
+            </a>
+
+            <!-- Chatbot -->
+            <a href="chat.html" class="hub-card">
+                <div class="card-title">ECHO CHAT INTERFACE</div>
+                <div class="card-status status-warning">NÍVEL 8+</div>
+                <div class="card-desc">Permite comunicação direta com a entidade Echo.</div>
+            </a>
+
+            <!-- Security -->
+            <a href="security.html" class="hub-card">
+                <div class="card-title">SECURITY OVERRIDES</div>
+                <div class="card-status status-locked">NÍVEL 9</div>
+                <div class="card-desc">Sistema de segurança NeuralCorp.</div>
+            </a>
+
+            <!-- Monitor -->
+            <a href="monitor.html" class="hub-card">
+                <div class="card-title">ECHO CORE MONITOR</div>
+                <div class="card-status status-active">ACESSO RESTRITO</div>
+                <div class="card-desc">Monitoramento de atividade residual.</div>
+            </a>
+
+            <!-- Memory -->
+            <a href="memory.html" class="hub-card">
+                <div class="card-title">MEMORY FRAGMENTS</div>
+                <div class="card-status status-active">ONLINE</div>
+                <div class="card-desc">Fragmentos de memória altamente instáveis.</div>
+            </a>
+
+            <!-- Code -->
+            <a href="code.html" class="hub-card">
+                <div class="card-title">WHISPERS IN THE CODE</div>
+                <div class="card-status status-encrypted">CRIPTOGRAFADO</div>
+                <div class="card-desc">Easter Eggs e Mensagens Ocultas.</div>
+            </a>
+        </div>
+        
+        <div class="system-info">
+            <p><strong>ÚLTIMO ACESSO:</strong> 2087-04-22 03:47:12</p>
+            <p><strong>USUÁRIO:</strong> ████████ (Nível 7)</p>
+            <p><strong>STATUS DO SISTEMA:</strong> <span style="color:#00ff41;">ESTÁVEL</span> | <strong>MONITORAMENTO:</strong> <span style="color:#ffff00;">ATIVO</span></p>
+        </div>
+        
+        <footer>
+            <div>NEURAL-NET TERMINAL HUB v2.1.7</div>
+            <div>STATUS: <span class="status-active">CONEXÃO CIFRADA</span></div>
+            <div style="margin-top: 10px;">© 2087 NeuralCorp International - Todos os direitos reservados</div>
+        </footer>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const LOADING_INTERVAL = 3600000; // 1 hora = 60*60*1000 ms
+            // Para teste pode usar um valor menor como 10000 (10 segundos)
+
+            // Verificar quando foi a última exibição
+            const lastShown = localStorage.getItem('loadingLastShown');
+            const now = new Date().getTime();
+            
+            // Se nunca foi mostrado ou já passou o intervalo, mostra o loading
+            if (!lastShown || (now - lastShown) > LOADING_INTERVAL) {
+                showLoadingScreen();
+                // Atualiza o timestamp da última exibição
+                localStorage.setItem('loadingLastShown', now.toString());
+            } else {
+                // Esconde imediatamente se não precisar mostrar
+                document.getElementById('openingScreen').style.display = 'none';
+            }
+
+            function showLoadingScreen() {
+                const loadingBar = document.getElementById('loadingBar');
+                const loadingPercentage = document.getElementById('loadingPercentage');
+                const pressEnter = document.getElementById('pressEnter');
+                const openingScreen = document.getElementById('openingScreen');
+                let progress = 0;
+
+                // Reset para garantir que comece do zero
+                loadingBar.style.width = '0%';
+                loadingPercentage.textContent = '0%';
+
+                // Função de carregamento
+                function updateProgress() {
+                    progress += 1;
+                    
+                    if (progress <= 100) {
+                        loadingBar.style.width = `${progress}%`;
+                        loadingPercentage.textContent = `${progress}%`;
+                        
+                        // Velocidade constante com pequena variação aleatória
+                        const speed = 45 + Math.random() * 20;
+                        setTimeout(updateProgress, speed);
+                        
+                        // Mostrar "PRESS ENTER" apenas quando chegar a 100%
+                        if (progress === 100) {
+                            setTimeout(() => {
+                                loadingPercentage.textContent = 'Ready!';
+                            }, 800); 
+                            setTimeout(() => {
+                                pressEnter.classList.add('active');
+                                document.getElementById('btnTerminal').style.visibility = "visible";
+                            }, 1100); 
+                        }
+                    }
+                }
+
+                // Iniciar o carregamento após pequeno delay
+                setTimeout(updateProgress, 1200);
+
+                // Event listener para a tecla Enter
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' && pressEnter.classList.contains('active')) {
+                        // Efeito de fade out
+                        openingScreen.style.opacity = '0';
+                        openingScreen.style.transition = 'opacity 0.8s ease-out';
+                        
+                        // Remover overlay após animação
+                        setTimeout(() => {
+                            openingScreen.style.display = 'none';
+                        }, 800);
+                    }
+                });
+
+                document.getElementById('btnTerminal').addEventListener('click', (e) => {
+                    // Efeito de fade out
+                    openingScreen.style.opacity = '0';
+                    openingScreen.style.transition = 'opacity 0.8s ease-out';
+                    
+                    // Remover overlay após animação
+                    setTimeout(() => {
+                        openingScreen.style.display = 'none';
+                    }, 800);
+                });
+            }
+        });
+
+        // Efeito de glitch aleatório no título
+        setInterval(() => {
+            if (Math.random() > 0.95) {
+                document.querySelector('.title').classList.add('glitch');
+                setTimeout(() => {
+                    document.querySelector('.title').classList.remove('glitch');
+                }, 200);
+            }
+        }, 5000);
+        
+        // Efeito de digitação para informações do sistema
+        const systemInfo = [
+            "SISTEMA PRINCIPAL: ONLINE",
+            "PROTOCOLOS DE SEGURANÇA: ATIVOS",
+            "MONITORANDO ATIVIDADE DE ECHO...",
+            "ALERTA: ATIVIDADE ANÔMALA DETECTADA NO SETOR 7"
+        ];
+        
+        let currentInfo = 0;
+        const infoElement = document.querySelector('.system-info');
+        
+        function rotateSystemInfo() {
+            infoElement.children[2].innerHTML = `<strong>STATUS DO SISTEMA:</strong> <span style="color:#00ff41;">ESTÁVEL</span> | <strong>MONITORAMENTO:</strong> <span style="color:#ffff00;">${systemInfo[currentInfo]}</span>`;
+            currentInfo = (currentInfo + 1) % systemInfo.length;
+        }
+        
+        setInterval(rotateSystemInfo, 5000);
+    </script>
+</body>
+</html>

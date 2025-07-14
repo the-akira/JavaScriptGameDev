@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MEMORY FRAGMENTS RECONSTRUCTION | NEURALCORP</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+        
+        :root {
+            --primary: #00ff41;
+            --secondary: #ae6bff;
+            --alert: #ff6b6b;
+            --blue: #00bfff;
+            --dark-bg: #0a0a0a;
+            --panel-bg: rgba(15, 15, 25, 0.8);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: var(--dark-bg);
+            color: var(--primary);
+            font-family: 'Share Tech Mono', monospace;
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        .scanlines {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                repeating-linear-gradient(
+                    0deg,
+                    rgba(0, 255, 65, 0.05),
+                    rgba(0, 255, 65, 0.05) 1px,
+                    transparent 1px,
+                    transparent 2px
+                );
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 30px;
+            position: relative;
+            z-index: 2;
+        }
+
+        header {
+            border-bottom: 1px solid var(--primary);
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 28px;
+            color: var(--primary);
+            text-shadow: 0 0 10px var(--primary);
+            margin-bottom: 10px;
+            letter-spacing: 3px;
+        }
+
+        .subtitle {
+            color: var(--secondary);
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+
+        .warning {
+            color: var(--alert);
+            border-left: 3px solid var(--alert);
+            padding: 10px 15px;
+            background: rgba(255, 107, 107, 0.1);
+            margin: 20px 0;
+            animation: pulse 2s infinite;
+        }
+
+        .reconstruction-interface {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 30px;
+            margin-top: 30px;
+        }
+
+        .fragments-pool {
+            flex: 1;
+            min-width: 300px;
+            background: var(--panel-bg);
+            border: 1px solid var(--primary);
+            padding: 20px;
+        }
+
+        .reconstruction-area {
+            flex: 2;
+            min-width: 400px;
+            background: var(--panel-bg);
+            border: 1px solid var(--primary);
+            padding: 20px;
+            min-height: 500px;
+        }
+
+        .section-title {
+            color: var(--secondary);
+            margin-bottom: 15px;
+            border-bottom: 1px dashed var(--secondary);
+            padding-bottom: 5px;
+        }
+
+        .fragments-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+
+        .fragment {
+            background: rgba(0, 255, 65, 0.1);
+            border: 1px solid var(--primary);
+            height: 100px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: grab;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .fragment:hover {
+            background: rgba(0, 255, 65, 0.2);
+            box-shadow: 0 0 10px rgba(0, 255, 65, 0.3);
+        }
+
+        .fragment img {
+            max-width: 100%;
+            max-height: 100%;
+            pointer-events: none;
+        }
+
+        .fragment::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(
+                45deg,
+                transparent,
+                transparent 5px,
+                rgba(0, 255, 65, 0.05) 5px,
+                rgba(0, 255, 65, 0.05) 10px
+            );
+        }
+
+        .reconstruction-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(3, 1fr);
+            gap: 10px;
+            height: 450px;
+        }
+
+        .reconstruction-slot {
+            background: rgba(0, 10, 5, 0.3);
+            border: 1px dashed var(--primary);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .reconstruction-slot.highlight {
+            background: rgba(0, 255, 65, 0.1);
+            border: 1px solid var(--secondary);
+            animation: pulse 1s infinite;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 25px;
+        }
+
+        .control-btn {
+            background: rgba(0, 255, 65, 0.1);
+            border: 1px solid var(--primary);
+            color: var(--primary);
+            padding: 10px 20px;
+            font-family: 'Share Tech Mono', monospace;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .control-btn:hover {
+            background: rgba(0, 255, 65, 0.3);
+            box-shadow: 0 0 10px rgba(0, 255, 65, 0.5);
+        }
+
+        .control-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .progress-container {
+            margin-top: 30px;
+            text-align: center;
+        }
+
+        .progress-bar {
+            height: 10px;
+            background: rgba(0, 255, 65, 0.1);
+            margin-top: 10px;
+            position: relative;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--primary);
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+
+        .completed-message {
+            color: var(--primary);
+            text-align: center;
+            margin-top: 20px;
+            font-size: 18px;
+            display: none;
+        }
+
+        .memory-preview {
+            display: none;
+            margin-top: 30px;
+            text-align: center;
+        }
+
+        .memory-preview img {
+            max-width: 100%;
+            border: 1px solid var(--primary);
+            box-shadow: 0 0 20px rgba(0, 255, 65, 0.2);
+        }
+
+        footer {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid var(--primary);
+            text-align: center;
+            color: var(--secondary);
+            font-size: 12px;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        @keyframes glitch {
+            0% { text-shadow: 1px 0 var(--alert), -1px 0 var(--secondary); }
+            25% { text-shadow: -1px 0 var(--alert), 1px 0 var(--secondary); }
+            50% { text-shadow: 1px 0 var(--secondary), -1px 0 var(--alert); }
+            75% { text-shadow: -1px 0 var(--secondary), 1px 0 var(--alert); }
+            100% { text-shadow: 1px 0 var(--alert), -1px 0 var(--secondary); }
+        }
+
+        .glitch-text {
+            animation: glitch 1s infinite;
+        }
+
+        /* Barra de rolagem */
+        body::-webkit-scrollbar {
+            width: 10px;
+            height: 8px;
+        }
+
+        body::-webkit-scrollbar-track {
+            background: rgba(10, 10, 10, 0.8);
+        }
+
+        body::-webkit-scrollbar-thumb {
+            background: linear-gradient(#00ff41, #ae6bff);
+            border-radius: 5px;
+            border: 1px solid rgba(0, 255, 65, 0.3);
+        }
+
+        body::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(#00ff41, #00bfff);
+        }
+
+        @media only screen and (max-width: 460px) {
+            .fragments-pool,
+            .reconstruction-area {
+                width: 90%;
+                min-width: 250px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="scanlines"></div>
+    
+    <div class="container">
+        <header>
+            <h1>MEMORY FRAGMENTS RECONSTRUCTION</h1>
+            <div class="subtitle">NeuralCorp Memory Recovery System v4.2.1 | Reconstructing: <span id="current-memory-name"></span></div>
+        </header>
+
+        <div class="warning">
+            ATENÇÃO: Fragmentos de memória altamente instáveis. Reconstrua com cuidado para evitar corrupção de dados.
+        </div>
+
+        <div class="reconstruction-interface">
+            <div class="fragments-pool">
+                <h3 class="section-title">FRAGMENTOS DISPONÍVEIS</h3>
+                <div class="fragments-grid" id="fragments-pool">
+                    <!-- Fragmentos serão adicionados pelo JavaScript -->
+                </div>
+            </div>
+
+            <div class="reconstruction-area">
+                <h3 class="section-title">ÁREA DE RECONSTRUÇÃO</h3>
+                <div class="reconstruction-grid" id="reconstruction-grid">
+                    <!-- Slots de reconstrução serão adicionados pelo JavaScript -->
+                </div>
+            </div>
+        </div>
+
+        <div class="progress-container">
+            <div>PROGRESSO DE RECONSTRUÇÃO: <span id="progress-text">0%</span></div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progress-fill"></div>
+            </div>
+        </div>
+
+        <div class="completed-message" id="completed-message">
+            RECONSTRUÇÃO COMPLETA! ANALISANDO MEMÓRIA RECUPERADA...
+        </div>
+
+        <div class="memory-preview" id="memory-preview">
+            <h3>MEMÓRIA RECONSTITUÍDA</h3>
+            <!-- Imagem completa será exibida aqui -->
+        </div>
+
+        <div class="controls">
+            <button class="control-btn" id="reset-btn">REINICIAR RECONSTRUÇÃO</button>
+            <button class="control-btn" id="analyze-btn" disabled>ANALISAR MEMÓRIA</button>
+        </div>
+
+        <footer>
+            <div>NEURALCORP MEMORY RECOVERY SYSTEM</div>
+            <div>STATUS: <span class="glitch-text">FRAGMENTOS DETECTADOS</span></div>
+            <div style="margin-top: 10px;">© 2087 NeuralCorp International - TODOS OS DIREITOS RESERVADOS</div>
+        </footer>
+    </div>
+
+    <script>
+        // Memórias disponíveis para reconstrução
+        const memorySets = [
+            {
+                name: "Memory_Alpha",
+                fullImage: "memory/computer.png"
+            },
+            {
+                name: "Memory_Beta", 
+                fullImage: "memory/server.png"
+            },
+            {
+                name: "Memory_Gamma",
+                fullImage: "memory/network.png"
+            },
+            {
+                name: "Memory_Delta",
+                fullImage: "memory/brain.png"
+            }
+        ];
+
+        // Estado do jogo
+        const gameState = {
+            currentSet: 0,
+            placedFragments: 0,
+            correctPlacements: 0,
+            draggedFragment: null,
+            fragmentPositions: shuffleArray([0, 1, 2, 3, 4, 5, 6, 7, 8])
+        };
+
+        // Elementos da interface
+        const elements = {
+            fragmentsPool: document.getElementById('fragments-pool'),
+            reconstructionGrid: document.getElementById('reconstruction-grid'),
+            progressText: document.getElementById('progress-text'),
+            progressFill: document.getElementById('progress-fill'),
+            completedMessage: document.getElementById('completed-message'),
+            memoryPreview: document.getElementById('memory-preview'),
+            resetBtn: document.getElementById('reset-btn'),
+            analyzeBtn: document.getElementById('analyze-btn'),
+            currentMemoryName: document.getElementById('current-memory-name'),
+        };
+
+        // Inicialização
+        function init() {
+            gameState.currentSet = Math.floor(Math.random() * memorySets.length);
+            loadMemorySet();
+            setupEventListeners();
+        }
+
+        // Carregar conjunto de memória
+        function loadMemorySet() {
+            elements.currentMemoryName.textContent = memorySets[gameState.currentSet].name;
+            // Limpar áreas
+            elements.fragmentsPool.innerHTML = '';
+            elements.reconstructionGrid.innerHTML = '';
+            
+            // Carregar fragmentos na pool
+            for (let i = 0; i < 9; i++) {
+                const fragment = document.createElement('div');
+                fragment.className = 'fragment';
+                fragment.draggable = true;
+                fragment.dataset.index = i;
+                fragment.dataset.correctPos = gameState.fragmentPositions[i];
+                
+                // Simular imagem do fragmento (na prática, seria um caminho real)
+                fragment.innerHTML = `<div style="width:100%;height:100%;background:#111;display:flex;justify-content:center;align-items:center;color:var(--primary)">${i+1}</div>`;
+                
+                elements.fragmentsPool.appendChild(fragment);
+            }
+            
+            // Criar slots de reconstrução
+            for (let i = 0; i < 9; i++) {
+                const slot = document.createElement('div');
+                slot.className = 'reconstruction-slot';
+                slot.dataset.position = i;
+                elements.reconstructionGrid.appendChild(slot);
+            }
+            
+            // Resetar estado
+            gameState.placedFragments = 0;
+            gameState.correctPlacements = 0;
+            updateProgress();
+        }
+
+        // Configurar listeners de eventos
+        function setupEventListeners() {
+            // Drag and Drop
+            document.addEventListener('dragstart', (e) => {
+                if (e.target.classList.contains('fragment')) {
+                    gameState.draggedFragment = e.target;
+                    e.target.style.opacity = '0.5';
+                }
+            });
+            
+            document.addEventListener('dragend', (e) => {
+                if (e.target.classList.contains('fragment')) {
+                    e.target.style.opacity = '1';
+                }
+            });
+            
+            document.addEventListener('dragover', (e) => {
+                if (e.target.classList.contains('reconstruction-slot')) {
+                    e.preventDefault();
+                    e.target.classList.add('highlight');
+                }
+            });
+            
+            document.addEventListener('dragleave', (e) => {
+                if (e.target.classList.contains('reconstruction-slot')) {
+                    e.target.classList.remove('highlight');
+                }
+            });
+            
+            document.addEventListener('drop', (e) => {
+                e.preventDefault();
+                if (e.target.classList.contains('reconstruction-slot') && gameState.draggedFragment) {
+                    e.target.classList.remove('highlight');
+                    
+                    const fragment = gameState.draggedFragment;
+                    const correctPos = parseInt(fragment.dataset.correctPos);
+                    const slotPos = parseInt(e.target.dataset.position);
+                    
+                    // Verificar se o fragmento já estava em algum slot correto antes
+                    const previousSlot = fragment.parentElement;
+                    if (previousSlot && previousSlot.classList.contains('reconstruction-slot')) {
+                        const previousPos = parseInt(previousSlot.dataset.position);
+                        if (previousPos === correctPos) {
+                            gameState.correctPlacements--; // Remove do contador se estava correto antes
+                        }
+                    }
+                    
+                    // Verificar se o slot já está ocupado (swap)
+                    if (e.target.children.length > 0) {
+                        const existingFragment = e.target.children[0];
+                        const existingCorrectPos = parseInt(existingFragment.dataset.correctPos);
+                        const existingSlotPos = parseInt(e.target.dataset.position);
+                        
+                        // Mover fragmento existente de volta para o pool
+                        elements.fragmentsPool.appendChild(existingFragment);
+                        existingFragment.style.width = '';
+                        existingFragment.style.height = '';
+                        existingFragment.style.border = '1px solid var(--primary)';
+                        
+                        // Atualizar contador se o fragmento existente estava correto
+                        if (existingSlotPos === existingCorrectPos) {
+                            gameState.correctPlacements--;
+                        }
+                    }
+                    
+                    // Mover fragmento para o novo slot
+                    e.target.appendChild(fragment);
+                    fragment.style.width = '100%';
+                    fragment.style.height = '100%';
+                    
+                    // Verificar nova posição
+                    if (correctPos === slotPos) {
+                        gameState.correctPlacements++;
+                        fragment.style.border = '2px solid var(--primary)';
+                    } else {
+                        fragment.style.border = '2px solid var(--alert)';
+                    }
+                    
+                    // Atualizar contagem total de peças colocadas
+                    gameState.placedFragments = document.querySelectorAll('.reconstruction-slot > .fragment').length;
+                    
+                    updateProgress();
+                }
+            });
+            
+            // Botões
+            elements.resetBtn.addEventListener('click', resetReconstruction);
+            elements.analyzeBtn.addEventListener('click', showMemory);
+        }
+
+        // Reiniciar reconstrução
+        function resetReconstruction() {
+            gameState.fragmentPositions = shuffleArray([0, 1, 2, 3, 4, 5, 6, 7, 8]);
+            
+            const fragments = Array.from(document.querySelectorAll('.reconstruction-slot > .fragment'));
+            fragments.forEach(fragment => {
+                elements.fragmentsPool.appendChild(fragment);
+                fragment.style.width = '';
+                fragment.style.height = '';
+                fragment.style.border = '1px solid var(--primary)';
+            });
+            
+            gameState.placedFragments = 0;
+            gameState.correctPlacements = 0;
+            updateProgress();
+            elements.memoryPreview.style.display = 'none';
+            elements.completedMessage.style.display = 'none';
+            elements.analyzeBtn.disabled = true;
+            gameState.currentSet = Math.floor(Math.random() * memorySets.length);
+            elements.currentMemoryName.textContent = memorySets[gameState.currentSet].name;
+        }
+
+        // Atualizar progresso
+        function updateProgress() {
+            // Progresso baseado apenas nas peças corretamente posicionadas
+            const progress = Math.min(Math.floor((gameState.correctPlacements / 9) * 100), 100);
+            elements.progressText.textContent = `${progress}%`;
+            elements.progressFill.style.width = `${progress}%`;
+            
+            if (gameState.correctPlacements > 0) {
+                elements.analyzeBtn.disabled = false;
+            } else {
+                elements.analyzeBtn.disabled = true;
+            }
+
+            if (gameState.placedFragments === 9) {
+                elements.completedMessage.style.display = 'block';
+                
+                // Verificar se a reconstrução está correta
+                if (gameState.correctPlacements === 9) {
+                    elements.completedMessage.textContent = 'RECONSTRUÇÃO PERFEITA! ANALISANDO MEMÓRIA...';
+                    elements.completedMessage.style.color = 'var(--primary)';
+                } else {
+                    const accuracy = Math.floor((gameState.correctPlacements / 9) * 100);
+                    elements.completedMessage.textContent = `RECONSTRUÇÃO PARCIAL (${accuracy}% DE PRECISÃO). ANALISANDO...`;
+                    elements.completedMessage.style.color = 'var(--alert)';
+                }
+            }
+        }
+
+        // Mostrar memória reconstruída
+        function showMemory() {
+            const accuracy = Math.floor((gameState.correctPlacements / 9) * 100);
+            const currentSet = memorySets[gameState.currentSet];
+            
+            // Calcular o nível de desfoque baseado na precisão (inverso)
+            const blurAmount = 10 - (accuracy / 10); // Varia de 10px (0%) a 0px (100%)
+            const contrastAmount = 50 + (accuracy / 2); // Varia de 50% (0%) a 100% (100%)
+            
+            elements.memoryPreview.innerHTML = `
+                <h3>MEMÓRIA RECONSTITUÍDA - ${currentSet.name}</h3>
+                <div style="width:100%;height:300px;display:flex;justify-content:center;align-items:center;margin:20px auto;overflow:hidden;border:1px solid var(--primary);">
+                    <img src="${currentSet.fullImage}" 
+                         style="width:100%;max-height:100%;object-fit:contain;
+                                filter: blur(${Math.max(0, blurAmount)}px) 
+                                       contrast(${contrastAmount}%)
+                                       grayscale(${100 - accuracy}%);
+                                transition: all 1s ease-out;"
+                         alt="Memória reconstruída">
+                </div>
+                <p>NÍVEL DE RECONSTRUÇÃO: <span style="color:${getAccuracyColor(accuracy)}">${accuracy}%</span></p>
+                <p>${getMemoryDescription(accuracy)}</p>
+                ${accuracy < 100 ? '<p style="color:var(--secondary);font-size:0.9em">DICA: Reposicione os fragmentos incorretos para melhorar a nitidez.</p>' : ''}
+            `;
+            
+            elements.memoryPreview.style.display = 'block';
+        }
+
+        // Função auxiliar para cor baseada na precisão
+        function getAccuracyColor(accuracy) {
+            if (accuracy === 100) return 'var(--primary)';
+            if (accuracy >= 80) return 'var(--blue)';
+            if (accuracy >= 60) return 'var(--secondary)';
+            return 'var(--alert)';
+        }
+
+        // Função de descrição modificada
+        function getMemoryDescription(accuracy) {
+            if (accuracy === 100) return "RECONSTRUÇÃO PERFEITA! Todos os detalhes estão precisos e claros.";
+            if (accuracy >= 80) return "Ótima reconstrução! Apenas pequenos detalhes estão desfocados.";
+            if (accuracy >= 60) return "Reconstrução satisfatória. A imagem geral é reconhecível, mas alguns detalhes estão confusos.";
+            if (accuracy >= 40) return "Estrutura básica visível, mas muitos detalhes importantes estão perdidos.";
+            if (accuracy >= 20) return "Reconstrução mínima. Apenas formas gerais são discerníveis.";
+            return "Dados extremamente corrompidos. Quase nada é reconhecível.";
+        }
+
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        // Iniciar quando o DOM estiver pronto
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>

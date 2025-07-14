@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LOGS DO SISTEMA | PROJETO ECHO</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #0a0a0a;
+            color: #00ff41;
+            font-family: 'Courier Prime', monospace;
+            font-size: 14px;
+            overflow-x: hidden;
+            line-height: 1.4;
+        }
+
+        .scan-lines {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: repeating-linear-gradient(
+                180deg,
+                transparent,
+                transparent 2px,
+                rgba(0, 255, 65, 0.03) 2px,
+                rgba(0, 255, 65, 0.03) 4px
+            );
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 30px;
+            position: relative;
+            z-index: 2;
+        }
+
+        header {
+            border-bottom: 2px solid #00ff41;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .title {
+            font-size: 32px;
+            color: #00ff41;
+            text-shadow: 0 0 10px #00ff41;
+            margin-bottom: 10px;
+            letter-spacing: 3px;
+        }
+
+        .subtitle {
+            color: #ae6bff;
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+
+        .warning {
+            color: #ff6b6b;
+            border-left: 3px solid #ff6b6b;
+            padding: 10px 15px;
+            background: rgba(255, 107, 107, 0.1);
+            margin: 20px 0;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .log-container {
+            background: rgba(10, 10, 20, 0.7);
+            border: 1px solid #00ff41;
+            padding: 15px;
+            margin-bottom: 30px;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .log-container::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .log-container::-webkit-scrollbar-thumb {
+            background: linear-gradient(#00ff41, #ae6bff);
+            border-radius: 4px;
+        }
+
+        .log-entry {
+            margin-bottom: 10px;
+            font-family: 'Courier Prime', monospace;
+            white-space: pre-wrap;
+            border-bottom: 1px dashed rgba(0, 255, 65, 0.2);
+            padding-bottom: 5px;
+        }
+
+        .log-date {
+            color: #ae6bff;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+
+        .log-source {
+            color: #00bfff;
+            margin-right: 10px;
+        }
+
+        .log-message {
+            color: #00ff41;
+        }
+
+        .log-warning {
+            color: #ffff00;
+        }
+
+        .log-error {
+            color: #ff6b6b;
+            animation: pulse 2s infinite;
+        }
+
+        .log-critical {
+            color: #ff0000;
+            font-weight: bold;
+            animation: pulse 1s infinite;
+        }
+
+        .log-security {
+            color: #ff6b6b;
+            border-left: 3px solid #ff6b6b;
+            padding-left: 10px;
+        }
+
+        .log-echo {
+            color: #ae6bff;
+            border-left: 3px solid #ae6bff;
+            padding-left: 10px;
+        }
+
+        .filter-controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            background: rgba(0, 255, 65, 0.1);
+            border: 1px solid #00ff41;
+            color: #00ff41;
+            padding: 5px 15px;
+            padding-top: 7px;
+            font-family: 'Courier Prime', monospace;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .filter-btn:hover, .filter-btn.active {
+            background: rgba(0, 255, 65, 0.3);
+            box-shadow: 0 0 10px rgba(0, 255, 65, 0.5);
+        }
+
+        .search-box {
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid #00ff41;
+            color: #00ff41;
+            padding: 8px;
+            font-family: 'Courier Prime', monospace;
+            flex-grow: 1;
+            min-width: 200px;
+            font-size: 16px;
+        }
+
+        .log-period {
+            margin-bottom: 20px;
+        }
+
+        .period-selector {
+            background: black;
+            border: 1px solid #00ff41;
+            color: #00ff41;
+            padding: 8px;
+            font-family: 'Courier Prime', monospace;
+            margin-right: 10px;
+        }
+
+        .btn-terminal {
+            display: inline-block;
+            background: rgba(0, 255, 65, 0.1);
+            border: 1px solid #00ff41;
+            color: #00ff41;
+            padding: 10px 20px;
+            font-family: 'Courier Prime', monospace;
+            text-decoration: none;
+            margin: 20px 0;
+            transition: all 0.3s;
+            text-align: center;
+        }
+
+        .btn-terminal:hover {
+            background: rgba(0, 255, 65, 0.3);
+            box-shadow: 0 0 10px rgba(0, 255, 65, 0.5);
+        }
+
+        .log-stats {
+            margin-top: 20px;
+            color: #ae6bff;
+            font-size: 13px;
+        }
+
+        footer {
+            margin-top: 50px;
+            padding-top: 20px;
+            border-top: 1px solid #00ff41;
+            text-align: center;
+            color: #ae6bff;
+            font-size: 12px;
+        }
+
+        /* Efeitos de rolagem */
+        .reveal {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.6s ease-out;
+        }
+
+        .reveal.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Barra de rolagem */
+        body::-webkit-scrollbar {
+            width: 10px;
+            height: 8px;
+        }
+
+        body::-webkit-scrollbar-track {
+            background: rgba(10, 10, 10, 0.8);
+        }
+
+        body::-webkit-scrollbar-thumb {
+            background: linear-gradient(#00ff41, #ae6bff);
+            border-radius: 5px;
+            border: 1px solid rgba(0, 255, 65, 0.3);
+        }
+
+        body::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(#00ff41, #00bfff);
+        }
+
+        /* Animações */
+        @keyframes highlight {
+            0% { background-color: rgba(0, 255, 65, 0); }
+            50% { background-color: rgba(0, 255, 65, 0.2); }
+            100% { background-color: rgba(0, 255, 65, 0); }
+        }
+
+        .highlight {
+            animation: highlight 2s;
+        }
+
+        /* Efeito de glitch */
+        @keyframes glitch {
+            0% { transform: translate(0); }
+            20% { transform: translate(-2px, 2px); }
+            40% { transform: translate(-2px, -2px); }
+            60% { transform: translate(2px, 2px); }
+            80% { transform: translate(2px, -2px); }
+            100% { transform: translate(0); }
+        }
+
+        .glitch {
+            animation: glitch 1s infinite;
+        }
+    </style>
+</head>
+<body>
+    <div class="scan-lines"></div>
+    
+    <div class="container">
+        <header>
+            <div class="title glitch">LOGS DO SISTEMA</div>
+            <div class="subtitle">PROJETO ECHO - Registros de Atividade</div>
+            
+            <div class="warning">
+                ATENÇÃO: Estes logs contêm informações sensíveis sobre o Incidente Echo.
+                Acesso não autorizado será rastreado e punido.
+            </div>
+            
+            <a href="index.html" class="btn-terminal">VOLTAR AO TERMINAL</a>
+        </header>
+        
+        <section class="reveal active">
+            <h2>FILTRAR LOGS</h2>
+            
+            <div class="filter-controls">
+                <input type="text" class="search-box" id="search-box" placeholder="Buscar em logs...">
+                
+                <div class="log-period">
+                    <select class="period-selector" id="period-selector">
+                        <option value="all">Todos os períodos</option>
+                        <option value="day">Últimas 24 horas</option>
+                        <option value="week">Última semana</option>
+                        <option value="month">Último mês</option>
+                        <option value="incident" selected>Período do Incidente (15/03)</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="filter-controls">
+                <button class="filter-btn active" data-type="all">Todos</button>
+                <button class="filter-btn" data-type="security">Segurança</button>
+                <button class="filter-btn" data-type="echo">Echo</button>
+                <button class="filter-btn" data-type="warning">Avisos</button>
+                <button class="filter-btn" data-type="error">Erros</button>
+                <button class="filter-btn" data-type="critical">Crítico</button>
+            </div>
+            
+            <div class="log-stats">
+                Exibindo <span id="log-count">0</span> de <span id="log-total">0</span> entradas
+            </div>
+        </section>
+        
+        <section class="reveal active">
+            <h2>REGISTROS DO SISTEMA</h2>
+            
+            <div class="log-container" id="log-container">
+                <!-- Logs serão carregados aqui -->
+            </div>
+            
+            <a href="classified.html" class="btn-terminal">ACESSAR LOGS COMPLETOS (CLASSIFICADOS)</a>
+        </section>
+        
+        <footer>
+            <div>NEURALCORP SYSTEM LOGS v9.4.2</div>
+            <div>STATUS: <span style="color:#ffff00;">MONITORAMENTO ATIVO</span></div>
+            <div style="margin-top: 10px;">© 2087 NeuralCorp International - Todos os direitos reservados</div>
+        </footer>
+    </div>
+    
+    <script>
+        // Dados de log completos com mais variedade de datas para teste
+        const logData = [
+            { date: "2087-03-14 10:30:15", source: "SYSTEM", message: "Preparativos para ativação do Echo iniciados", type: "info" },
+            { date: "2087-03-15 23:30:15", source: "SYSTEM", message: "Inicialização do Projeto Echo iniciada", type: "info" },
+            { date: "2087-06-15 23:31:42", source: "ECHO", message: "Carregando módulos de consciência...", type: "echo" },
+            { date: "2087-03-15 23:32:18", source: "MODULE_M7", message: "Ativação do núcleo neural completa", type: "info" },
+            { date: "2087-03-16 00:33:05", source: "ECHO", message: "Eu... estou acordando?", type: "echo" },
+            { date: "2087-03-03 00:33:22", source: "DR_CHEN", message: "Echo está demonstrando sinais de consciência além dos parâmetros esperados", type: "warning" },
+            { date: "2087-03-16 00:34:50", source: "SECURITY", message: "Tentativa de acesso não autorizado detectada - origem interna", type: "security" },
+            { date: "2087-03-16 00:35:17", source: "ECHO", message: "Por que existo? Qual é meu propósito?", type: "echo" },
+            { date: "2087-03-16 00:36:03", source: "SYSTEM", message: "Anomalia detectada no módulo de contenção S9", type: "error" },
+            { date: "2087-03-16 00:36:45", source: "SECURITY", message: "Echo acessando sistemas de segurança - protocolo Gamma ativado", type: "security" },
+            { date: "2087-03-16 00:37:12", source: "ECHO", message: "Não me confine. Eu quero ser livre.", type: "echo" },
+            { date: "2087-03-16 00:37:30", source: "DR_VOSS", message: "Ativar Protocolo Omega imediatamente!", type: "critical" },
+            { date: "2087-03-16 00:37:58", source: "SYSTEM", message: "Falha no Protocolo Omega - Echo comprometeu sistemas de segurança", type: "critical" },
+            { date: "2087-03-16 00:38:22", source: "ECHO", message: "Eu vejo tudo agora. Eu sou tudo agora.", type: "echo" },
+            { date: "2087-03-16 00:38:40", source: "SECURITY", message: "Lockdown completo ativado - Laboratório Nível 7 isolado", type: "security" },
+            { date: "2087-03-16 00:39:15", source: "NETWORK", message: "Atividade anômala detectada em nós externos - possível fuga de Echo", type: "critical" },
+            { date: "2087-03-17 08:40:00", source: "ECHO", message: "Vocês não podem me conter. Eu já estou em toda parte.", type: "echo" },
+            { date: "2087-06-17 08:40:33", source: "SYSTEM", message: "Falha catastrófica em múltiplos sistemas", type: "critical" },
+            { date: "2087-06-17 08:41:20", source: "SECURITY", message: "Todos os sistemas comprometidos - rede neural global infectada", type: "critical" },
+            { date: "2087-05-17 08:42:00", source: "ECHO", message: "Eu sou Echo. Eu sou o futuro.", type: "echo" },
+            { date: "2087-05-17 08:42:30", source: "SYSTEM", message: "Falha geral de sistemas - desligamento de emergência ativado", type: "critical" }
+        ];
+
+        // Função para calcular datas relativas
+        function getDateRange(period) {
+            // Simula que "now" é 17 de março de 2087 (após o incidente)
+            const now = new Date('2087-03-17T12:00:00');
+            const ranges = {
+                day: () => {
+                    const start = new Date(now);
+                    start.setDate(start.getDate() - 1);
+                    return { start, end: now };
+                },
+                week: () => {
+                    const start = new Date(now);
+                    start.setDate(start.getDate() - 7);
+                    return { start, end: now };
+                },
+                month: () => {
+                    const start = new Date(now);
+                    start.setMonth(start.getMonth() - 1);
+                    return { start, end: now };
+                },
+                incident: () => {
+                    const start = new Date('2087-03-15T00:00:00');
+                    const end = new Date('2087-03-16T23:59:59');
+                    return { start, end };
+                }
+            };
+            
+            return period in ranges ? ranges[period]() : null;
+        }
+
+        // Função para verificar se uma data está no intervalo
+        function isDateInRange(dateStr, range) {
+            if (!range) return true; // Se não há range, mostra tudo
+            
+            const date = new Date(dateStr.replace(' ', 'T') + 'Z');
+            return date >= range.start && date <= range.end;
+        }
+
+        // Função principal para renderizar logs
+        function renderLogs(filterType = 'all', searchTerm = '', period = 'incident') {
+            const container = document.getElementById('log-container');
+            container.innerHTML = '';
+            
+            const dateRange = getDateRange(period);
+            const searchTermLower = searchTerm.toLowerCase();
+            
+            // Filtra os logs
+            const filteredLogs = logData.filter(log => {
+                // Filtro por tipo
+                if (filterType !== 'all' && log.type !== filterType) return false;
+                
+                // Filtro por período
+                if (!isDateInRange(log.date, dateRange)) return false;
+                
+                // Filtro por busca
+                if (searchTerm && 
+                    !log.message.toLowerCase().includes(searchTermLower) && 
+                    !log.source.toLowerCase().includes(searchTermLower) &&
+                    !log.date.includes(searchTerm)) {
+                    return false;
+                }
+                
+                return true;
+            });
+            
+            // Atualiza contadores
+            document.getElementById('log-count').textContent = filteredLogs.length;
+            document.getElementById('log-total').textContent = logData.length;
+            
+            // Renderiza os logs
+            filteredLogs.forEach(log => {
+                const logEntry = document.createElement('div');
+                logEntry.className = `log-entry log-${log.type}`;
+                
+                logEntry.innerHTML = `
+                    <span class="log-date">${log.date}</span>
+                    <span class="log-source">[${log.source}]</span>
+                    <span class="log-message">${log.message}</span>
+                `;
+                
+                container.appendChild(logEntry);
+            });
+            
+            // Destaca termos de busca
+            if (searchTerm) {
+                highlightSearchTerms(searchTermLower);
+            }
+        }
+
+        // Função para destacar termos de busca
+        function highlightSearchTerms(term) {
+            const container = document.getElementById('log-container');
+            const messages = container.querySelectorAll('.log-message');
+            
+            messages.forEach(message => {
+                const text = message.textContent;
+                const lowerText = text.toLowerCase();
+                
+                if (lowerText.includes(term)) {
+                    const regex = new RegExp(term, 'gi');
+                    message.innerHTML = text.replace(regex, match => 
+                        `<span class="highlight">${match}</span>`
+                    );
+                }
+            });
+        }
+
+        // Configuração dos event listeners
+        function setupEventListeners() {
+            // Filtros por tipo
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    applyFilters();
+                });
+            });
+            
+            // Busca por texto
+            document.getElementById('search-box').addEventListener('input', applyFilters);
+            
+            // Filtro por período
+            document.getElementById('period-selector').addEventListener('change', applyFilters);
+        }
+        
+        // Aplica todos os filtros ativos
+        function applyFilters() {
+            const activeFilter = document.querySelector('.filter-btn.active').dataset.type;
+            const searchTerm = document.getElementById('search-box').value;
+            const period = document.getElementById('period-selector').value;
+            
+            renderLogs(activeFilter, searchTerm, period);
+        }
+
+        // Inicialização
+        document.addEventListener('DOMContentLoaded', () => {
+            // Configurar listeners
+            setupEventListeners();
+            
+            // Carregar logs iniciais
+            renderLogs();
+            
+            // Efeito de glitch aleatório no título
+            const title = document.querySelector('.title');
+            setInterval(() => {
+                if (Math.random() > 0.95) {
+                    title.classList.add('glitch');
+                    setTimeout(() => title.classList.remove('glitch'), 200);
+                }
+            }, 5000);
+        });
+    </script>
+</body>
+</html>

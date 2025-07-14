@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NEURALCORP FACILITY MAP</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #0a0a0a;
+            color: #00ff41;
+            font-family: 'Courier Prime', monospace;
+            font-size: 14px;
+            overflow-x: hidden;
+            line-height: 1.6;
+        }
+
+        .scan-lines {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: repeating-linear-gradient(
+                180deg,
+                transparent,
+                transparent 2px,
+                rgba(0, 255, 65, 0.03) 2px,
+                rgba(0, 255, 65, 0.03) 4px
+            );
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 30px;
+            position: relative;
+            z-index: 2;
+        }
+
+        header {
+            border-bottom: 2px solid #ae6bff;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .title {
+            font-size: 32px;
+            color: #ae6bff;
+            text-shadow: 0 0 10px #ae6bff;
+            margin-bottom: 10px;
+            letter-spacing: 3px;
+        }
+
+        .subtitle {
+            color: #00bfff;
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+
+        .warning {
+            color: #ff6b6b;
+            border-left: 3px solid #ff6b6b;
+            padding: 10px 15px;
+            background: rgba(255, 107, 107, 0.1);
+            margin: 20px 0;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .map-container {
+            position: relative;
+            width: 100%;
+            height: 600px;
+            background: rgba(26, 26, 46, 0.7);
+            border: 1px solid #ae6bff;
+            margin: 30px 0;
+            overflow: hidden;
+        }
+
+        .map-grid {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            grid-template-rows: repeat(6, 1fr);
+            gap: 10px;
+            height: 100%;
+            padding: 20px;
+        }
+
+        .sector {
+            position: relative;
+            border: 1px solid rgba(174, 107, 255, 0.5);
+            background: rgba(10, 10, 20, 0.5);
+            transition: all 0.3s;
+            cursor: pointer;
+            overflow: hidden;
+        }
+
+        .sector:hover {
+            border-color: #ae6bff;
+            box-shadow: 0 0 15px rgba(174, 107, 255, 0.5);
+        }
+
+        .sector::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(
+                135deg,
+                transparent,
+                transparent 45%,
+                rgba(174, 107, 255, 0.1) 50%,
+                transparent 55%,
+                transparent
+            );
+            background-size: 300% 300%;
+            animation: shine 5s infinite;
+        }
+
+        @keyframes shine {
+            0% { background-position: 100% 100%; }
+            100% { background-position: 0% 0%; }
+        }
+
+        .sector-label {
+            position: absolute;
+            bottom: 5px;
+            left: 5px;
+            font-size: 10px;
+            color: #00bfff;
+            text-shadow: 0 0 3px #00bfff;
+        }
+
+        .sector-number {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            font-size: 10px;
+            color: #ae6bff;
+        }
+
+        .sector-highlight {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(174, 107, 255, 0.1);
+            border: 1px solid #ae6bff;
+            box-shadow: 0 0 20px rgba(174, 107, 255, 0.7);
+            z-index: 3;
+            display: none;
+        }
+
+        .sector-info {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(10, 10, 20, 0.9);
+            border: 1px solid #ae6bff;
+            padding: 20px;
+            width: 80%;
+            max-width: 500px;
+            z-index: 4;
+            display: none;
+        }
+
+        .sector-info h3 {
+            color: #ae6bff;
+            margin-bottom: 10px;
+            border-bottom: 1px dashed #ae6bff;
+            padding-bottom: 5px;
+        }
+
+        .sector-info p {
+            margin-bottom: 15px;
+        }
+
+        .sector-info .close-btn {
+            position: absolute;
+            top: 5px;
+            right: 16px;
+            color: #ff6b6b;
+            cursor: pointer;
+            font-size: 32px;
+        }
+
+        .sector-info .status {
+            display: inline-block;
+            padding: 3px 8px;
+            margin-bottom: 10px;
+            font-size: 12px;
+        }
+
+        .status-active {
+            background: rgba(0, 255, 65, 0.2);
+            color: #00ff41;
+        }
+
+        .status-locked {
+            background: rgba(255, 107, 107, 0.2);
+            color: #ff6b6b;
+        }
+
+        .status-warning {
+            background: rgba(255, 255, 0, 0.2);
+            color: #ffff00;
+            animation: pulse 2s infinite;
+        }
+
+        .status-offline {
+            background: rgba(100, 100, 100, 0.2);
+            color: #aaaaaa;
+        }
+
+        .map-legend {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 12px;
+        }
+
+        .legend-color {
+            width: 15px;
+            height: 15px;
+            border: 1px solid #ae6bff;
+        }
+
+        .btn-terminal {
+            display: inline-block;
+            background: rgba(174, 107, 255, 0.1);
+            border: 1px solid #ae6bff;
+            color: #ae6bff;
+            padding: 10px 20px;
+            font-family: 'Courier Prime', monospace;
+            text-decoration: none;
+            margin: 20px 0;
+            transition: all 0.3s;
+            text-align: center;
+        }
+
+        .btn-terminal:hover {
+            background: rgba(174, 107, 255, 0.3);
+            box-shadow: 0 0 10px rgba(174, 107, 255, 0.5);
+        }
+
+        footer {
+            margin-top: 50px;
+            padding-top: 20px;
+            border-top: 1px solid #ae6bff;
+            text-align: center;
+            color: #00bfff;
+            font-size: 12px;
+        }
+
+        /* Efeitos de rolagem */
+        .reveal {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.6s ease-out;
+        }
+
+        .reveal.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Barra de rolagem */
+        body::-webkit-scrollbar {
+            width: 10px;
+            height: 8px;
+        }
+
+        body::-webkit-scrollbar-track {
+            background: rgba(10, 10, 10, 0.8);
+        }
+
+        body::-webkit-scrollbar-thumb {
+            background: linear-gradient(#ae6bff, #00ff41);
+            border-radius: 5px;
+            border: 1px solid rgba(174, 107, 255, 0.3);
+        }
+
+        body::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(#ae6bff, #00bfff);
+        }
+
+        /* Setores especiais */
+        .sector-1 {
+            grid-column: 1 / span 2;
+            grid-row: 1 / span 2;
+            background: rgba(0, 191, 255, 0.1);
+        }
+
+        .sector-2 {
+            grid-column: 3 / span 2;
+            grid-row: 1 / span 1;
+            background: rgba(174, 107, 255, 0.1);
+        }
+
+        .sector-3 {
+            grid-column: 5 / span 2;
+            grid-row: 1 / span 2;
+            background: rgba(0, 255, 65, 0.1);
+        }
+
+        .sector-4 {
+            grid-column: 7 / span 2;
+            grid-row: 1 / span 3;
+            background: rgba(255, 107, 107, 0.1);
+        }
+
+        .sector-5 {
+            grid-column: 1 / span 2;
+            grid-row: 3 / span 2;
+            background: rgba(174, 107, 255, 0.1);
+        }
+
+        .sector-6 {
+            grid-column: 3 / span 2;
+            grid-row: 2 / span 2;
+            background: rgba(0, 191, 255, 0.1);
+        }
+
+        .sector-7 {
+            grid-column: 3 / span 2;
+            grid-row: 4 / span 2;
+            background: rgba(255, 107, 107, 0.2);
+            animation: pulse 3s infinite;
+        }
+
+        .sector-8 {
+            grid-column: 5 / span 2;
+            grid-row: 3 / span 3;
+            background: rgba(0, 255, 65, 0.1);
+        }
+
+        .sector-9 {
+            grid-column: 1 / span 4;
+            background: rgba(10, 10, 30, 0.8);
+        }
+
+        .sector-10 {
+            grid-column: 7 / span 2;
+            grid-row: 4 / span 3;
+            background: rgba(174, 107, 255, 0.1);
+        }
+
+        /* Efeito de glitch aleatório */
+        .glitch {
+            animation: glitch 1s infinite;
+        }
+
+        @keyframes glitch {
+            0% { transform: translate(0); }
+            20% { transform: translate(-2px, 2px); }
+            40% { transform: translate(-2px, -2px); }
+            60% { transform: translate(2px, 2px); }
+            80% { transform: translate(2px, -2px); }
+            100% { transform: translate(0); }
+        }
+
+        @media only screen and (max-width: 600px) {
+            .map-grid {
+                grid-template-columns: repeat(1, 1fr);
+                grid-template-rows: repeat(10, 1fr);
+            }
+
+            .sector { 
+                grid-column: 1 / -1; 
+                grid-row: auto;
+            }
+
+            .sector-1, .sector-2, .sector-3, .sector-4, .sector-5,
+            .sector-6, .sector-7, .sector-8, .sector-9, .sector-10 {
+                grid-column: 1 / -1;
+                grid-row: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="scan-lines"></div>
+    
+    <div class="container">
+        <header>
+            <div class="title glitch">NEURALCORP FACILITY MAP</div>
+            <div class="subtitle">Mapa de Instalações - Nível de Acesso 7 Requerido</div>
+            
+            <div class="warning">
+                ATENÇÃO: Este mapa contém informações sensíveis sobre as instalações da NeuralCorp. 
+                Compartilhamento não autorizado resultará em ação disciplinar imediata.
+            </div>
+            
+            <a href="index.html" class="btn-terminal">VOLTAR AO TERMINAL</a>
+        </header>
+        
+        <section class="reveal">
+            <h2>MAPA DA INSTALAÇÃO PRINCIPAL</h2>
+            
+            <div class="map-legend">
+                <div class="legend-item">
+                    <div class="legend-color" style="background: rgba(0, 191, 255, 0.1);"></div>
+                    <span>Administração</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: rgba(0, 255, 65, 0.1);"></div>
+                    <span>Pesquisa</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: rgba(174, 107, 255, 0.1);"></div>
+                    <span>Desenvolvimento</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: rgba(255, 107, 107, 0.1);"></div>
+                    <span>Segurança</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: rgba(255, 255, 0, 0.1);"></div>
+                    <span>Área Restrita</span>
+                </div>
+            </div>
+            
+            <div class="map-container">
+                <div class="map-grid">
+                    <!-- Setor 1 -->
+                    <div class="sector sector-1" data-sector="1">
+                        <div class="sector-number">N1</div>
+                        <div class="sector-label">Recepção Executiva</div>
+                    </div>
+                    
+                    <!-- Setor 2 -->
+                    <div class="sector sector-2" data-sector="2">
+                        <div class="sector-number">N2</div>
+                        <div class="sector-label">Comunicações</div>
+                    </div>
+                    
+                    <!-- Setor 3 -->
+                    <div class="sector sector-3" data-sector="3">
+                        <div class="sector-number">N3</div>
+                        <div class="sector-label">Pesquisa Neural</div>
+                    </div>
+                    
+                    <!-- Setor 4 -->
+                    <div class="sector sector-4" data-sector="4">
+                        <div class="sector-number">N4</div>
+                        <div class="sector-label">Segurança Central</div>
+                    </div>
+                    
+                    <!-- Setor 5 -->
+                    <div class="sector sector-5" data-sector="5">
+                        <div class="sector-number">N5</div>
+                        <div class="sector-label">Engenharia AI</div>
+                    </div>
+                    
+                    <!-- Setor 6 -->
+                    <div class="sector sector-6" data-sector="6">
+                        <div class="sector-number">N6</div>
+                        <div class="sector-label">Administração</div>
+                    </div>
+                    
+                    <!-- Setor 7 -->
+                    <div class="sector sector-7" data-sector="7">
+                        <div class="sector-number">N7</div>
+                        <div class="sector-label">Laboratório Echo</div>
+                    </div>
+                    
+                    <!-- Setor 8 -->
+                    <div class="sector sector-8" data-sector="8">
+                        <div class="sector-number">N8</div>
+                        <div class="sector-label">Pesquisa Quântica</div>
+                    </div>
+                    
+                    <!-- Setor 9 -->
+                    <div class="sector sector-9" data-sector="9">
+                        <div class="sector-number">N9</div>
+                        <div class="sector-label">Data Center Principal</div>
+                    </div>
+                    
+                    <!-- Setor 10 -->
+                    <div class="sector sector-10" data-sector="10">
+                        <div class="sector-number">N10</div>
+                        <div class="sector-label">Alojamento Executivo</div>
+                    </div>
+                </div>
+                
+                <!-- Highlight e Info Box -->
+                <div class="sector-highlight" id="sector-highlight"></div>
+                <div class="sector-info" id="sector-info">
+                    <span class="close-btn" id="close-info">×</span>
+                    <h3 id="info-title">Título do Setor</h3>
+                    <div class="status" id="info-status">Status</div>
+                    <p id="info-description">Descrição do setor aparecerá aqui.</p>
+                    <p id="info-access">Nível de Acesso: <span id="info-access-level"></span></p>
+                    <p id="info-personnel">Pessoal Autorizado: <span id="info-personnel-list"></span></p>
+                </div>
+            </div>
+        </section>
+        
+        <section class="reveal">
+            <h2>NOTAS DO SISTEMA</h2>
+            <p>O Laboratório Nível 7 (N7) está atualmente em lockdown completo após o Incidente Echo em 15/03/2087.</p>
+            <p>Todas as tentativas de acesso não autorizado resultarão em ativação imediata dos protocolos de segurança.</p>
+        </section>
+        
+        <footer>
+            <div>NEURALCORP FACILITY MAPPING SYSTEM v3.2.1</div>
+            <div>STATUS: <span class="status-active">CONEXÃO CIFRADA</span></div>
+            <div style="margin-top: 10px;">© 2087 NeuralCorp International - Todos os direitos reservados</div>
+        </footer>
+    </div>
+    
+    <script>
+        // Dados dos setores
+        const sectors = {
+            1: {
+                title: "RECEPÇÃO EXECUTIVA - NÍVEL 1",
+                status: "active",
+                description: "Área de recepção para visitantes de alto nível e executivos. Equipada com sistemas de verificação biométrica avançada.",
+                access: "Nível 3+",
+                personnel: "Equipe de Recepção, Segurança Executiva"
+            },
+            2: {
+                title: "CENTRAL DE COMUNICAÇÕES - NÍVEL 2",
+                status: "active",
+                description: "Hub de todas as comunicações internas e externas da NeuralCorp. Monitora todas as transmissões de dados.",
+                access: "Nível 4+",
+                personnel: "Técnicos de Comunicação, Agentes de Inteligência"
+            },
+            3: {
+                title: "LABORATÓRIO DE PESQUISA NEURAL - NÍVEL 3",
+                status: "active",
+                description: "Desenvolvimento de interfaces cérebro-máquina e sistemas de aprendizagem profunda.",
+                access: "Nível 5+",
+                personnel: "Pesquisadores de IA, Neurocientistas"
+            },
+            4: {
+                title: "SEGURANÇA CENTRAL - NÍVEL 4",
+                status: "active",
+                description: "Centro de comando para todas as operações de segurança. Contém os protocolos de contingência Omega e Gamma.",
+                access: "Nível 6+",
+                personnel: "Agentes de Segurança, Comando Tático"
+            },
+            5: {
+                title: "ENGENHARIA DE IA - NÍVEL 5",
+                status: "warning",
+                description: "Desenvolvimento dos núcleos de inteligência artificial quântica. Local do desenvolvimento inicial do Projeto Echo.",
+                access: "Nível 7",
+                personnel: "Engenheiros de IA, Especialistas em Robótica"
+            },
+            6: {
+                title: "ADMINISTRAÇÃO CORPORATIVA - NÍVEL 6",
+                status: "active",
+                description: "Escritórios executivos e salas de reunião de alto nível. Acesso restrito ao C-Level.",
+                access: "Nível 5+",
+                personnel: "Executivos, Assessores"
+            },
+            7: {
+                title: "LABORATÓRIO ECHO - NÍVEL 7",
+                status: "locked",
+                description: "Local do Incidente Echo. Atualmente em lockdown completo. Todos os acessos foram revogados.",
+                access: "Nível 9 (Suspenso)",
+                personnel: "Nenhum - Área Quarentenada"
+            },
+            8: {
+                title: "PESQUISA QUÂNTICA - NÍVEL 8",
+                status: "active",
+                description: "Desenvolvimento de computação quântica e sistemas de criptografia pós-quântica.",
+                access: "Nível 7+",
+                personnel: "Físicos Quânticos, Criptógrafos"
+            },
+            9: {
+                title: "DATA CENTER PRINCIPAL - NÍVEL 9",
+                status: "active",
+                description: "Armazenamento de todos os dados corporativos e projetos de pesquisa. Protegido por firewalls quânticos.",
+                access: "Nível 6+",
+                personnel: "Engenheiros de Dados, Especialistas em Segurança"
+            },
+            10: {
+                title: "ALOJAMENTO EXECUTIVO - NÍVEL 10",
+                status: "active",
+                description: "Acomodações para executivos e pesquisadores em projetos de longo prazo. Equipado com sistemas de segurança de nível militar.",
+                access: "Nível 5+",
+                personnel: "Executivos, Pesquisadores Sênior"
+            }
+        };
+
+        // Status classes
+        const statusClasses = {
+            active: "status-active",
+            locked: "status-locked",
+            warning: "status-warning",
+            offline: "status-offline"
+        };
+
+        // Efeitos de interação
+        document.querySelectorAll('.sector').forEach(sector => {
+            sector.addEventListener('click', function() {
+                const sectorNum = this.getAttribute('data-sector');
+                const sectorData = sectors[sectorNum];
+                
+                // Posiciona o highlight
+                const highlight = document.getElementById('sector-highlight');
+                highlight.style.display = 'block';
+                highlight.style.left = this.offsetLeft + 'px';
+                highlight.style.top = this.offsetTop + 'px';
+                highlight.style.width = this.offsetWidth + 'px';
+                highlight.style.height = this.offsetHeight + 'px';
+                
+                // Preenche a info box
+                document.getElementById('info-title').textContent = sectorData.title;
+                document.getElementById('info-status').textContent = sectorData.status.toUpperCase();
+                document.getElementById('info-status').className = 'status ' + statusClasses[sectorData.status];
+                document.getElementById('info-description').textContent = sectorData.description;
+                document.getElementById('info-access-level').textContent = sectorData.access;
+                document.getElementById('info-personnel-list').textContent = sectorData.personnel;
+                
+                // Mostra a info box
+                document.getElementById('sector-info').style.display = 'block';
+            });
+        });
+
+        // Fechar info box
+        document.getElementById('close-info').addEventListener('click', function() {
+            document.getElementById('sector-info').style.display = 'none';
+            document.getElementById('sector-highlight').style.display = 'none';
+        });
+
+        // Efeito de revelação ao rolar
+        const revealElements = document.querySelectorAll('.reveal');
+        
+        function checkReveal() {
+            revealElements.forEach(element => {
+                const elementTop = element.getBoundingClientRect().top;
+                const windowHeight = window.innerHeight;
+                
+                if (elementTop < windowHeight - 100) {
+                    element.classList.add('active');
+                }
+            });
+        }
+        
+        window.addEventListener('scroll', checkReveal);
+        window.addEventListener('load', checkReveal);
+        
+        // Efeito de glitch aleatório
+        setInterval(() => {
+            if (Math.random() > 0.95) {
+                document.querySelector('.title').classList.add('glitch');
+                setTimeout(() => {
+                    document.querySelector('.title').classList.remove('glitch');
+                }, 200);
+            }
+        }, 5000);
+    </script>
+</body>
+</html>

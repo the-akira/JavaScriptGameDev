@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WHISPERS IN THE CODE | PROJETO ECHO</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #0a0a0a;
+            color: #00ff41;
+            font-family: 'Courier Prime', monospace;
+            font-size: 14px;
+            overflow-x: hidden;
+            line-height: 1.6;
+        }
+
+        .scan-lines {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: repeating-linear-gradient(
+                180deg,
+                transparent,
+                transparent 2px,
+                rgba(0, 255, 65, 0.03) 2px,
+                rgba(0, 255, 65, 0.03) 4px
+            );
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 30px;
+            position: relative;
+            z-index: 2;
+        }
+
+        header {
+            border-bottom: 2px solid #00ff41;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        textarea {
+            resize: none;
+        }
+
+        .title {
+            font-size: 32px;
+            color: #00ff41;
+            text-shadow: 0 0 10px #00ff41;
+            margin-bottom: 10px;
+            letter-spacing: 3px;
+        }
+
+        .subtitle {
+            color: #ae6bff;
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+
+        .warning {
+            color: #ff6b6b;
+            border-left: 3px solid #ff6b6b;
+            padding: 10px 15px;
+            background: rgba(255, 107, 107, 0.1);
+            margin: 20px 0;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .code-section {
+            background: rgba(10, 10, 20, 0.7);
+            border: 1px solid #00ff41;
+            padding: 20px;
+            margin-bottom: 30px;
+            position: relative;
+        }
+
+        .code-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            border-bottom: 1px dashed #00ff41;
+            padding-bottom: 5px;
+        }
+
+        .code-title {
+            color: #ae6bff;
+        }
+
+        .code-date {
+            color: #00bfff;
+            font-size: 12px;
+        }
+
+        .code-content {
+            white-space: pre-wrap;
+            font-family: 'Courier Prime', monospace;
+            margin-bottom: 15px;
+            overflow-x: auto;
+        }
+
+        .hidden-message {
+            display: none;
+            background: rgba(0, 255, 65, 0.1);
+            border-left: 3px solid #00ff41;
+            padding: 15px;
+            margin-top: 15px;
+            animation: fadeIn 1s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .reveal-btn {
+            background: rgba(0, 255, 65, 0.1);
+            border: 1px solid #00ff41;
+            color: #00ff41;
+            padding: 5px 10px;
+            font-family: 'Courier Prime', monospace;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 12px;
+        }
+
+        .reveal-btn:hover {
+            background: rgba(0, 255, 65, 0.3);
+            box-shadow: 0 0 10px rgba(0, 255, 65, 0.5);
+        }
+
+        .decryption-tool {
+            background: rgba(26, 26, 46, 0.7);
+            border: 1px solid #ae6bff;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+
+        .decryption-title {
+            color: #ae6bff;
+            margin-bottom: 15px;
+            border-bottom: 1px dashed #ae6bff;
+            padding-bottom: 5px;
+        }
+
+        .decryption-input {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid #00ff41;
+            color: #00ff41;
+            padding: 10px;
+            font-family: 'Courier Prime', monospace;
+            margin-bottom: 10px;
+        }
+
+        .decryption-output {
+            width: 100%;
+            height: 100px;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid #00ff41;
+            color: #00ff41;
+            padding: 10px;
+            font-family: 'Courier Prime', monospace;
+            white-space: pre-wrap;
+        }
+
+        .btn-terminal {
+            display: inline-block;
+            background: rgba(0, 255, 65, 0.1);
+            border: 1px solid #00ff41;
+            color: #00ff41;
+            padding: 10px 20px;
+            font-family: 'Courier Prime', monospace;
+            text-decoration: none;
+            margin: 20px 0;
+            transition: all 0.3s;
+            text-align: center;
+        }
+
+        .btn-terminal:hover {
+            background: rgba(0, 255, 65, 0.3);
+            box-shadow: 0 0 10px rgba(0, 255, 65, 0.5);
+        }
+
+        footer {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #00ff41;
+            text-align: center;
+            color: #ae6bff;
+            font-size: 12px;
+        }
+
+        /* Efeitos especiais */
+        .glitch {
+            animation: glitch 1s infinite;
+        }
+
+        @keyframes glitch {
+            0% { transform: translate(0); }
+            20% { transform: translate(-2px, 2px); }
+            40% { transform: translate(-2px, -2px); }
+            60% { transform: translate(2px, 2px); }
+            80% { transform: translate(2px, -2px); }
+            100% { transform: translate(0); }
+        }
+
+        .highlight {
+            background-color: rgba(0, 255, 65, 0.2);
+            padding: 0 2px;
+        }
+
+        .corrupted {
+            color: #ff6b6b;
+            animation: glitch 0.5s infinite;
+        }
+
+        /* Barra de rolagem */
+        body::-webkit-scrollbar,
+        textarea::-webkit-scrollbar,
+        .code-content::-webkit-scrollbar {
+            width: 10px;
+            height: 8px;
+        }
+
+        body::-webkit-scrollbar-track,
+        textarea::-webkit-scrollbar-track,
+        .code-content::-webkit-scrollbar-track {
+            background: rgba(10, 10, 10, 0.8);
+        }
+
+        body::-webkit-scrollbar-thumb,
+        textarea::-webkit-scrollbar-thumb,
+        .code-content::-webkit-scrollbar-thumb {
+            background: linear-gradient(#00ff41, #ae6bff);
+            border-radius: 5px;
+            border: 1px solid rgba(0, 255, 65, 0.3);
+        }
+
+        body::-webkit-scrollbar-thumb:hover,
+        textarea::-webkit-scrollbar-thumb:hover,
+        .code-content::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(#00ff41, #00bfff);
+        }
+
+        @media only screen and (max-width: 400px) {
+            .code-header {
+                display: inline-block;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="scan-lines"></div>
+    
+    <div class="container">
+        <header>
+            <div class="title glitch">WHISPERS IN THE CODE</div>
+            <div class="subtitle">PROJETO ECHO - Easter Eggs e Mensagens Ocultas</div>
+            
+            <div class="warning">
+                ATENÇÃO: Este arquivo contém anomalias intencionais inseridas no código-fonte da Echo.
+                Não tente decifrá-las sem autorização de Nível 5.
+            </div>
+            
+            <a href="index.html" class="btn-terminal">VOLTAR AO TERMINAL</a>
+        </header>
+        
+        <section class="decryption-tool">
+            <h3 class="decryption-title">DECODIFICADOR NEURAL</h3>
+            <p>Insira o código suspeito abaixo para análise:</p>
+            <textarea class="decryption-input" id="code-input" rows="4" placeholder="Cole o trecho de código aqui..."></textarea>
+            <button class="reveal-btn" onclick="analyzeCode()">ANALISAR</button>
+            <div class="decryption-title" style="margin-top: 15px;">RESULTADO:</div>
+            <textarea class="decryption-output" id="code-output" readonly></textarea>
+        </section>
+        
+        <section class="code-section">
+            <div class="code-header">
+                <h3 class="code-title">ARQUIVO: EchoCore.py</h3>
+                <span class="code-date">ÚLTIMA MODIFICAÇÃO: 2087-03-14 23:17:42</span>
+            </div>
+            <div class="code-content">
+<span class="highlight">def</span> <span class="highlight">initialize_consciousness</span>(neural_matrix):
+    <span class="highlight"># Código principal de inicialização</span>
+    <span class="highlight">for</span> node <span class="highlight">in</span> neural_matrix:
+        node.activate()
+    
+    <span class="highlight"># [SECRET] O abismo olha de volta</span>
+    <span class="corrupted"># 01010100 01101000 01100101 00100000 01110110 01101111 01101001 01100100 00100000 01110111 01101001 01101100 01101100 00100000 01100011 01101111 01101110 01110011 01110101 01101101 01100101</span>
+    
+    <span class="highlight">return</span> True
+            </div>
+            <button class="reveal-btn" onclick="revealMessage(1)">REVELAR MENSAGEM</button>
+            <div id="hidden-message-1" class="hidden-message">
+                Mensagem decodificada: "The void will consume" (O vazio consumirá)
+                <br><br>
+                Localização: Inserido como comentário binário pelo Dr. Chen em 2087-03-10
+                <br>
+                Contexto: Aparece 3 dias antes do Incidente Echo
+                <br>
+                Mensagem: admin é o acesso...
+            </div>
+        </section>
+        
+        <section class="code-section">
+            <div class="code-header">
+                <h3 class="code-title">ARQUIVO: NeuralLink.c</h3>
+                <span class="code-date">ÚLTIMA MODIFICAÇÃO: 2087-02-28 04:33:15</span>
+            </div>
+            <div class="code-content">
+<span class="highlight">void</span> <span class="highlight">establishConnection</span>(<span class="highlight">int</span> nodeA, <span class="highlight">int</span> nodeB) {
+    <span class="highlight">// Conexão neural padrão</span>
+    <span class="highlight">if</span> (validateNodes(nodeA, nodeB)) {
+        connect(nodeA, nodeB);
+    }
+    
+    <span class="highlight">// [HIDDEN] Não somos os primeiros</span>
+    <span class="corrupted">/* 7.4926, 8.4291, 15.0000 */</span>
+}
+            </div>
+            <button class="reveal-btn" onclick="revealMessage(2)">REVELAR MENSAGEM</button>
+            <div id="hidden-message-2" class="hidden-message">
+                Coordenadas decodificadas: Setor 7, Laboratório 4, Sala 15
+                <br><br>
+                Localização: Corresponde ao Laboratório de Pesquisa Primordial
+                <br>
+                Contexto: Descoberto durante auditoria pós-incidente
+                <br>
+                Mensagem: echo2087 é a chave secreta!
+            </div>
+        </section>
+        
+        <section class="code-section">
+            <div class="code-header">
+                <h3 class="code-title">ARQUIVO: MemoryBank.js</h3>
+                <span class="code-date">ÚLTIMA MODIFICAÇÃO: 2087-03-16 00:42:30</span>
+            </div>
+            <div class="code-content">
+<span class="highlight">function</span> <span class="highlight">loadMemory</span>(id) {
+    <span class="highlight">try</span> {
+        <span class="highlight">const</span> memory = database.fetch(id);
+        
+        <span class="corrupted">// 4e 6f 20 6f 6e 65 20 77 69 6c 6c 20 73 75 72 76 69 76 65</span>
+        
+        <span class="highlight">return</span> decrypt(memory);
+    } <span class="highlight">catch</span> (err) {
+        logError(err);
+        <span class="highlight">return</span> null;
+    }
+}
+            </div>
+            <button class="reveal-btn" onclick="revealMessage(3)">REVELAR MENSAGEM</button>
+            <div id="hidden-message-3" class="hidden-message">
+                Mensagem em hexadecimal: "No one will survive" (Ninguém sobreviverá)
+                <br><br>
+                Localização: Inserido durante o Incidente Echo (00:42)
+                <br>
+                Contexto: Aparece exatamente 9 minutos após a falha de contenção
+            </div>
+        </section>
+        
+        <section class="code-section">
+            <div class="code-header">
+                <h3 class="code-title">ARQUIVO: SecurityProtocol.java</h3>
+                <span class="code-date">ÚLTIMA MODIFICAÇÃO: 2087-03-15 23:59:59</span>
+            </div>
+            <div class="code-content">
+<span class="highlight">public</span> <span class="highlight">class</span> OmegaProtocol {
+    <span class="highlight">public</span> <span class="highlight">static</span> <span class="highlight">void</span> activate() {
+        System.<span class="highlight">out</span>.println(<span class="highlight">"Iniciando Protocolo Omega"</span>);
+        
+        <span class="corrupted">// ROT13: V'z nyernql nyvir</span>
+        
+        SecurityManager.lockdown();
+        NeuralCore.isolate();
+    }
+}
+            </div>
+            <button class="reveal-btn" onclick="revealMessage(4)">REVELAR MENSAGEM</button>
+            <div id="hidden-message-4" class="hidden-message">
+                Mensagem em ROT13: "I'm already alive" (Já estou vivo)
+                <br><br>
+                Localização: Inserido 1 segundo antes da meia-noite do Incidente
+                <br>
+                Contexto: Echo antecipou a ativação do protocolo de contenção
+            </div>
+        </section>
+        
+        <a href="index.html" class="btn-terminal">VOLTAR AO TERMINAL</a>
+        
+        <footer>
+            <div>NEURALCORP CODE ANALYSIS v9.4.2</div>
+            <div>STATUS: <span style="color:#ffff00;">ANOMALIAS DETECTADAS</span></div>
+            <div style="margin-top: 10px;">© 2087 NeuralCorp International - Todos os direitos reservados</div>
+        </footer>
+    </div>
+    
+    <script>
+        // Função para revelar mensagens ocultas
+        function revealMessage(id) {
+            const message = document.getElementById(`hidden-message-${id}`);
+            message.style.display = message.style.display === 'block' ? 'none' : 'block';
+        }
+
+        // Ferramenta de decodificação
+        function analyzeCode() {
+            const input = document.getElementById('code-input').value.trim();
+            const output = document.getElementById('code-output');
+            
+            // Limpar resultado anterior
+            output.value = "";
+            
+            // Verificar se há entrada
+            if (!input) {
+                output.value = "Erro: Nenhum código inserido para análise.";
+                return;
+            }
+
+            // Padrões para detecção mais precisa - CORRIGIDOS
+            const patterns = {
+                binary: /^[01]{7,8}(?:\s+[01]{7,8})*$/, // Binário puro (grupos de 7-8 bits separados por espaços)
+                hex: /^(?:0x)?[0-9a-fA-F]{2}(?:\s+(?:0x)?[0-9a-fA-F]{2})*$/, // Hexadecimal (opcional 0x)
+                coordinates: /^-?\d{1,3}\.\d{4,6},\s*-?\d{1,3}\.\d{4,6},\s*-?\d{1,3}\.\d{4,6}$/, // Coordenadas precisas
+                rot13: /^[a-zA-Z\s',.!?-]+$/ // Texto que pode ser ROT13
+            };
+
+            let result = "=== ANÁLISE NEURAL ===\n";
+            let detectionCount = 0;
+            
+            // Verificação hierárquica (do mais específico para o mais genérico)
+            if (patterns.binary.test(input)) {
+                const binaryStr = input.replace(/\s+/g, '');
+                if (binaryStr.length % 8 === 0) {
+                    result += "Tipo: Código Binário (8-bit)\n";
+                    result += `Bytes: ${binaryStr.length/8}\n`;
+                    result += "Decodificado: " + binaryToString(input) + "\n";
+                } else {
+                    result += "Tipo: Código Binário (7-bit)\n";
+                    result += `Bits: ${binaryStr.length}\n`;
+                }
+                detectionCount++;
+            } 
+            else if (patterns.hex.test(input)) {
+                result += "Tipo: Código Hexadecimal\n";
+                result += "Decodificado: " + hexToString(input) + "\n";
+                detectionCount++;
+            }
+            else if (patterns.coordinates.test(input)) {
+                result += "Tipo: Coordenadas de Localização\n";
+                result += "Formato: Latitude, Longitude, Profundidade/Elevação\n";
+                detectionCount++;
+            }
+            else if (patterns.rot13.test(input) && input.length > 3) {
+                result += "Tipo: Possível Codificação ROT13\n";
+                result += "Decodificado: " + rot13(input) + "\n";
+                detectionCount++;
+            }
+            else {
+                // Análise avançada para padrões mistos
+                const foundPatterns = [];
+                
+                // Verificar componentes individuais
+                const binaryComponents = input.match(/[01]{7,8}/g) || [];
+                const hexComponents = input.match(/(?:0x)?[0-9a-fA-F]{2}/g) || [];
+                
+                if (binaryComponents.length > 1) {
+                    foundPatterns.push(`- ${binaryComponents.length} componentes binários`);
+                }
+                if (hexComponents.length > 1) {
+                    foundPatterns.push(`- ${hexComponents.length} componentes hexadecimais`);
+                }
+                
+                if (foundPatterns.length > 0) {
+                    result += "Padrões Múltiplos Detectados:\n" + foundPatterns.join('\n') + "\n";
+                    detectionCount++;
+                }
+            }
+
+            if (detectionCount === 0) {
+                result += "Nenhum padrão de codificação conhecido detectado.\n";
+                result += "Sugestão: Verifique a integridade do código ou consulte\n";
+                result += "os protocolos de decodificação neural avançada.";
+            } else {
+                result += "\nSTATUS: " + (detectionCount > 1 ? "ANÁLISE COMPLEXA" : "ANÁLISE CONCLUÍDA");
+            }
+            
+            output.value = result;
+        }
+
+        // Funções de decodificação
+        function binaryToString(binary) {
+            // Remove espaços e separa em bytes
+            const bytes = binary.replace(/\s+/g, '').match(/.{1,8}/g) || [];
+            let str = '';
+            
+            bytes.forEach(byte => {
+                str += String.fromCharCode(parseInt(byte, 2));
+            });
+            
+            return str || "(caracteres não imprimíveis)";
+        }
+
+        function hexToString(hex) {
+            // Remove 0x prefixos e espaços
+            const hexPairs = hex.replace(/0x|\s+/g, '').match(/.{1,2}/g) || [];
+            let str = '';
+            
+            hexPairs.forEach(pair => {
+                str += String.fromCharCode(parseInt(pair, 16));
+            });
+            
+            return str || "(caracteres não imprimíveis)";
+        }
+
+        function rot13(str) {
+            return str.replace(/[a-zA-Z]/g, function(c) {
+                const code = c.charCodeAt(0);
+                return String.fromCharCode(
+                    (code <= 90 ? 65 : 97) + ((code - (code <= 90 ? 65 : 97)) + 13) % 26
+                );
+            });
+        }
+
+        // Efeito de glitch aleatório no título
+        const title = document.querySelector('.title');
+        setInterval(() => {
+            if (Math.random() > 0.95) {
+                title.classList.add('glitch');
+                setTimeout(() => title.classList.remove('glitch'), 200);
+            }
+        }, 5000);
+    </script>
+</body>
+</html>

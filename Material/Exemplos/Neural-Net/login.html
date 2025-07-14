@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NEURAL-NET ACCESS v2.1.7</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #0a0a0a;
+            color: #00ff41;
+            font-family: 'Courier Prime', monospace;
+            font-size: 14px;
+            margin-top: 50px;
+            margin-bottom: 50px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .login-container {
+            width: 600px;
+            max-width: 90%;
+            background: rgba(10, 10, 20, 0.8);
+            border: 2px solid #00ff41;
+            box-shadow: 0 0 20px rgba(0, 255, 65, 0.5);
+            padding: 30px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .login-container::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: repeating-linear-gradient(
+                0deg,
+                transparent,
+                transparent 2px,
+                rgba(0, 255, 65, 0.05) 2px,
+                rgba(0, 255, 65, 0.05) 4px
+            );
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: 30px;
+            position: relative;
+        }
+
+        .login-title {
+            font-size: 24px;
+            color: #00ff41;
+            text-shadow: 0 0 10px #00ff41;
+            margin-bottom: 10px;
+            letter-spacing: 2px;
+        }
+
+        .login-subtitle {
+            color: #ae6bff;
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+
+        .login-status {
+            color: #ff6b6b;
+            font-size: 12px;
+            margin-top: 10px;
+            height: 20px;
+        }
+
+        .login-form {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .form-label {
+            color: #00bfff;
+            font-size: 14px;
+        }
+
+        .form-input {
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid #00ff41;
+            color: #00ff41;
+            font-family: 'Courier Prime', monospace;
+            padding: 10px;
+            outline: none;
+            caret-color: #00ff41;
+        }
+
+        .form-input:focus {
+            box-shadow: 0 0 10px rgba(0, 255, 65, 0.5);
+        }
+
+        .login-btn {
+            background: rgba(0, 255, 65, 0.1);
+            border: 1px solid #00ff41;
+            color: #00ff41;
+            padding: 10px;
+            font-family: 'Courier Prime', monospace;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 10px;
+        }
+
+        .login-btn:hover {
+            background: rgba(0, 255, 65, 0.3);
+            box-shadow: 0 0 10px rgba(0, 255, 65, 0.5);
+        }
+
+        .login-footer {
+            margin-top: 30px;
+            text-align: center;
+            font-size: 12px;
+            color: #ae6bff;
+        }
+
+        .hint-container {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.3);
+            border-left: 3px solid #ae6bff;
+            display: none;
+        }
+
+        .hint-title {
+            color: #ae6bff;
+            margin-bottom: 5px;
+        }
+
+        .scan-lines {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: repeating-linear-gradient(
+                180deg,
+                transparent,
+                transparent 2px,
+                rgba(0, 255, 65, 0.03) 2px,
+                rgba(0, 255, 65, 0.03) 4px
+            );
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .glitch {
+            animation: glitch 1s infinite;
+        }
+
+        @keyframes glitch {
+            0%, 100% { 
+                filter: hue-rotate(0deg) contrast(100%);
+                opacity: 1;
+            }
+            20% {
+                filter: hue-rotate(90deg) contrast(200%);
+                opacity: 0.8;
+            }
+            40% {
+                filter: hue-rotate(180deg) contrast(300%);
+                opacity: 0.9;
+            }
+            60% {
+                filter: hue-rotate(270deg) contrast(200%);
+                opacity: 0.7;
+            }
+            80% {
+                filter: hue-rotate(45deg) contrast(400%);
+                opacity: 0.8;
+            }
+        }
+
+        .blink {
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+
+        /* Efeito de boot aprimorado */
+        .boot-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: #0a0a0a;
+            color: #00ff41;
+            padding: 40px;
+            font-family: 'Courier Prime', monospace;
+            overflow-y: auto;
+            z-index: 1000;
+            display: none;
+        }
+
+        .boot-line {
+            margin-bottom: 15px;
+            white-space: pre-wrap;
+            line-height: 1.6;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeIn 0.5s forwards;
+        }
+
+        @keyframes fadeIn {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .boot-header {
+            font-size: 24px;
+            color: #00ff41;
+            text-shadow: 0 0 10px #00ff41;
+            margin-bottom: 30px;
+            border-bottom: 1px solid #00ff41;
+            padding-bottom: 10px;
+        }
+
+        .boot-section {
+            margin-bottom: 30px;
+            border-left: 2px solid #ae6bff;
+            padding-left: 15px;
+        }
+
+        .boot-section-title {
+            color: #ae6bff;
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+
+        .boot-module {
+            margin-bottom: 10px;
+            padding-left: 20px;
+            position: relative;
+        }
+
+        .boot-module::before {
+            content: ">";
+            position: absolute;
+            left: 0;
+            color: #00ff41;
+        }
+
+        .boot-module.ok {
+            color: #00ff41;
+        }
+
+        .boot-module.error {
+            color: #ff6b6b;
+        }
+
+        .boot-module.warning {
+            color: #ffff00;
+        }
+
+        .boot-module.loading {
+            color: #00bfff;
+        }
+
+        .boot-progress-container {
+            margin-top: 40px;
+            margin-bottom: 20px;
+        }
+
+        .boot-progress-text {
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .boot-progress {
+            height: 6px;
+            background: rgba(0, 255, 65, 0.1);
+            border-radius: 3px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .boot-progress-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #00ff41, #ae6bff);
+            transition: width 0.3s ease-out;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .boot-progress-bar::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(
+                90deg,
+                rgba(255, 255, 255, 0.1) 0%,
+                rgba(255, 255, 255, 0.3) 50%,
+                rgba(255, 255, 255, 0.1) 100%
+            );
+            animation: progressShine 2s infinite;
+        }
+
+        @keyframes progressShine {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        .boot-complete {
+            text-align: center;
+            margin-top: 40px;
+            font-size: 18px;
+            color: #00ff41;
+            text-shadow: 0 0 10px #00ff41;
+            opacity: 0;
+            animation: fadeIn 0.55s 0.55s forwards;
+            display: none;
+        }
+
+        .boot-logo {
+            color: #00ff41;
+            text-shadow: 0 0 5px #00ff41;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            line-height: 1;
+            white-space: pre;
+            margin: 10px 0;
+            overflow-x: auto;
+            display: block;
+            padding: 5px;
+        }
+
+        .boot-continue-btn {
+            background: rgba(0, 255, 65, 0.1);
+            border: 1px solid #00ff41;
+            color: #00ff41;
+            padding: 12px 24px;
+            font-family: 'Courier Prime', monospace;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin: 20px auto;
+            display: block;
+            opacity: 0;
+            animation: fadeIn 0.55s 0.55s forwards;
+        }
+
+        .boot-continue-btn:hover {
+            background: rgba(0, 255, 65, 0.3);
+            box-shadow: 0 0 10px rgba(0, 255, 65, 0.5);
+        }
+
+        body::-webkit-scrollbar,
+        .boot-screen::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+
+        body::-webkit-scrollbar-track,
+        .boot-screen::-webkit-scrollbar-track {
+            background: rgba(10, 10, 10, 0.8);
+            border-left: 1px solid rgba(0, 255, 65, 0.1);
+        }
+
+        body::-webkit-scrollbar-thumb,
+        .boot-screen::-webkit-scrollbar-thumb {
+            background: linear-gradient(45deg, #00ff41, #ae6bff);
+            border-radius: 5px;
+            border: 1px solid rgba(0, 255, 65, 0.3);
+            box-shadow: 0 0 5px rgba(0, 255, 65, 0.7);
+            transition: all 0.3s ease;
+        }
+
+        body::-webkit-scrollbar-thumb:hover,
+        .boot-screen::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(45deg, #00ff41, #00bfff);
+        }
+
+        body::-webkit-scrollbar-thumb:active,
+        .boot-screen::-webkit-scrollbar-thumb:active {
+            box-shadow: 0 0 10px rgba(0, 255, 65, 0.9);
+        }
+
+        body::-webkit-scrollbar-corner,
+        .boot-screen::-webkit-scrollbar-corner {
+            background: rgba(10, 10, 10, 0.8);
+        }
+    </style>
+</head>
+<body>
+    <div class="scan-lines"></div>
+    
+    <div class="login-container" id="login-container">
+        <div class="login-header">
+            <div class="login-title">NEURAL-NET ACCESS v2.1.7</div>
+            <div class="login-subtitle">SISTEMA DE ACESSO RESTRITO</div>
+            <div class="login-status" id="login-status"></div>
+        </div>
+        
+        <div class="login-form">
+            <div class="form-group">
+                <label class="form-label">USUÁRIO:</label>
+                <input type="text" class="form-input" id="username" autocomplete="off" spellcheck="false">
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">SENHA:</label>
+                <input type="password" class="form-input" id="password" autocomplete="off" spellcheck="false">
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">ENIGMA: Qual é o nome do projeto secreto?</label>
+                <input type="text" class="form-input" id="riddle" autocomplete="off" spellcheck="false">
+            </div>
+            
+            <button class="login-btn" id="login-btn">ACESSAR</button>
+        </div>
+        
+        <div class="hint-container" id="hint-container">
+            <div class="hint-title">DICA:</div>
+            <div id="hint-text">Procure nos arquivos do sistema por referências ao projeto.</div>
+        </div>
+        
+        <div class="login-footer">
+            <div style="margin-bottom: 8px;">CONEXÃO CIFRADA - PROXY ATIVO</div>
+            <div>STATUS: <span id="connection-status">SEGURO</span></div>
+        </div>
+    </div>
+    
+    <div class="boot-screen" id="boot-screen">
+        <div class="boot-header">NEURAL NETWORK BOOT SEQUENCE v2.1.7</div>
+        
+        <div class="boot-logo">
+███╗   ██╗███████╗██╗   ██╗██████╗  █████╗ ██╗     
+████╗  ██║██╔════╝██║   ██║██╔══██╗██╔══██╗██║     
+██╔██╗ ██║█████╗  ██║   ██║██████╔╝███████║██║     
+██║╚██╗██║██╔══╝  ██║   ██║██╔══██╗██╔══██║██║     
+██║ ╚████║███████╗╚██████╔╝██║  ██║██║  ██║███████╗
+╚═╝  ╚═══╝╚══════╝ ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝
+        </div>
+        
+        <div class="boot-section">
+            <div class="boot-section-title">INICIALIZANDO MÓDULOS PRIMÁRIOS:</div>
+            <div id="boot-modules"></div>
+        </div>
+        
+        <div class="boot-section">
+            <div class="boot-section-title">CARREGANDO INTERFACE NEURAL:</div>
+            <div id="boot-interface"></div>
+        </div>
+        
+        <div class="boot-section">
+            <div class="boot-section-title">VERIFICANDO CONEXÕES:</div>
+            <div id="boot-network"></div>
+        </div>
+        
+        <div class="boot-progress-container">
+            <div class="boot-progress-text">
+                <span>STATUS DO SISTEMA:</span>
+                <span id="boot-progress-text">0%</span>
+            </div>
+            <div class="boot-progress">
+                <div class="boot-progress-bar" id="boot-progress"></div>
+            </div>
+        </div>
+        
+        <div class="boot-complete" id="boot-complete">
+            SISTEMA PRONTO. TERMINAL INICIADO COM SUCESSO...
+        </div>
+    </div>
+
+    <script>
+        // Enigma: A resposta é "PROMETHEUS" (como encontrado nos arquivos do sistema)
+        const RIDDLE_ANSWER = "PROMETHEUS";
+        const USERNAME = "admin";
+        const PASSWORD = "echo2087";
+        
+        const loginContainer = document.getElementById('login-container');
+        const loginStatus = document.getElementById('login-status');
+        const loginBtn = document.getElementById('login-btn');
+        const usernameInput = document.getElementById('username');
+        const passwordInput = document.getElementById('password');
+        const riddleInput = document.getElementById('riddle');
+        const hintContainer = document.getElementById('hint-container');
+        const bootScreen = document.getElementById('boot-screen');
+        const connectionStatus = document.getElementById('connection-status');
+        
+        let attempts = 0;
+        const maxAttempts = 3;
+        
+        // Efeito de digitação no status de conexão
+        const statusMessages = [
+            "SEGURO",
+            "CRIPTOGRAFADO",
+            "PROXY ATIVO",
+            "SEM RASTRO",
+            "ANÔNIMO"
+        ];
+        
+        let statusIndex = 0;
+        setInterval(() => {
+            connectionStatus.textContent = statusMessages[statusIndex];
+            statusIndex = (statusIndex + 1) % statusMessages.length;
+        }, 2000);
+        
+        // Efeito de varredura de segurança
+        setInterval(() => {
+            loginContainer.classList.add('glitch');
+            setTimeout(() => {
+                loginContainer.classList.remove('glitch');
+            }, 100);
+        }, 10000);
+        
+        // Mostrar dica após 1 erro
+        loginBtn.addEventListener('click', () => {
+            const username = usernameInput.value.trim();
+            const password = passwordInput.value.trim();
+            const riddleAnswer = riddleInput.value.trim().toUpperCase();
+            
+            if (username === USERNAME && password === PASSWORD && riddleAnswer === RIDDLE_ANSWER) {
+                // Login bem-sucedido
+                loginStatus.textContent = "ACESSO AUTORIZADO. INICIANDO SISTEMA...";
+                loginStatus.style.color = "#00ff41";
+                
+                // Mostrar tela de boot
+                loginContainer.style.display = "none";
+                bootScreen.style.display = "block";
+                
+                // Iniciar animação de boot
+                startBootSequence();
+            } else {
+                attempts++;
+                loginStatus.textContent = `ACESSO NEGADO. TENTATIVAS RESTANTES: ${maxAttempts - attempts}`;
+                loginStatus.style.color = "#ff6b6b";
+                
+                if (attempts >= 1) {
+                    hintContainer.style.display = "block";
+                }
+                
+                if (attempts >= maxAttempts) {
+                    loginStatus.textContent = "SISTEMA BLOQUEADO. CONTATE O ADMINISTRADOR.";
+                    loginBtn.disabled = true;
+                    
+                    // Efeito de bloqueio
+                    loginContainer.classList.add('glitch');
+                    setTimeout(() => {
+                        loginContainer.classList.remove('glitch');
+                    }, 2000);
+                }
+            }
+        });
+        
+        // Animações de boot aprimoradas
+        function startBootSequence() {
+            const bootModules = document.getElementById('boot-modules');
+            const bootInterface = document.getElementById('boot-interface');
+            const bootNetwork = document.getElementById('boot-network');
+            const bootProgress = document.getElementById('boot-progress');
+            const bootProgressText = document.getElementById('boot-progress-text');
+            const bootComplete = document.getElementById('boot-complete');
+            
+            // Módulos do sistema
+            const modules = [
+                { text: "Módulo de Segurança...", status: "ok", delay: 300 },
+                { text: "Núcleo Neural...", status: "ok", delay: 600 },
+                { text: "Decodificador Quântico...", status: "ok", delay: 900 },
+                { text: "Interface Holográfica...", status: "warning", delay: 1200 },
+                { text: "Sistema de Monitoramento...", status: "ok", delay: 1500 },
+                { text: "Banco de Dados Neural...", status: "ok", delay: 1800 },
+                { text: "Protocolos de Contenção...", status: "error", delay: 2100 },
+                { text: "Tentando reparar Protocolos de Contenção...", status: "loading", delay: 2400 },
+                { text: "Protocolos de Contenção reparados...", status: "ok", delay: 2700 }
+            ];
+            
+            // Interface
+            const interfaces = [
+                { text: "Carregando Terminal...", status: "ok", delay: 3000 },
+                { text: "Inicializando Sensores...", status: "ok", delay: 3300 },
+                { text: "Conectando à Rede Neural...", status: "loading", delay: 3600 },
+                { text: "Conexão estabelecida com Echo Node...", status: "ok", delay: 3900 },
+                { text: "Carregando módulos de IA...", status: "warning", delay: 4200 },
+                { text: "Módulos de IA carregados com restrições...", status: "ok", delay: 4500 }
+            ];
+            
+            // Rede
+            const network = [
+                { text: "Verificando conexões locais...", status: "ok", delay: 4800 },
+                { text: "Conexão com LAB_SECUNDARIO_7 estabelecida...", status: "ok", delay: 5100 },
+                { text: "Tentando conectar a CORP_VAULT...", status: "loading", delay: 5400 },
+                { text: "Firewall detectado - bypassando...", status: "warning", delay: 5700 },
+                { text: "Conexão com CORP_VAULT estabelecida...", status: "ok", delay: 6000 },
+                { text: "Detectando assinaturas anômalas...", status: "error", delay: 6300 },
+                { text: "Assinatura: ECHO_AI_2087 detectada...", status: "warning", delay: 6650 }
+            ];
+            
+            // Adiciona módulos com atraso
+            modules.forEach(module => {
+                setTimeout(() => {
+                    const el = document.createElement('div');
+                    el.className = `boot-module ${module.status}`;
+                    el.textContent = module.text;
+                    bootModules.appendChild(el);
+                    bootScreen.scrollTop = bootScreen.scrollHeight;
+                    updateProgress();
+                }, module.delay);
+            });
+            
+            // Adiciona interface com atraso
+            interfaces.forEach(intf => {
+                setTimeout(() => {
+                    const el = document.createElement('div');
+                    el.className = `boot-module ${intf.status}`;
+                    el.textContent = intf.text;
+                    bootInterface.appendChild(el);
+                    bootScreen.scrollTop = bootScreen.scrollHeight;
+                    updateProgress();
+                }, intf.delay);
+            });
+            
+            // Adiciona rede com atraso
+            network.forEach(net => {
+                setTimeout(() => {
+                    const el = document.createElement('div');
+                    el.className = `boot-module ${net.status}`;
+                    el.textContent = net.text;
+                    bootNetwork.appendChild(el);
+                    bootScreen.scrollTop = bootScreen.scrollHeight;
+                    updateProgress();
+                }, net.delay);
+            });
+            
+            // Atualiza barra de progresso
+            function updateProgress() {
+                const totalItems = modules.length + interfaces.length + network.length;
+                const loadedItems = 
+                    bootModules.childElementCount + 
+                    bootInterface.childElementCount + 
+                    bootNetwork.childElementCount;
+                
+                const progress = Math.min(100, Math.floor((loadedItems / totalItems) * 100));
+                bootProgress.style.width = `${progress}%`;
+                bootProgressText.textContent = `${progress}%`;
+                
+                // Quando completar
+                if (progress === 100) {
+                    bootComplete.style.display = "block";
+                    const continueBtn = document.createElement('button');
+                    continueBtn.className = 'boot-continue-btn';
+                    continueBtn.textContent = 'PROSSEGUIR PARA O TERMINAL';
+                    continueBtn.id = 'boot-continue-btn';
+                    bootComplete.insertAdjacentElement('afterend', continueBtn);
+                    
+                    // Rolando para mostrar o botão
+                    continueBtn.scrollIntoView({ behavior: 'smooth' });
+                    
+                    // Adicionar evento de clique ao botão
+                    continueBtn.addEventListener('click', () => {
+                        continueBtn.disabled = true;
+                        continueBtn.textContent = 'REDIRECIONANDO...';
+                        setTimeout(() => {
+                            window.location.href = "terminal.html";
+                        }, 1000);
+                    });
+                }
+            }
+        }
+        
+        // Permitir tecla Enter para login
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                loginBtn.click();
+            }
+        });
+    </script>
+</body>
+</html>

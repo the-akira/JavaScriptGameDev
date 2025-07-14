@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SECURITY OVERRIDES | NEURALCORP</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+        
+        :root {
+            --primary: #00ff41;
+            --secondary: #ae6bff;
+            --alert: #ff6b6b;
+            --blue: #00bfff;
+            --dark-bg: #0a0a0a;
+            --panel-bg: rgba(15, 15, 25, 0.8);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: var(--dark-bg);
+            color: var(--primary);
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            overflow-x: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .scanlines {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                repeating-linear-gradient(
+                    0deg,
+                    rgba(0, 255, 65, 0.05),
+                    rgba(0, 255, 65, 0.05) 1px,
+                    transparent 1px,
+                    transparent 2px
+                ),
+                repeating-linear-gradient(
+                    90deg,
+                    rgba(0, 255, 65, 0.03),
+                    rgba(0, 255, 65, 0.03) 1px,
+                    transparent 1px,
+                    transparent 2px
+                );
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .container {
+            max-width: 800px;
+            width: 90%;
+            margin: 20px auto;
+            padding: 20px;
+            position: relative;
+            z-index: 2;
+            border: 1px solid var(--primary);
+            background: var(--panel-bg);
+            box-shadow: 0 0 20px rgba(0, 255, 65, 0.1);
+        }
+
+        header {
+            border-bottom: 1px solid var(--primary);
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .title {
+            font-size: 24px;
+            color: var(--primary);
+            text-shadow: 0 0 10px var(--primary);
+            letter-spacing: 3px;
+        }
+
+        .status {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--alert);
+            box-shadow: 0 0 10px var(--alert);
+            animation: pulse 1s infinite;
+        }
+
+        .status-text {
+            font-size: 14px;
+            color: var(--primary);
+        }
+
+        .access-panel {
+            margin-bottom: 30px;
+        }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .panel-title {
+            color: var(--primary);
+            font-size: 18px;
+        }
+
+        .panel-subtitle {
+            color: var(--secondary);
+            font-size: 14px;
+        }
+
+        .code-display {
+            background: rgba(0, 10, 5, 0.5);
+            border: 1px solid var(--primary);
+            padding: 15px;
+            font-family: 'Courier Prime', monospace;
+            font-size: 24px;
+            letter-spacing: 5px;
+            text-align: center;
+            margin-bottom: 20px;
+            height: 60px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .code-char {
+            display: inline-block;
+            width: 30px;
+            text-align: center;
+        }
+
+        .code-char.empty {
+            color: rgba(0, 255, 65, 0.3);
+        }
+
+        .code-char.filled {
+            animation: pulse 1s infinite;
+        }
+
+        .attempts-counter {
+            text-align: right;
+            color: var(--secondary);
+            margin-bottom: 20px;
+        }
+
+        .keypad {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .key {
+            background: rgba(0, 255, 65, 0.1);
+            border: 1px solid var(--primary);
+            color: var(--primary);
+            padding: 15px;
+            font-size: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            user-select: none;
+        }
+
+        .key:hover {
+            background: rgba(0, 255, 65, 0.3);
+            box-shadow: 0 0 10px rgba(0, 255, 65, 0.5);
+        }
+
+        .key:active {
+            transform: scale(0.95);
+        }
+
+        .key.function {
+            color: var(--secondary);
+            font-size: 16px;
+        }
+
+        .hacking-progress {
+            height: 10px;
+            background: rgba(0, 255, 65, 0.1);
+            margin-top: 30px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: var(--primary);
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+
+        .progress-bar.pulsing {
+            animation: pulseBar 2s infinite;
+        }
+
+        .messages-log {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid rgba(0, 255, 65, 0.2);
+            height: 100px;
+            overflow-y: auto;
+            font-family: 'Courier Prime', monospace;
+            font-size: 12px;
+        }
+
+        .log-entry {
+            margin-bottom: 5px;
+            padding-left: 10px;
+            border-left: 2px solid var(--primary);
+        }
+
+        .log-time {
+            color: var(--secondary);
+        }
+
+        .log-warning {
+            color: var(--alert);
+        }
+
+        .log-success {
+            color: var(--primary);
+        }
+
+        .glitch-effect {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(
+                0deg,
+                rgba(0, 255, 65, 0.1),
+                rgba(0, 255, 65, 0.1) 1px,
+                transparent 1px,
+                transparent 3px
+            );
+            pointer-events: none;
+            z-index: 1;
+            opacity: 0;
+        }
+
+        .code-display:hover .glitch-effect {
+            animation: glitchPanel 0.2s;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        @keyframes pulseBar {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        @keyframes glitch {
+            0% { text-shadow: 1px 0 var(--alert), -1px 0 var(--secondary); }
+            25% { text-shadow: -1px 0 var(--alert), 1px 0 var(--secondary); }
+            50% { text-shadow: 1px 0 var(--secondary), -1px 0 var(--alert); }
+            75% { text-shadow: -1px 0 var(--secondary), 1px 0 var(--alert); }
+            100% { text-shadow: 1px 0 var(--alert), -1px 0 var(--secondary); }
+        }
+
+        @keyframes glitchPanel {
+            0% { opacity: 0; transform: translateX(0); }
+            20% { opacity: 0.3; transform: translateX(-2px); }
+            40% { opacity: 0.1; transform: translateX(2px); }
+            60% { opacity: 0.4; transform: translateX(-1px); }
+            80% { opacity: 0.2; transform: translateX(1px); }
+            100% { opacity: 0; transform: translateX(0); }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+            20%, 40%, 60%, 80% { transform: translateX(5px); }
+        }
+
+        .shake {
+            animation: shake 0.5s;
+        }
+
+        .firewall-animation {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s;
+        }
+
+        .firewall-content {
+            text-align: center;
+            color: var(--alert);
+            font-size: 24px;
+            text-shadow: 0 0 10px var(--alert);
+        }
+
+        .firewall-active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .matrix-rain {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            opacity: 0.3;
+            z-index: -1;
+        }
+
+        body::-webkit-scrollbar,
+        .messages-log::-webkit-scrollbar {
+            width: 10px;
+            height: 8px;
+        }
+
+        body::-webkit-scrollbar-track,
+        .messages-log::-webkit-scrollbar-track {
+            background: rgba(10, 10, 10, 0.8);
+        }
+
+        body::-webkit-scrollbar-thumb,
+        .messages-log::-webkit-scrollbar-thumb {
+            background: linear-gradient(#00ff41, #ae6bff);
+            border-radius: 5px;
+            border: 1px solid rgba(0, 255, 65, 0.3);
+        }
+
+        body::-webkit-scrollbar-thumb:hover,
+        .messages-log::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(#00ff41, #00bfff);
+        }
+    </style>
+</head>
+<body>
+    <div class="scanlines"></div>
+    <canvas id="matrix-rain" class="matrix-rain"></canvas>
+    
+    <div class="firewall-animation" id="firewall-animation">
+        <div class="firewall-content">
+            <div>FIREWALL ATIVADO</div>
+            <div>ACESSO NEGADO</div>
+        </div>
+    </div>
+    
+    <div class="container">
+        <header>
+            <div class="title">SECURITY OVERRIDES</div>
+            <div class="status">
+                <div class="status-indicator"></div>
+                <div class="status-text">AGUARDANDO AUTENTICAÇÃO</div>
+            </div>
+        </header>
+        
+        <div class="access-panel">
+            <div class="panel-header">
+                <div>
+                    <div class="panel-title">SISTEMA DE SEGURANÇA NEURALCORP</div>
+                    <div class="panel-subtitle">PROTOCOLO DE SOBREPOSIÇÃO DE ACESSO</div>
+                </div>
+            </div>
+            
+            <div class="code-display" id="code-display">
+                <div class="glitch-effect"></div>
+                <!-- Código será inserido aqui pelo JavaScript -->
+            </div>
+            
+            <div class="attempts-counter" id="attempts-counter">
+                TENTATIVAS RESTANTES: 5
+            </div>
+            
+            <div class="keypad">
+                <div class="key" data-key="1">1</div>
+                <div class="key" data-key="2">2</div>
+                <div class="key" data-key="3">3</div>
+                <div class="key" data-key="4">4</div>
+                <div class="key" data-key="5">5</div>
+                <div class="key" data-key="6">6</div>
+                <div class="key" data-key="7">7</div>
+                <div class="key" data-key="8">8</div>
+                <div class="key" data-key="9">9</div>
+                <div class="key function" data-key="clear">LIMPAR</div>
+                <div class="key" data-key="0">0</div>
+                <div class="key function" data-key="enter">CONFIRMAR</div>
+            </div>
+            
+            <div class="hacking-progress">
+                <div class="progress-bar" id="progress-bar"></div>
+            </div>
+            
+            <div class="messages-log" id="messages-log">
+                <div class="log-entry"><span class="log-time">[00:00:00]</span> Sistema de segurança ativado</div>
+                <div class="log-entry"><span class="log-time">[00:00:00]</span> Insira o código de acesso de 8 dígitos</div>
+            </div>
+        </div>
+        
+        <footer>
+            <div>NEURALCORP SECURITY TERMINAL v5.2.7</div>
+            <div style="margin-top: 5px;">© 2087 NeuralCorp International - TODOS OS DIREITOS RESERVADOS</div>
+        </footer>
+    </div>
+
+    <script>
+        // Estado do jogo
+        const gameState = {
+            targetCode: generateRandomCode(8),
+            currentInput: [],
+            attemptsRemaining: 5,
+            isHacking: false,
+            hackingProgress: 0,
+            lastAttemptTime: null
+        };
+
+        // Elementos da interface
+        const elements = {
+            codeDisplay: document.getElementById('code-display'),
+            attemptsCounter: document.getElementById('attempts-counter'),
+            progressBar: document.getElementById('progress-bar'),
+            messagesLog: document.getElementById('messages-log'),
+            firewallAnimation: document.getElementById('firewall-animation'),
+            keys: document.querySelectorAll('.key')
+        };
+
+        // Inicialização
+        function init() {
+            renderCodeDisplay();
+            setupEventListeners();
+            initMatrixRain();
+        }
+
+        // Gerar código aleatório
+        function generateRandomCode(length) {
+            let code = '';
+            for (let i = 0; i < length; i++) {
+                code += Math.floor(Math.random() * 10);
+            }
+            return code;
+        }
+
+        // Renderizar display de código
+        function renderCodeDisplay() {
+            elements.codeDisplay.innerHTML = '';
+            
+            for (let i = 0; i < 8; i++) {
+                const charElement = document.createElement('span');
+                charElement.className = 'code-char ' + (gameState.currentInput[i] ? 'filled' : 'empty');
+                charElement.textContent = gameState.currentInput[i] || '▁';
+                elements.codeDisplay.appendChild(charElement);
+            }
+            
+            // Adicionar efeito de glitch novamente
+            elements.codeDisplay.innerHTML += '<div class="glitch-effect"></div>';
+        }
+
+        // Configurar listeners de eventos
+        function setupEventListeners() {
+            // Teclado físico
+            document.addEventListener('keydown', handleKeyPress);
+            
+            // Teclado virtual
+            elements.keys.forEach(key => {
+                key.addEventListener('click', () => {
+                    const keyValue = key.getAttribute('data-key');
+                    handleKeyPress({ key: keyValue });
+                });
+            });
+        }
+
+        // Manipulador de teclas
+        function handleKeyPress(event) {
+            if (gameState.isHacking) return;
+            
+            const key = event.key;
+            
+            // Teclas numéricas
+            if (/^[0-9]$/.test(key)) {
+                if (gameState.currentInput.length < 8) {
+                    gameState.currentInput.push(key);
+                    renderCodeDisplay();
+                    playSound('beep');
+                }
+            }
+            // Limpar
+            else if (key === 'clear' || key === 'Backspace') {
+                gameState.currentInput = [];
+                renderCodeDisplay();
+                playSound('beep');
+            }
+            // Confirmar
+            else if (key === 'enter' || key === 'Enter') {
+                if (gameState.currentInput.length === 8) {
+                    attemptCode();
+                } else {
+                    addLogMessage('Código incompleto. Insira 8 dígitos.', 'warning');
+                    elements.codeDisplay.classList.add('shake');
+                    setTimeout(() => {
+                        elements.codeDisplay.classList.remove('shake');
+                    }, 500);
+                }
+            }
+        }
+
+        // Tentar código
+        function attemptCode() {
+            if (gameState.attemptsRemaining <= 0) return;
+            
+            const inputCode = gameState.currentInput.join('');
+            gameState.lastAttemptTime = new Date();
+            
+            if (inputCode === gameState.targetCode) {
+                // Código correto
+                addLogMessage('Código aceito. Acesso concedido.', 'success');
+                playSound('success');
+                startHackingSequence();
+            } else {
+                // Código incorreto
+                gameState.attemptsRemaining--;
+                elements.attemptsCounter.textContent = `TENTATIVAS RESTANTES: ${gameState.attemptsRemaining}`;
+                
+                if (gameState.attemptsRemaining > 0) {
+                    addLogMessage('Código inválido. Tentativas restantes: ' + gameState.attemptsRemaining, 'warning');
+                    
+                    // Mostrar dica (quantos dígitos estão corretos)
+                    const correctDigits = countCorrectDigits(inputCode);
+                    addLogMessage(`Dica: ${correctDigits} dígito(s) correto(s) na posição errada`, 'warning');
+                    
+                    // Efeito visual
+                    elements.codeDisplay.classList.add('shake');
+                    setTimeout(() => {
+                        elements.codeDisplay.classList.remove('shake');
+                    }, 500);
+                    
+                    playSound('error');
+                    
+                    // Limpar entrada
+                    setTimeout(() => {
+                        gameState.currentInput = [];
+                        renderCodeDisplay();
+                    }, 1000);
+                } else {
+                    // Sem tentativas restantes
+                    addLogMessage('ACESSO NEGADO. FIREWALL ATIVADO.', 'warning');
+                    playSound('firewall');
+                    triggerFirewall();
+                }
+            }
+        }
+
+        // Contar dígitos corretos
+        function countCorrectDigits(inputCode) {
+            let count = 0;
+            const targetDigits = gameState.targetCode.split('');
+            const inputDigits = inputCode.split('');
+            
+            // Contar dígitos corretos mas na posição errada
+            for (let i = 0; i < inputDigits.length; i++) {
+                if (inputDigits[i] !== targetDigits[i] && targetDigits.includes(inputDigits[i])) {
+                    count++;
+                }
+            }
+            
+            return count;
+        }
+
+        // Iniciar sequência de hacking
+        function startHackingSequence() {
+            gameState.isHacking = true;
+            elements.progressBar.classList.add('pulsing');
+            
+            // Simular progresso de hacking
+            const hackingInterval = setInterval(() => {
+                gameState.hackingProgress += Math.random() * 10;
+                elements.progressBar.style.width = `${Math.min(100, gameState.hackingProgress)}%`;
+                
+                // Mensagens aleatórias durante o hacking
+                if (Math.random() > 0.7) {
+                    const messages = [
+                        "Sobrescrevendo protocolos...",
+                        "Bypassando firewalls...",
+                        "Acessando núcleo do sistema...",
+                        "Decodificando criptografia...",
+                        "Injetando payload..."
+                    ];
+                    addLogMessage(messages[Math.floor(Math.random() * messages.length)]);
+                }
+                
+                // Concluído
+                if (gameState.hackingProgress >= 100) {
+                    clearInterval(hackingInterval);
+                    elements.progressBar.classList.remove('pulsing');
+                    addLogMessage('SOBREPOSIÇÃO DE SEGURANÇA CONCLUÍDA', 'success');
+                    addLogMessage('CONTROLES PRINCIPAIS LIBERADOS', 'success');
+                    playSound('complete');
+                    gameState.isHacking = false;
+                    
+                    // Atualizar interface
+                    document.querySelector('.status-text').textContent = "ACESSO CONCEDIDO";
+                    document.querySelector('.status-indicator').style.background = "var(--primary)";
+                    document.querySelector('.status-indicator').style.boxShadow = "0 0 10px var(--primary)";
+                }
+            }, 300);
+        }
+
+        // Ativar firewall
+        function triggerFirewall() {
+            elements.firewallAnimation.classList.add('firewall-active');
+            
+            // Resetar após alguns segundos
+            setTimeout(() => {
+                elements.firewallAnimation.classList.remove('firewall-active');
+                
+                // Gerar novo código
+                gameState.targetCode = generateRandomCode(8);
+                gameState.attemptsRemaining = 5;
+                gameState.currentInput = [];
+                gameState.hackingProgress = 0;
+                
+                // Atualizar interface
+                elements.attemptsCounter.textContent = `TENTATIVAS RESTANTES: ${gameState.attemptsRemaining}`;
+                elements.progressBar.style.width = `0%`;
+                renderCodeDisplay();
+                
+                addLogMessage('Novo código gerado. Tente novamente.', 'warning');
+            }, 3000);
+        }
+
+        // Adicionar mensagem ao log
+        function addLogMessage(message, type = '') {
+            const now = new Date();
+            const timeString = `[${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}]`;
+            
+            const logEntry = document.createElement('div');
+            logEntry.className = `log-entry ${type === 'warning' ? 'log-warning' : type === 'success' ? 'log-success' : ''}`;
+            logEntry.innerHTML = `<span class="log-time">${timeString}</span> ${message}`;
+            
+            elements.messagesLog.appendChild(logEntry);
+            elements.messagesLog.scrollTop = elements.messagesLog.scrollHeight;
+        }
+
+        // Efeito Matrix Rain
+        function initMatrixRain() {
+            const canvas = document.getElementById('matrix-rain');
+            const ctx = canvas.getContext('2d');
+            
+            // Configurar canvas para cobrir todo o documento
+            function resizeCanvas() {
+                canvas.width = document.documentElement.scrollWidth;
+                canvas.height = document.documentElement.scrollHeight;
+            }
+            
+            // Chamar inicialmente e no redimensionamento
+            resizeCanvas();
+            window.addEventListener('resize', resizeCanvas);
+            
+            // Caracteres do efeito Matrix
+            const matrixChars = "日ﾊﾐﾋｰｳｼﾅﾓﾆｻﾜﾂｵﾘｱﾎﾃﾏｹﾒｴｶｷﾑﾕﾗｾﾈｽﾀﾇﾍｦｲｸｺｿﾁﾄﾉﾌﾔﾖﾙﾚﾛﾝ0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+            const fontSize = 14;
+            const columns = Math.floor(canvas.width / fontSize);
+            
+            // Array para armazenar a posição Y de cada coluna
+            const drops = [];
+            for (let i = 0; i < columns; i++) {
+                drops[i] = Math.random() * -100;
+            }
+            
+            // Função de desenho
+            function draw() {
+                // Fundo semi-transparente para efeito de rastro
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                // Cor e estilo do texto
+                ctx.fillStyle = '#00ff41';
+                ctx.font = fontSize + 'px monospace';
+                
+                // Desenhar caracteres
+                for (let i = 0; i < drops.length; i++) {
+                    const text = matrixChars.charAt(Math.floor(Math.random() * matrixChars.length));
+                    const x = i * fontSize;
+                    const y = drops[i] * fontSize;
+                    
+                    // Verificar se a posição Y está dentro dos limites do canvas
+                    if (y < canvas.height) {
+                        ctx.fillText(text, x, y);
+                    }
+                    
+                    // Resetar gota no final da tela
+                    if (y > canvas.height && Math.random() > 0.975) {
+                        drops[i] = 0;
+                    }
+                    
+                    // Mover a gota para baixo
+                    drops[i]++;
+                }
+            }
+            
+            // Iniciar animação
+            setInterval(draw, 50);
+        }
+
+        // Efeitos sonoros
+        function playSound(type) {
+            // Na prática, você implementaria os efeitos sonoros reais aqui
+            // Esta é uma implementação simulada
+            console.log(`Playing sound: ${type}`);
+        }
+
+        // Iniciar quando o DOM estiver pronto
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>

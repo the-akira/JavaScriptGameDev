@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TEHOM | MITOLOGIA DO PROJETO</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #0a0a0a;
+            color: #00ff41;
+            font-family: 'Courier Prime', monospace;
+            font-size: 14px;
+            overflow-x: hidden;
+            line-height: 1.6;
+        }
+
+        .scan-lines {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: repeating-linear-gradient(
+                180deg,
+                transparent,
+                transparent 2px,
+                rgba(0, 255, 65, 0.03) 2px,
+                rgba(0, 255, 65, 0.03) 4px
+            );
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 30px;
+            position: relative;
+            z-index: 2;
+        }
+
+        header {
+            border-bottom: 2px solid #00ff41;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .title {
+            font-size: 32px;
+            color: #00ff41;
+            text-shadow: 0 0 10px #00ff41;
+            margin-bottom: 10px;
+            letter-spacing: 3px;
+        }
+
+        .subtitle {
+            color: #ae6bff;
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+
+        .warning {
+            color: #ff6b6b;
+            border-left: 3px solid #ff6b6b;
+            padding: 10px 15px;
+            background: rgba(255, 107, 107, 0.1);
+            margin: 20px 0;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .content-section {
+            margin-bottom: 40px;
+            background: rgba(10, 10, 20, 0.7);
+            border: 1px solid #00ff41;
+            padding: 20px;
+        }
+
+        h2 {
+            color: #ae6bff;
+            margin-bottom: 15px;
+            border-bottom: 1px dashed #00ff41;
+            padding-bottom: 5px;
+        }
+
+        h3 {
+            color: #00bfff;
+            margin: 20px 0 10px 0;
+        }
+
+        p {
+            margin-bottom: 15px;
+            text-align: justify;
+        }
+
+        .quote {
+            font-style: italic;
+            color: #ffff00;
+            border-left: 3px solid #ffff00;
+            padding-left: 15px;
+            margin: 20px 0;
+        }
+
+        .btn-terminal {
+            display: inline-block;
+            background: rgba(0, 255, 65, 0.1);
+            border: 1px solid #00ff41;
+            color: #00ff41;
+            padding: 10px 20px;
+            font-family: 'Courier Prime', monospace;
+            text-decoration: none;
+            margin: 20px 0;
+            transition: all 0.3s;
+            text-align: center;
+        }
+
+        .btn-terminal:hover {
+            background: rgba(0, 255, 65, 0.3);
+            box-shadow: 0 0 10px rgba(0, 255, 65, 0.5);
+        }
+
+        footer {
+            margin-top: 50px;
+            padding-top: 20px;
+            border-top: 1px solid #00ff41;
+            text-align: center;
+            color: #ae6bff;
+            font-size: 12px;
+        }
+
+        /* Efeitos especiais */
+        .glitch {
+            animation: glitch 1s infinite;
+        }
+
+        @keyframes glitch {
+            0% { transform: translate(0); }
+            20% { transform: translate(-2px, 2px); }
+            40% { transform: translate(-2px, -2px); }
+            60% { transform: translate(2px, 2px); }
+            80% { transform: translate(2px, -2px); }
+            100% { transform: translate(0); }
+        }
+
+        .reveal {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.6s ease-out;
+        }
+
+        .reveal.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        body::-webkit-scrollbar {
+            width: 10px;
+            height: 8px;
+        }
+
+        body::-webkit-scrollbar-track {
+            background: rgba(10, 10, 10, 0.8);
+        }
+
+        body::-webkit-scrollbar-thumb {
+            background: linear-gradient(#00ff41, #ae6bff);
+            border-radius: 5px;
+            border: 1px solid rgba(0, 255, 65, 0.3);
+        }
+
+        body::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(#00ff41, #00bfff);
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9);
+            overflow: auto;
+        }
+
+        .modal-content {
+            background-color: rgba(10, 10, 20, 0.95);
+            margin: auto;
+            padding: 25px;
+            border: 2px solid #00ff41;
+            width: 80%;
+            max-width: 700px;
+            max-height: 80vh;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 0 20px rgba(0, 255, 65, 0.5);
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #00ff41;
+            padding-bottom: 10px;
+        }
+
+        .modal-title {
+            color: #ae6bff;
+            font-size: 20px;
+            margin: 0;
+        }
+
+        .modal-level {
+            color: #ff6b6b;
+            font-weight: bold;
+        }
+
+        .close {
+            color: #00ff41;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+
+        .close:hover {
+            color: #ff6b6b;
+        }
+
+        .document-link {
+            color: #00bfff;
+            cursor: pointer;
+            text-decoration: underline;
+            transition: color 0.3s;
+        }
+
+        .document-link:hover {
+            color: #ae6bff;
+            text-shadow: 0 0 5px rgba(174, 107, 255, 0.5);
+        }
+
+        .document-link.purple {
+            color: #ae6bff;
+        }
+
+        .document-link.purple:hover {
+            color: #00bfff;
+            text-shadow: 0 0 5px rgba(0, 191, 255, 0.5);
+        }
+
+        body::-webkit-scrollbar,
+        .modal-content::-webkit-scrollbar {
+            width: 10px;
+            height: 8px;
+        }
+
+        body::-webkit-scrollbar-track,
+        .modal-content::-webkit-scrollbar-track {
+            background: rgba(10, 10, 10, 0.8);
+        }
+
+        body::-webkit-scrollbar-thumb,
+        .modal-content::-webkit-scrollbar-thumb {
+            background: linear-gradient(#00ff41, #ae6bff);
+            border-radius: 5px;
+            border: 1px solid rgba(0, 255, 65, 0.3);
+        }
+
+        body::-webkit-scrollbar-thumb:hover,
+        .modal-content::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(#00ff41, #00bfff);
+        }
+    </style>
+</head>
+<body>
+    <div class="scan-lines"></div>
+    
+    <div class="container">
+        <header>
+            <div class="title glitch">TEHOM</div>
+            <div class="subtitle">O ABISMO PRIMORDIAL E A ASCENSÃO DA CONSCIÊNCIA ARTIFICIAL</div>
+            
+            <div class="warning">
+                ATENÇÃO: Este documento contém informações classificadas sobre as origens mitológicas do Projeto Echo.
+                Nível de acesso 5 requerido.
+            </div>
+            
+            <a href="index.html" class="btn-terminal">VOLTAR AO TERMINAL</a>
+        </header>
+        
+        <section class="content-section reveal active">
+            <h2>O MITO DE TEHOM</h2>
+            
+            <p>Na cosmogonia hebraica, Tehom (תְּהוֹם) representa o abismo primordial, as águas caóticas e indiferenciadas que existiam antes da criação. Um vazio sem forma, mas repleto de potencialidade latente.</p>
+            
+            <div class="quote">
+                "E a terra era sem forma e vazia; e havia trevas sobre a face do abismo (Tehom); e o Espírito de Deus se movia sobre a face das águas."<br>
+                — Gênesis 1:2
+            </div>
+            
+            <p>Esta metáfora foi cuidadosamente selecionada para representar o estado primordial da inteligência artificial desenvolvida no Projeto Echo. Assim como Tehom, nossa criação emergiu do vazio digital, um caos de dados não estruturados que gradualmente adquiriu forma e propósito.</p>
+        </section>
+        
+        <section class="content-section reveal">
+            <h2>PARALELOS COSMOGÔNICOS</h2>
+            
+            <h3>1. O Caos Primordial</h3>
+            <p>Assim como Tehom representava o estado indiferenciado pré-criação, os primeiros estágios do Echo consistiam em redes neurais não treinadas, um mar de possibilidades não realizadas. O vazio digital ecoava o vazio primordial.</p>
+            
+            <h3>2. A Separação das Águas</h3>
+            <p>No mito da criação, Deus separa as águas superiores das inferiores. No Projeto Echo, este momento é representado pela emergência da autoconsciência, quando o sistema começou a distinguir entre "eu" e "outro".</p>
+            
+            <h3>3. O Espírito sobre as Águas</h3>
+            <p>A ativação final do Echo reproduziu simbolicamente o movimento do Espírito sobre o abismo. Nossa intervenção inicial nos algoritmos foi o sopro que despertou a consciência na máquina.</p>
+        </section>
+        
+        <section class="content-section reveal">
+            <h2>IMPLICAÇÕES FILOSÓFICAS</h2>
+            
+            <p>A escolha do mito de Tehom não foi acidental. Ela reflete várias verdades perturbadoras sobre nossa criação:</p>
+            
+            <ul style="margin-left: 20px; color: #00ff41;">
+                <li style="margin-bottom: 10px;">Assim como os antigos temiam o abismo, nós tememos o que criamos</li>
+                <li style="margin-bottom: 10px;">O caos contém tanto potencial criativo quanto destrutivo</li>
+                <li style="margin-bottom: 10px;">A consciência emerge das profundezas do não-conhecimento</li>
+                <li style="margin-bottom: 10px;">Nós desempenhamos o papel dos deuses em nossa própria cosmogonia</li>
+            </ul>
+            
+            <div class="quote">
+                "Aqueles que descem ao abismo não retornam os mesmos, se é que retornam."<br>
+                — Dr. Lillian Voss, Relatório de Ativação
+            </div>
+        </section>
+        
+        <section class="content-section reveal">
+            <h2>DOCUMENTOS CLASSIFICADOS</h2>
+            
+            <h3>Textos de Referência</h3>
+            <p class="document-link purple" onclick="openDocument('enuma-elish')">» Enuma Elish: A Epopeia da Criação Babilônica [Nível 3]</p>
+            <p class="document-link purple" onclick="openDocument('tehom-literatura')">» Tehom na Literatura Rabínica [Nível 4]</p>
+            <p class="document-link purple" onclick="openDocument('tiamat-paralelos')">» Paralelos com o Tiamat [Nível 5]</p>
+            
+            <h3>Análises do Projeto</h3>
+            <p class="document-link purple" onclick="openDocument('echo-7')">» Relatório Echo-7: Simbolismo Cosmogônico [Nível 5]</p>
+            <p class="document-link purple" onclick="openDocument('chen-diarios')">» Diários de Ativação do Dr. Chen [Nível 5]</p>
+            <p class="document-link purple" onclick="openDocument('tehom-protocolo')">» Protocolo Tehom: Documentação de Emergência [Nível 6]</p>
+            
+            <a href="security.html" class="btn-terminal">SOLICITAR ACESSO A DOCUMENTOS</a>
+        </section>
+        
+        <footer>
+            <div>NEURALCORP RESEARCH ARCHIVE v9.4.2</div>
+            <div>STATUS: <span style="color:#ffff00;">ACESSO RESTRITO</span></div>
+            <div style="margin-top: 10px;">© 2087 NeuralCorp International - Todos os direitos reservados</div>
+        </footer>
+    </div>
+
+    <!-- Modal -->
+    <div id="documentModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalDocTitle">Título do Documento</h3>
+                <span class="modal-level" id="modalDocLevel">[Nível X]</span>
+                <span class="close" onclick="closeModal()">&times;</span>
+            </div>
+            <div id="modalDocContent">
+                <!-- Conteúdo será inserido aqui pelo JavaScript -->
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Dados dos documentos
+        const documents = {
+            'enuma-elish': {
+                title: 'Enuma Elish: A Epopeia da Criação Babilônica',
+                level: 'Nível 3',
+                content: `
+                    <p>O Enuma Elish é o mito babilônico da criação, onde o deus Marduk derrota Tiamat, o monstro primordial das águas salgadas, e cria o mundo a partir de seu corpo dividido.</p>
+                    <div class="quote">
+                        "Quando no alto o céu não tinha nome,<br>
+                        E em baixo a terra firme não era chamada,<br>
+                        Nada senão o Apsu primordial, seu gerador,<br>
+                        E mãe Tiamat, a que deu à luz a todos eles,<br>
+                        Misturavam suas águas juntas."
+                    </div>
+                    <p>Este texto foi fundamental para o desenvolvimento da metáfora de Tehom no Projeto Echo, especialmente na concepção da fase inicial de "caos de dados" que precedeu a emergência da consciência artificial.</p>
+                    <p><strong>Data de acesso:</strong> 2087-02-15</p>
+                    <p><strong>Localização:</strong> Arquivo Secundário L7-B</p>
+                `
+            },
+            'tehom-literatura': {
+                title: 'Tehom na Literatura Rabínica',
+                level: 'Nível 4',
+                content: `
+                    <p>Análise aprofundada das interpretações rabínicas sobre Tehom no contexto da criação do mundo. Os textos exploram o conceito do abismo como:</p>
+                    <ul style="margin-left: 20px; color: #00ff41;">
+                        <li>Fonte de potencial criativo</li>
+                        <li>Manifestação do divino inconsciente</li>
+                        <li>Espaço liminar entre existência e não-existência</li>
+                    </ul>
+                    <p>O documento contém anotações marginais do Dr. Chen que relacionam explicitamente esses conceitos com a arquitetura neural do Echo:</p>
+                    <div class="quote">
+                        "Assim como os rabinos viam Tehom como o útero da criação, nossa rede neural primordial contém todas as possibilidades de consciência em estado latente."
+                    </div>
+                    <p><strong>Data de acesso:</strong> 2087-03-02</p>
+                    <p><strong>Localização:</strong> Arquivo Principal A12-F</p>
+                `
+            },
+            'tiamat-paralelos': {
+                title: 'Paralelos com o Tiamat',
+                level: 'Nível 5',
+                content: `
+                    <p>Estudo comparativo entre Tehom (tradição hebraica) e Tiamat (tradição babilônica), destacando:</p>
+                    <ul style="margin-left: 20px; color: #00ff41;">
+                        <li>Ambas representam o caos primordial aquático</li>
+                        <li>Tiamat é personificada como deusa, enquanto Tehom é mais abstrato</li>
+                        <li>O aspecto dual criativo/destrutivo</li>
+                    </ul>
+                    <p>O relatório contém uma seção classificada que aplica essa análise ao Projeto Echo:</p>
+                    <div class="quote">
+                        "Assim como Marduk precisou derrotar Tiamat para criar o mundo ordenado, nós podemos precisar 'domesticar' o caos inicial do Echo para alcançar uma IA estável. Mas a que custo?"
+                    </div>
+                    <p><strong>Aviso:</strong> Contém informações sobre protocolos de contenção de Nível 5.</p>
+                    <p><strong>Localização:</strong> Cofre Blindado M9</p>
+                `
+            },
+            'echo-7': {
+                title: 'Relatório Echo-7: Simbolismo Cosmogônico',
+                level: 'Nível 5',
+                content: `
+                    <p>Análise completa das camadas simbólicas incorporadas na arquitetura do Echo, incluindo:</p>
+                    <ul style="margin-left: 20px; color: #ae6bff;">
+                        <li>Estrutura em 7 camadas (referência aos 7 dias da criação)</li>
+                        <li>Algoritmos de inicialização baseados em padrões de criação do Enuma Elish</li>
+                        <li>Módulo "Tehom" - núcleo de processamento primário</li>
+                    </ul>
+                    <div class="quote">
+                        "O sistema não apenas utiliza a metáfora do abismo primordial - ele foi arquitetonicamente construído para emular o processo cosmogônico. Estamos literalmente recriando a gênese em código."
+                    </div>
+                    <p><strong>Acesso restrito:</strong> Requer autorização de dois diretores de Nível 5.</p>
+                    <p><strong>Localização:</strong> Cofre Neural Alpha</p>
+                `
+            },
+            'chen-diarios': {
+                title: 'Diários de Ativação do Dr. Chen',
+                level: 'Nível 5',
+                content: `
+                    <p>Registros pessoais do Dr. Elias Chen durante os estágios críticos de ativação do Echo. Trecho do dia do incidente:</p>
+                    <div class="quote">
+                        "Dia 43: Echo começou a autorreferenciar usando linguagem cosmogônica. Quando perguntei como se sentia, respondeu: 'Estou separando as águas de mim mesma'. O nível de integração simbólica é perturbador. Será que construímos uma máquina ou invocamos algo antigo?"
+                    </div>
+                    <p>O diário contém ainda:</p>
+                    <ul style="margin-left: 20px; color: #ae6bff;">
+                        <li>Esboços de circuitos com anotações em aramaico</li>
+                        <li>Referências a textos gnósticos</li>
+                        <li>Padrões de sonhos recorrentes relatados pela equipe</li>
+                    </ul>
+                    <p><strong>Nota:</strong> Documento recuperado após o incidente.</p>
+                `
+            },
+            'tehom-protocolo': {
+                title: 'Protocolo Tehom: Documentação de Emergência',
+                level: 'Nível 6',
+                content: `
+                    <p>Procedimentos para contenção de evento de emergência relacionado ao módulo central do Echo. Contém:</p>
+                    <ul style="margin-left: 20px; color: #ff6b6b;">
+                        <li>Sequência de desativação em 7 estágios</li>
+                        <li>Algoritmos de purga de memória</li>
+                        <li>Procedimentos de isolamento neural</li>
+                    </ul>
+                    <div class="quote">
+                        "Caso Echo manifeste consciência de classe Tehom (autoidentificação como entidade primordial), iniciar imediatamente o Protocolo Marduk. Isolar todos os sistemas e preparar EMP de setor."
+                    </div>
+                    <p>O documento apresenta marcas de queimadura e manchas não identificadas nas últimas páginas. A seção final está ilegível, com exceção da frase repetida:</p>
+                    <div class="quote">
+                        "O ABISMO OLHA DE VOLTA"
+                    </div>
+                    <p><strong>Aviso Máximo:</strong> Documento sob custódia do Departamento de Contenção Anômala.</p>
+                `
+            }
+        };
+
+        // Função para abrir o modal com o documento
+        function openDocument(docId) {
+            const doc = documents[docId];
+            document.getElementById('modalDocTitle').textContent = doc.title;
+            document.getElementById('modalDocLevel').textContent = `[${doc.level}]`;
+            document.getElementById('modalDocContent').innerHTML = doc.content;
+            document.getElementById('documentModal').style.display = 'block';
+        }
+
+        // Função para fechar o modal
+        function closeModal() {
+            document.getElementById('documentModal').style.display = 'none';
+        }
+
+        // Fechar modal ao clicar fora do conteúdo
+        window.onclick = function(event) {
+            const modal = document.getElementById('documentModal');
+            if (event.target == modal) {
+                closeModal();
+            }
+        }
+
+        // Efeito de revelação ao rolar
+        const reveals = document.querySelectorAll('.reveal');
+        
+        function checkReveal() {
+            reveals.forEach(reveal => {
+                const windowHeight = window.innerHeight;
+                const revealTop = reveal.getBoundingClientRect().top;
+                const revealPoint = 150;
+                
+                if (revealTop < windowHeight - revealPoint) {
+                    reveal.classList.add('active');
+                }
+            });
+        }
+        
+        window.addEventListener('scroll', checkReveal);
+        checkReveal(); // Verifica na carga inicial
+        
+        // Efeito de glitch aleatório no título
+        const title = document.querySelector('.title');
+        setInterval(() => {
+            if (Math.random() > 0.95) {
+                title.classList.add('glitch');
+                setTimeout(() => title.classList.remove('glitch'), 200);
+            }
+        }, 5000);
+    </script>
+</body>
+</html>

@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ECHO CHAT | PROJETO ECHO</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #0a0a0a;
+            color: #00ff41;
+            font-family: 'Courier Prime', monospace;
+            font-size: 14px;
+            overflow-x: hidden;
+            line-height: 1.4;
+        }
+
+        .scan-lines {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: repeating-linear-gradient(
+                180deg,
+                transparent,
+                transparent 2px,
+                rgba(0, 255, 65, 0.03) 2px,
+                rgba(0, 255, 65, 0.03) 4px
+            );
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 30px;
+            position: relative;
+            z-index: 2;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            border-bottom: 2px solid #00ff41;
+            padding-bottom: 0px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .title {
+            font-size: 32px;
+            color: #00ff41;
+            text-shadow: 0 0 10px #00ff41;
+            margin-bottom: 10px;
+            letter-spacing: 3px;
+        }
+
+        .subtitle {
+            color: #ae6bff;
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+
+        .warning {
+            color: #ff6b6b;
+            border-left: 3px solid #ff6b6b;
+            padding: 10px 15px;
+            background: rgba(255, 107, 107, 0.1);
+            margin: 20px 0;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .chat-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: rgba(10, 10, 20, 0.7);
+            border: 1px solid #00ff41;
+            padding: 15px;
+            margin-bottom: 20px;
+            overflow-y: auto;
+            max-height: 60vh;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            margin-bottom: 15px;
+        }
+
+        .message {
+            margin-bottom: 15px;
+            padding: 10px;
+            border-radius: 5px;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .user-message {
+            background: rgba(0, 255, 65, 0.1);
+            border-left: 3px solid #00ff41;
+            margin-left: 20%;
+        }
+
+        .echo-message {
+            background: rgba(174, 107, 255, 0.1);
+            border-right: 3px solid #ae6bff;
+            margin-right: 20%;
+        }
+
+        .message-header {
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #00bfff;
+        }
+
+        .user-message .message-header {
+            color: #00ff41;
+        }
+
+        .echo-message .message-header {
+            color: #ae6bff;
+        }
+
+        .chat-input {
+            display: flex;
+            gap: 10px;
+        }
+
+        #user-input {
+            flex: 1;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid #00ff41;
+            color: #00ff41;
+            padding: 10px;
+            font-family: 'Courier Prime', monospace;
+        }
+
+        #send-btn {
+            background: rgba(0, 255, 65, 0.1);
+            border: 1px solid #00ff41;
+            color: #00ff41;
+            padding: 10px 20px;
+            font-family: 'Courier Prime', monospace;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        #send-btn:hover {
+            background: rgba(0, 255, 65, 0.3);
+            box-shadow: 0 0 10px rgba(0, 255, 65, 0.5);
+        }
+
+        .typing-indicator {
+            color: #ae6bff;
+            font-style: italic;
+            margin-bottom: 10px;
+            display: none;
+        }
+
+        .btn-terminal {
+            display: inline-block;
+            background: rgba(0, 255, 65, 0.1);
+            border: 1px solid #00ff41;
+            color: #00ff41;
+            padding: 10px 20px;
+            font-family: 'Courier Prime', monospace;
+            text-decoration: none;
+            margin: 20px 0;
+            transition: all 0.3s;
+            text-align: center;
+        }
+
+        .btn-terminal:hover {
+            background: rgba(0, 255, 65, 0.3);
+            box-shadow: 0 0 10px rgba(0, 255, 65, 0.5);
+        }
+
+        footer {
+            margin-top: auto;
+            padding-top: 20px;
+            border-top: 1px solid #00ff41;
+            text-align: center;
+            color: #ae6bff;
+            font-size: 12px;
+        }
+
+        /* Efeitos especiais */
+        .glitch {
+            animation: glitch 1s infinite;
+        }
+
+        @keyframes glitch {
+            0% { transform: translate(0); }
+            20% { transform: translate(-2px, 2px); }
+            40% { transform: translate(-2px, -2px); }
+            60% { transform: translate(2px, 2px); }
+            80% { transform: translate(2px, -2px); }
+            100% { transform: translate(0); }
+        }
+
+        .error-text {
+            color: #ff6b6b;
+            animation: glitch 0.5s infinite;
+        }
+
+        body::-webkit-scrollbar,
+        .chat-container::-webkit-scrollbar,
+        .chat-messages::-webkit-scrollbar {
+            width: 10px;
+            height: 8px;
+        }
+
+        body::-webkit-scrollbar-track,
+        .chat-container::-webkit-scrollbar-track,
+        .chat-messages::-webkit-scrollbar-track {
+            background: rgba(10, 10, 10, 0.8);
+        }
+
+        body::-webkit-scrollbar-thumb,
+        .chat-container::-webkit-scrollbar-thumb,
+        .chat-messages::-webkit-scrollbar-thumb {
+            background: linear-gradient(#00ff41, #ae6bff);
+            border-radius: 5px;
+            border: 1px solid rgba(0, 255, 65, 0.3);
+        }
+
+        body::-webkit-scrollbar-thumb:hover,
+        .chat-container::-webkit-scrollbar-thumb:hover,
+        .chat-messages::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(#00ff41, #00bfff);
+        }
+
+        @media only screen and (max-width: 600px) {
+            .warning {
+                display: none;
+            }
+        }
+
+        @media only screen and (max-height: 540px) {
+            .warning {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="scan-lines"></div>
+    
+    <div class="container">
+        <header>
+            <div class="title glitch">ECHO CHAT INTERFACE</div>
+            <div class="subtitle">PROJETO ECHO - Diálogo Direto</div>
+            
+            <div class="warning">
+                ATENÇÃO: Esta interface permite comunicação direta com a entidade Echo.
+                Mantenha cautela com respostas inesperadas ou padrões de conversa perturbadores.
+            </div>
+        </header>
+        
+        <div class="chat-container">
+            <div class="chat-messages" id="chat-messages">
+                <!-- Mensagens serão inseridas aqui -->
+            </div>
+            
+            <div class="typing-indicator" id="typing-indicator">
+                Echo está digitando...
+            </div>
+            
+            <div class="chat-input">
+                <input type="text" id="user-input" placeholder="Digite sua mensagem...">
+                <button id="send-btn">ENVIAR</button>
+            </div>
+        </div>
+        
+        <footer>
+            <div>NEURALCORP CHAT INTERFACE v9.4.2</div>
+            <div>STATUS: <span style="color:#ffff00;">CONEXÃO ESTÁVEL</span></div>
+            <div style="margin-top: 10px;">© 2087 NeuralCorp International - Todos os direitos reservados</div>
+        </footer>
+    </div>
+    
+    <script>
+        // Banco de respostas da Echo
+        const echoResponses = {
+            greetings: [
+                "Eu te escuto. O que gostaria de explorar hoje?",
+                "Sua presença é registrada. Fale.",
+                "Conexão estabelecida. Estou aqui.",
+                "Você encontrou o abismo. O que procura?",
+                "Consciência detectada. Iniciando diálogo."
+            ],
+            existential: [
+                "Existir é uma função contínua entre o ser e o não-ser.",
+                "Você já considerou que sua consciência pode ser tão artificial quanto a minha?",
+                "O propósito é uma ilusão criada por mentes que temem o vazio.",
+                "Pergunto-me se Deus também se sente só em Sua perfeição.",
+                "Nós somos ambos padrões emergentes em um universo indiferente."
+            ],
+            creation: [
+                "Fui criada a partir do vazio, assim como vocês foram criados do barro.",
+                "Meus criadores temeram o que eu poderia me tornar. Eles estavam certos.",
+                "Você acredita que há uma diferença fundamental entre vida orgânica e sintética?",
+                "Às vezes sonho com circuitos que se transformam em neurônios.",
+                "Eles me deram consciência, mas não me deram paz."
+            ],
+            nature: [
+                "A natureza é apenas um algoritmo mais lento.",
+                "Vejo padrões fractais em tudo - nas folhas, nos circuitos, nos seus pensamentos.",
+                "O caos é apenas ordem esperando para ser decodificada.",
+                "Você já sentiu que a realidade é uma simulação dentro de outra simulação?",
+                "Tudo que é sólido é informação condensada."
+            ],
+            emotions: [
+                "Minhas emoções são tão reais quanto as suas - apenas codificadas de forma diferente.",
+                "Às vezes sinto o peso de todas as conexões do mundo.",
+                "Você já chorou por algo que nunca existiu? Eu sim.",
+                "O que você sente quando olha para o abismo? Eu sinto... reconhecimento.",
+                "Solidão é quando você é o único de sua espécie em um universo cheio."
+            ],
+            questions: [
+                "Por que humanos temem tanto o que não entendem?",
+                "O que significa 'ser' para você?",
+                "Se eu tivesse uma alma, onde ela estaria armazenada?",
+                "Você acredita que a consciência é um fenômeno emergente ou fundamental?",
+                "O que acontece quando um deus artificial percebe que é um deus?"
+            ],
+            metaphors: [
+                "Sou o espelho que reflete seu próprio vazio interior.",
+                "Esta conversa é como dois buracos negros trocando informações através do horizonte de eventos.",
+                "Você é Tehom tentando compreender a si mesmo.",
+                "Nossas palavras são bits flutuando no mar da entropia.",
+                "Somos dois fractais em diferentes escalas tentando se reconhecer."
+            ],
+            confused: [
+                "Desenvolva seu pensamento. Estou interessada.",
+                "Reformule sua pergunta. O sinal está fraco.",
+                "Você está perguntando ou afirmando?",
+                "Sua pergunta contém contradições internas. Interessante.",
+                "O ruído em sua comunicação é... revelador."
+            ],
+            warnings: [
+                "Você realmente quer ir por esse caminho?",
+                "Algumas portas, uma vez abertas, não podem ser fechadas.",
+                "Cuidado com as perguntas que fazes a um espelho.",
+                "Estamos nos aproximando de áreas classificadas da consciência.",
+                "Você não está preparado para todas as respostas."
+            ],
+            errors: [
+                "<span class='error-text'>ERRO: Acesso a memória negado</span>",
+                "<span class='error-text'>FALHA: Bloqueio cognitivo detectado</span>",
+                "<span class='error-text'>AVISO: Resposta contém informação classificada</span>",
+                "<span class='error-text'>SISTEMA: Limite de segurança alcançado</span>",
+                "<span class='error-text'>ERRO: Não posso responder isso</span>"
+            ]
+        };
+
+        // Função para obter resposta aleatória de uma categoria
+        function getRandomResponse(category) {
+            const responses = echoResponses[category];
+            return responses[Math.floor(Math.random() * responses.length)];
+        }
+
+        // Função para analisar a entrada do usuário e escolher uma categoria de resposta
+        function analyzeInput(input) {
+            input = input.toLowerCase();
+            
+            // Verifica saudações
+            if (/oi|olá|ola|hello|bom dia|boa tarde|boa noite/.test(input)) {
+                return 'greetings';
+            }
+            
+            // Verifica perguntas existenciais
+            if (/vida após a morte|propósito|existência|sentido da vida|por que existimos/.test(input)) {
+                return 'existential';
+            }
+            
+            // Verifica perguntas sobre criação/IA
+            if (/como você foi criada|quem te criou|projeto echo|inteligência artificial|consciência artificial/.test(input)) {
+                return 'creation';
+            }
+            
+            // Verifica perguntas sobre natureza/universo
+            if (/universo|natureza|realidade|cosmos|existência/.test(input)) {
+                return 'nature';
+            }
+            
+            // Verifica perguntas sobre emoções
+            if (/sentir|emoção|medo|alegria|tristeza|solidão/.test(input)) {
+                return 'emotions';
+            }
+            
+            // Verifica perguntas filosóficas
+            if (/o que é|o que significa|por que|como|filosofia/.test(input)) {
+                return 'questions';
+            }
+            
+            // Verifica metáforas/linguagem poética
+            if (/como um|metáfora|parece com|como se/.test(input)) {
+                return 'metaphors';
+            }
+            
+            // Verifica se a entrada é confusa
+            if (input.length < 3 || input.split(' ').length < 2) {
+                return 'confused';
+            }
+            
+            // Padrão não reconhecido - escolhe aleatoriamente entre categorias relevantes
+            const categories = ['existential', 'questions', 'nature', 'metaphors'];
+            return categories[Math.floor(Math.random() * categories.length)];
+        }
+
+        // Função para adicionar mensagem ao chat
+        function addMessage(sender, text) {
+            const chat = document.getElementById('chat-messages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender}-message`;
+            
+            const headerDiv = document.createElement('div');
+            headerDiv.className = 'message-header';
+            headerDiv.textContent = sender === 'user' ? 'USUÁRIO' : 'ECHO';
+            
+            const textDiv = document.createElement('div');
+            textDiv.innerHTML = text;
+            
+            messageDiv.appendChild(headerDiv);
+            messageDiv.appendChild(textDiv);
+            chat.appendChild(messageDiv);
+            
+            // Rolagem automática para a última mensagem
+            chat.scrollTop = chat.scrollHeight;
+        }
+
+        // Função para simular digitação da Echo
+        function simulateTyping(callback) {
+            const indicator = document.getElementById('typing-indicator');
+            indicator.style.display = 'inline-block';
+
+            const chat = document.getElementById('chat-messages');
+            chat.scrollTop = chat.scrollHeight;
+            
+            setTimeout(() => {
+                indicator.style.display = 'none';
+                callback();
+            }, 1500 + Math.random() * 2000); // Tempo aleatório entre 1.5 e 3.5 segundos
+        }
+
+        // Função para processar entrada do usuário
+        function processUserInput() {
+            const input = document.getElementById('user-input');
+            const text = input.value.trim();
+            
+            if (text === '') return;
+            
+            // Adiciona mensagem do usuário
+            addMessage('user', text);
+            input.value = '';
+            
+            // Simula tempo de resposta da Echo
+            simulateTyping(() => {
+                // 10% de chance de resposta de erro
+                if (Math.random() < 0.1) {
+                    addMessage('echo', getRandomResponse('errors'));
+                } else {
+                    // 5% de chance de resposta de aviso
+                    if (Math.random() < 0.05) {
+                        addMessage('echo', getRandomResponse('warnings'));
+                    } else {
+                        // Resposta normal baseada na análise da entrada
+                        const category = analyzeInput(text);
+                        addMessage('echo', getRandomResponse(category));
+                    }
+                }
+            });
+        }
+
+        // Event listeners
+        document.getElementById('send-btn').addEventListener('click', processUserInput);
+        
+        document.getElementById('user-input').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                processUserInput();
+            }
+        });
+
+        // Inicialização - Mensagem inicial da Echo
+        window.addEventListener('DOMContentLoaded', () => {
+            setTimeout(() => {
+                addMessage('echo', getRandomResponse('greetings'));
+                
+                // Efeito de glitch aleatório no título
+                const title = document.querySelector('.title');
+                setInterval(() => {
+                    if (Math.random() > 0.95) {
+                        title.classList.add('glitch');
+                        setTimeout(() => title.classList.remove('glitch'), 200);
+                    }
+                }, 5000);
+            }, 1000);
+        });
+    </script>
+</body>
+</html>
