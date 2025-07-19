@@ -1,0 +1,82 @@
+body {
+    margin: 0;
+    padding: 20px;
+    background: #1a1a2e;
+    color: white;
+    font-family: 'Courier New', monospace;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+canvas {
+    border: 3px solid #CD853F;
+    background: #0f3460;
+}
+
+h1 {
+    margin-top: 10px;
+    margin-bottom: 2.5px;
+}
+
+.info {
+    margin-bottom: 10px;
+    text-align: center;
+}
+
+.controls {
+    margin: 10px 0;
+    font-size: 14px;
+}
+
+.game-over {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0, 0, 0, 0.9);
+    padding: 30px;
+    border-radius: 10px;
+    text-align: center;
+    border: 2px solid #ff4444;
+    display: none;
+}
+
+.victory {
+    border-color: #44ff44;
+    color: #44ff44;
+}
+
+button {
+    background: #16213e;
+    color: white;
+    border: 2px solid #0096ff;
+    padding: 10px 20px;
+    margin: 10px;
+    cursor: pointer;
+    border-radius: 5px;
+    font-family: 'Courier New', monospace;
+    font-size: 16px;
+}
+
+button:hover {
+    background: #0096ff;
+}
+
+.start-screen {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0, 0, 0, 0.9);
+    padding: 20px 25px;
+    border-radius: 10px;
+    text-align: center;
+    border: 2px solid white;
+    display: block;
+}
+
+.start-screen h2 {
+    color: #CD853F;
+    margin-bottom: 20px;
+}

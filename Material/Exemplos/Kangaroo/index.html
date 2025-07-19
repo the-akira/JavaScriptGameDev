@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kangaroo Game</title>
+    <link rel="stylesheet" type="text/css" href="styles.css">
+</head>
+<body>
+    <h1>Kangaroo Game</h1>
+    
+    <div class="info">
+        <div class="controls">
+            <b>Controles:</b> WASD ou Setas - Movimento | ESPAÇO - Pular | R - Reiniciar
+        </div>
+    </div>
+
+    <div id="startScreen" class="start-screen">
+        <h2>Kangaroo Game</h2>
+        <p>Ajude o canguru a resgatar seus filhotes e levá-los de volta para a mamãe!</p>
+        <p>Salve todos os filhotes (ᗢ) antes de alcançar a mamãe canguru.</p>
+        <p>Cuidado com os macacos que jogam pedras!</p>
+        <button onclick="startGame()">Começar</button>
+    </div>
+    
+    <canvas id="gameCanvas" width="800" height="550"></canvas>
+    
+    <div id="gameOverScreen" class="game-over">
+        <h2 id="gameOverTitle">Game Over!</h2>
+        <p id="gameOverMessage">Você foi atingido por uma pedra!</p>
+        <button onclick="restartGame()">Jogar Novamente</button>
+    </div>
+
+    <script src="game.js"></script>
+</body>
+</html>
