@@ -13,7 +13,7 @@ const PLAYER_SPEED = 3;
 const MONKEY_THROW_INTERVAL = 2000;
 const LADDER_EXIT_DELAY = Number.MIN_VALUE;
 let ladderExitBuffer = 0;
-let DEBUG = true;
+let DEBUG = false;
 
 // Mapa do jogo
 const gameMap = [
