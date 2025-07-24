@@ -11,7 +11,9 @@ const GRAVITY = 0.5;
 const JUMP_FORCE = -12;
 const PLAYER_SPEED = 3;
 const MONKEY_THROW_INTERVAL = 2000;
-let DEBUG = false;
+const LADDER_EXIT_DELAY = Number.MIN_VALUE;
+let ladderExitBuffer = 0;
+let DEBUG = true;
 
 // Mapa do jogo
 const gameMap = [
@@ -399,6 +401,7 @@ function updatePlayer() {
     if (touchingLadder && ((keys['ArrowUp'] || keys['w']) || (keys['ArrowDown'] || keys['s']))) {
         player.onLadder = true;
         player.onGround = false;
+        ladderExitBuffer = 0; // Reset do buffer quando entra na escada
     }
     
     // Se estava no topo da escada e pressiona para baixo, e há uma escada abaixo
@@ -406,16 +409,47 @@ function updatePlayer() {
         player.onLadder = true;
         player.onGround = false;
         player.onLadderTop = false;
+        ladderExitBuffer = 0; // Reset do buffer
     }
     
     // Sair do modo escada se não estiver mais tocando
     if (!touchingLadder && !ladderBelow) {
-        player.onLadder = false;
+        if (player.onLadder) {
+            const nearGround = checkGroundContact(player) || checkLadderTopSupport(player.x, player.y + player.height + 3, player.width, 1);
+
+            if (nearGround) {
+                player.onLadder = false;
+                ladderExitBuffer = 0;
+            } else {
+                if (ladderExitBuffer === 0) {
+                    ladderExitBuffer = Date.now();
+                }
+                else if (Date.now() - ladderExitBuffer > LADDER_EXIT_DELAY) {
+                    player.onLadder = false;
+                    ladderExitBuffer = 0;
+                }
+            }
+        }
+    } else {
+        ladderExitBuffer = 0;
     }
     
     // Se está no modo escada mas não pressiona nenhuma tecla vertical, sair do modo
     if (player.onLadder && !touchingLadder && !(keys['ArrowUp'] || keys['w'] || keys['ArrowDown'] || keys['s'])) {
-        player.onLadder = false;
+        const nearGround = checkGroundContact(player) || checkLadderTopSupport(player.x, player.y + player.height + 3, player.width, 1);
+
+        if (nearGround) {
+            player.onLadder = false;
+            ladderExitBuffer = 0;
+        } else {
+            if (ladderExitBuffer === 0) {
+                ladderExitBuffer = Date.now();
+            }
+            else if (Date.now() - ladderExitBuffer > LADDER_EXIT_DELAY) {
+                player.onLadder = false;
+                ladderExitBuffer = 0;
+            }
+        }
     }
 
     // Aplicar gravidade ou movimento em escada
