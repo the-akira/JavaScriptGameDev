@@ -44,7 +44,7 @@
     let countriesData = [];
 
     function obterPaisesDaAPI() {
-        const url = 'https://restcountries.com/v3.1/all';
+        const url = 'https://restcountries.com/v3.1/all?fields=name,flags,capital,population';
 
         return $.ajax({
             url: url,
