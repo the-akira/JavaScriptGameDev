@@ -41,14 +41,151 @@
 <script type="text/javascript">
     const postsPerPage = 5;
     let currentPage = 1;
-    const totalPosts = 20;
     
-    const posts = Array.from({ length: totalPosts }, (_, i) => ({
-        id: i + 1,
-        title: `Post ${i + 1}`,
-        excerpt: `Este é um resumo do post número ${i + 1}.`,
-        body: `Este é o conteúdo completo do post número ${i + 1}. Aqui temos mais detalhes sobre o assunto tratado.`
-    }));
+    const posts = [
+        {
+            id: 1,
+            title: "Introdução ao JavaScript Moderno",
+            excerpt: "Descubra os fundamentos e recursos do JavaScript moderno, como let, const e arrow functions.",
+            body: `O JavaScript evoluiu muito desde sua criação. Hoje, com ES6 e versões posteriores, temos recursos poderosos como let e const para declaração de variáveis com escopo de bloco, arrow functions para sintaxe mais concisa de funções, template literals para interpolação de strings e muito mais. Conhecer essas ferramentas é essencial para todo desenvolvedor front-end moderno.`
+        },
+        {
+            id: 2,
+            title: "Entendendo Promises e Async/Await",
+            excerpt: "Saiba como trabalhar com código assíncrono de forma eficiente usando Promises e async/await.",
+            body: `Programação assíncrona pode ser confusa no início, mas o JavaScript oferece ferramentas poderosas para lidar com ela. Promises representam operações que ainda não foram concluídas, enquanto async/await nos permite escrever código assíncrono de forma síncrona. Isso torna o código mais legível e fácil de manter.`
+        },
+        {
+            id: 3,
+            title: "Como Funciona o DOM",
+            excerpt: "Aprenda como o navegador interpreta e manipula o HTML com o DOM.",
+            body: `O DOM (Document Object Model) é a interface que o navegador fornece para interagir com a estrutura da página HTML. Usando JavaScript, podemos selecionar elementos, alterar conteúdo, adicionar eventos e criar experiências dinâmicas. Entender o DOM é essencial para manipulação eficiente de páginas.`
+        },
+        {
+            id: 4,
+            title: "O que são APIs e como consumi-las",
+            excerpt: "Entenda o conceito de APIs e como integrá-las ao seu projeto.",
+            body: `APIs (Application Programming Interfaces) são pontes que permitem que diferentes sistemas se comuniquem. Em JavaScript, podemos usar fetch ou bibliotecas como axios para consumir APIs REST. É importante entender os métodos HTTP (GET, POST, etc.) e o formato JSON para trabalhar com essas integrações.`
+        },
+        {
+            id: 5,
+            title: "Controle de Versão com Git",
+            excerpt: "Uma introdução prática ao Git para controle de versões de código.",
+            body: `Git é a ferramenta padrão para versionamento de código. Comandos como git init, git add, git commit, e git push permitem que você mantenha o histórico de mudanças, colabore com outras pessoas e evite perder trabalho. Aprender Git é essencial para qualquer desenvolvedor.`
+        },
+        {
+            id: 6,
+            title: "Por que aprender Python?",
+            excerpt: "Conheça os motivos que fazem do Python uma linguagem tão popular.",
+            body: `Python é uma linguagem versátil, com sintaxe simples e legível. É amplamente usada em ciência de dados, automação, back-end, inteligência artificial e mais. Com uma comunidade enorme e várias bibliotecas úteis, aprender Python é um ótimo investimento para sua carreira.`
+        },
+        {
+            id: 7,
+            title: "Começando com Django",
+            excerpt: "Um guia para começar com o framework web Django em Python.",
+            body: `Django é um framework web completo que segue o padrão MVC (Model-View-Controller). Ele oferece uma estrutura robusta para criar aplicações escaláveis, com segurança, autenticação e ORM embutidos. Criar projetos com o comando django-admin startproject é o primeiro passo para explorar seu poder.`
+        },
+        {
+            id: 8,
+            title: "Estilizando com CSS Flexbox",
+            excerpt: "Aprenda a alinhar e distribuir elementos facilmente com Flexbox.",
+            body: `Flexbox é um modelo de layout do CSS que facilita o alinhamento, distribuição e redimensionamento de elementos em uma página. Com propriedades como display: flex, justify-content, align-items, podemos criar layouts responsivos de maneira simples e elegante.`
+        },
+        {
+            id: 9,
+            title: "React: Conceitos Fundamentais",
+            excerpt: "Explore os princípios básicos do React para construir interfaces modernas.",
+            body: `React é uma biblioteca JavaScript criada pelo Facebook para construir interfaces de usuário. Ele introduz o conceito de componentes reutilizáveis e a renderização reativa do DOM. Aprender sobre useState, props e JSX é essencial para começar a criar aplicações com React.`
+        },
+        {
+            id: 10,
+            title: "Node.js e o poder do back-end com JavaScript",
+            excerpt: "Veja como usar JavaScript no servidor com Node.js.",
+            body: `Node.js permite que você escreva código JavaScript do lado do servidor, utilizando a engine V8 do Chrome. Com módulos como express, fs, e http, você pode criar servidores, ler arquivos e construir APIs completas com performance impressionante.`
+        },
+        {
+            id: 11,
+            title: "Websockets em Aplicações Reais",
+            excerpt: "Comunicação em tempo real com Websockets e JavaScript.",
+            body: `Websockets são uma tecnologia que permite comunicação bidirecional entre cliente e servidor. Com bibliotecas como socket.io, é possível criar chats em tempo real, sistemas de notificação, jogos multiplayer e muito mais, tudo em tempo real.`
+        },
+        {
+            id: 12,
+            title: "Boas Práticas de Código Limpo",
+            excerpt: "Escreva código que outras pessoas (e você) possam entender e manter.",
+            body: `Código limpo é mais do que organização — é um estilo de programação que facilita a leitura, manutenção e evolução do projeto. Nomear variáveis de forma clara, dividir funções em responsabilidades únicas e evitar duplicações são algumas práticas que promovem qualidade.`
+        },
+        {
+            id: 13,
+            title: "Deploy com Docker para Iniciantes",
+            excerpt: "Aprenda a empacotar e rodar sua aplicação com Docker.",
+            body: `Docker permite que você crie containers — ambientes isolados com tudo o que sua aplicação precisa para rodar. Com um simples Dockerfile, você pode definir dependências, sistema operacional base e comandos de inicialização, garantindo que a aplicação funcione da mesma forma em qualquer lugar.`
+        },
+        {
+            id: 14,
+            title: "Versionando APIs com REST",
+            excerpt: "Por que e como versionar suas APIs REST.",
+            body: `APIs REST precisam de versionamento para evitar que mudanças quebrem integrações com clientes existentes. Usar URLs como /api/v1/recurso é uma prática comum. Além disso, pensar na retrocompatibilidade e documentar suas rotas é essencial para um bom design de API.`
+        },
+        {
+            id: 15,
+            title: "O Futuro do Front-End: Web Components",
+            excerpt: "Entenda como os Web Components estão mudando o desenvolvimento front-end.",
+            body: `Web Components são uma especificação do W3C que permite criar elementos personalizados reutilizáveis nativamente no navegador, sem depender de frameworks. Com Shadow DOM, Custom Elements e HTML Templates, podemos encapsular estilos e comportamentos com performance e organização.`
+        },
+        {
+            id: 16,
+            title: "Como Funciona o Motor do Navegador",
+            excerpt: "Explore os bastidores do navegador e entenda como páginas são renderizadas.",
+            body: `Os navegadores modernos possuem motores de renderização complexos como o Blink (Chrome) ou o Gecko (Firefox). Esses motores são responsáveis por interpretar o HTML, aplicar estilos CSS e executar scripts JavaScript.
+
+                A renderização começa com a análise do HTML, que gera a árvore DOM. Em seguida, o CSS é processado para criar a árvore de estilos. O navegador então constrói uma árvore de renderização, calcula o layout e finalmente desenha os pixels na tela.
+
+                Cada etapa é otimizada para performance, e pequenas mudanças no DOM podem causar grandes reflows se não forem bem gerenciadas.`
+        },
+        {
+            id: 17,
+            title: "Construindo um Blog com Node.js e Express",
+            excerpt: "Aprenda a criar seu próprio blog do zero com JavaScript no servidor.",
+            body: `Criar um blog com Node.js e Express é uma ótima forma de aprender desenvolvimento web full-stack. Express fornece uma estrutura leve para definir rotas, lidar com requisições e enviar respostas.
+
+                Você pode começar com um simples servidor que renderiza HTML estático ou usar templates como EJS para gerar páginas dinamicamente. Com um banco de dados como MongoDB, é possível persistir os posts, usuários e comentários.
+
+                Adicione autenticação, páginas protegidas e uma área de administração para evoluir seu blog e torná-lo um projeto completo.`
+        },
+        {
+            id: 18,
+            title: "Design Responsivo com Media Queries",
+            excerpt: "Descubra como adaptar seu site a diferentes dispositivos com CSS.",
+            body: `Media queries são regras no CSS que permitem aplicar estilos diferentes com base em características do dispositivo, como largura da tela. Isso é essencial para garantir que seu site seja usável em celulares, tablets e desktops.
+
+                Por exemplo, você pode esconder menus em telas menores e substituí-los por um botão tipo "hambúrguer", ou ajustar tamanhos de fonte para melhorar a legibilidade em telas pequenas.
+
+                Um design responsivo não é apenas uma tendência — é uma necessidade. Hoje, a maior parte dos acessos vem de dispositivos móveis.`
+        },
+        {
+            id: 19,
+            title: "O que é o Virtual DOM no React?",
+            excerpt: "Entenda como o React otimiza a renderização com o Virtual DOM.",
+            body: `O Virtual DOM é uma representação leve da árvore real do DOM, mantida na memória. Quando o estado da aplicação muda, o React atualiza primeiro essa versão virtual.
+
+                Depois, o React compara o Virtual DOM antigo com o novo (um processo chamado "diffing") e aplica apenas as mudanças necessárias no DOM real. Isso torna as atualizações mais rápidas e eficientes.
+
+                Essa abordagem evita re-renderizações desnecessárias e melhora muito a performance de interfaces complexas.`
+        },
+        {
+            id: 20,
+            title: "Fetch para Requisições HTTP",
+            excerpt: "Aprenda a fazer chamadas para APIs usando a API Fetch nativa do JavaScript.",
+            body: `A API Fetch é uma forma moderna de fazer requisições HTTP no navegador. Ela retorna Promises e substitui o antigo XMLHttpRequest com uma sintaxe mais simples.
+
+                Você pode usar fetch para buscar dados de APIs externas, enviar formulários, ou carregar conteúdo dinamicamente.
+
+                Também é possível lidar com erros e configurar headers para autenticação, tudo de forma nativa.`
+        }
+    ];
+
+    const totalPosts = posts.length;
 
     function renderPosts() {
         const blogList = document.getElementById('blog-list');
@@ -87,9 +224,10 @@
         const fullPost = document.getElementById('full-post');
         const blogList = document.getElementById('blog-list');
 
+        const paragraphs = post.body.split('\n').filter(p => p.trim() !== '');
         fullPost.innerHTML = `
             <h2>${post.title}</h2>
-            <p>${post.body}</p>
+            ${paragraphs.map(p => `<p>${p.trim()}</p>`).join('')}
             <button onclick="goBack()">Voltar</button>
         `;
 
