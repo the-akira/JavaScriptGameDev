@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Defender - Jogo de Nave Espacial</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" type="text/css" href="css/game.css">
+</head>
+<body>
+    <div class="controls">
+        <div><b>Setas:</b> Mover</div>
+        <div><b>Z:</b> Tiro Normal</div>
+        <div><b>X:</b> Tiro Laser</div>
+        <div><b>C:</b> Espalhamento</div>
+        <div><b>T:</b> Turbo Boost</div>
+        <div><b>B:</b> Bomba Nuclear</div>
+        <div><b>A:</b> Chamar Aliados</div>
+        <div><b>V:</b> Escudo Protetor</div>
+        <div><b>D:</b> Drone Aliado</div>
+        <div><b>S:</b> Trocar Skin</div>
+        <div><b>R:</b> Reiniciar</div>
+        <div><b>P:</b> Pausar</div>
+    </div>
+    
+    <div class="score">
+        <div><b>Vidas:</b> <span id="lives">3</span></div>
+        <div><b>Pontos:</b> <span id="score">0</span></div>
+        <div><b>Aliens:</b> <span id="aliens">15</span></div>
+    </div>
+    
+    <button id="crtToggle" style="display: none;" class="crt-toggle">CRT Effect: OFF</button>
+
+    <canvas id="radarCanvas" class="radar" width="150" height="150"></canvas>
+
+    <canvas id="eventCanvas" width="220" height="160" class="panel" style="top: 415px;"></canvas>
+
+    <canvas id="gameCanvas" width="800" height="600"></canvas>
+
+    <canvas id="panelCanvas" width="220" height="160" class="panel"></canvas>
+
+    <canvas id="healthMonitorCanvas" width="220" height="160" class="panel"></canvas>
+
+    <canvas id="neuralCanvas" width="220" height="160" class="panel"></canvas>
+
+    <div id="attributesPanel" class="panel" style="display: none; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 400px; height: 300px;">
+        <h2 style="color: #0f0; text-align: center;">Level Up!</h2>
+        <p style="color: #fff; text-align: center;">Pontos disponíveis: <span id="availablePoints">0</span></p>
+        
+        <div class="attribute-row">
+            <span class="attribute-name">Velocidade:</span>
+            <span class="attribute-value" id="speedValue">5</span>
+            <button class="attribute-btn" onclick="increaseAttribute('speed')">+</button>
+        </div>
+        
+        <div class="attribute-row">
+            <span class="attribute-name">Vida Máxima:</span>
+            <span class="attribute-value" id="healthValue">100</span>
+            <button class="attribute-btn" onclick="increaseAttribute('health')">+</button>
+        </div>
+        
+        <div class="attribute-row">
+            <span class="attribute-name">Cooldown Spread:</span>
+            <span class="attribute-value" id="spreadCooldownValue">15s</span>
+            <button class="attribute-btn" onclick="increaseAttribute('spreadCooldown')">+</button>
+        </div>
+        
+        <div class="attribute-row">
+            <span class="attribute-name">Cooldown Turbo:</span>
+            <span class="attribute-value" id="turboCooldownValue">10s</span>
+            <button class="attribute-btn" onclick="increaseAttribute('turboCooldown')">+</button>
+        </div>
+        
+        <button id="confirmAttributes" class="crt-toggle" style="position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);">Confirmar</button>
+    </div>
+
+    <div id="xpBarContainer" style="position: absolute; bottom: 60px; left: 50%; transform: translateX(-50%); width: 800px; height: 20px; background: #222; border: 2px solid #0f0; display: none;">
+        <div id="xpBar" style="height: 100%; width: 0%; background: linear-gradient(to right, #0f0, #0a0);"></div>
+        <div id="xpText" style="position: absolute; top: 0; left: 0; width: 100%; text-align: center; color: #fff; line-height: 20px;">Level 1 (0/100)</div>
+    </div>
+
+    <div id="musicControls" style="position: absolute; bottom: 250px; left: 20px; z-index: 100;">
+        <button id="prevTrack" style="background: #333; color: #0f0; border: 1px solid #0f0; padding: 5px; cursor: pointer; border-radius: 4px;"><i class="fas fa-backward" style="color: #0f0"></i></button>
+        <button id="playPause" style="background: #333; color: #0f0; border: 1px solid #0f0; padding: 5px; cursor: pointer; border-radius: 4px;"><i class="fas fa-pause" style="color: #0f0"></i></button>
+        <button id="nextTrack" style="background: #333; color: #0f0; border: 1px solid #0f0; padding: 5px; cursor: pointer; border-radius: 4px;"><i class="fas fa-forward" style="color: #0f0"></i></button>
+        <input type="range" id="volumeControl" min="0" max="1" step="0.1" value="0.1" style="width: 100px; vertical-align: middle;">
+        <span id="nowPlaying" style="color: #0f0; font-size: 12px; margin-left: 7.5px;"></span>
+    </div>
+
+    <script src="js/game.js"></script>
+</body>
+</html>
