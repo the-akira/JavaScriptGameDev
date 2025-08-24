@@ -1,0 +1,396 @@
+body {
+    margin: 0;
+    padding: 0;
+    background: #000;
+    font-family: 'Courier New', monospace;
+    overflow: hidden;
+    color: #00ff00;
+}
+
+button:focus { 
+    outline: none; 
+}
+
+#gameCanvas {
+    background: radial-gradient(circle at center, #001122, #000000);
+    display: block;
+    cursor: crosshair;
+}
+
+#ui {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 10;
+}
+
+#nodeInfo {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    width: 300px;
+    max-height: 400px;
+    background: rgba(0, 20, 40, 0.9);
+    border: 2px solid #00ffff;
+    border-radius: 10px;
+    padding: 15px;
+    display: none;
+    pointer-events: auto;
+    overflow-y: auto;
+    box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
+}
+
+#nodeInfo h3 {
+    color: #00ffff;
+    margin-top: 0;
+    text-shadow: 0 0 10px #00ffff;
+}
+
+#nodeInfo p {
+    color: #ffffff;
+    line-height: 1.4;
+    font-size: 14px;
+}
+
+#nodeLinks ul {
+    margin: 0px 0;
+    padding-left: 20px;
+}
+
+#nodeLinks li {
+    margin-bottom: 0px;
+}
+
+#nodeLinks a {
+    text-decoration: none;
+    font-size: 13px;
+}
+
+#nodeLinks a:hover {
+    color: #ffff00;
+    text-shadow: 0 0 5px #ffff00;
+}
+
+#closeBtn,
+#closeBtnNote,
+#closeBtnDialog,
+#closeQuiz,
+#closeFlashcard {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    background: none;
+    border: none;
+    color: #ff0066;
+    font-size: 20px;
+    cursor: pointer;
+    pointer-events: auto;
+}
+
+#instructions {
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    color: #00ff00;
+    font-size: 12px;
+    text-shadow: 0 0 5px #00ff00;
+}
+
+#minimap {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    background: rgba(0, 0, 0, 0.7);
+    border: 1px solid #00ff00;
+    border-radius: 5px;
+}
+
+#noteBox {
+    position: absolute; 
+    bottom: 20px; 
+    right: 20px; 
+    background: rgba(0, 20, 40, 0.9);
+    border: 2px solid #00ffff;
+    color: #fff; 
+    padding: 15px; 
+    border-radius: 10px; 
+    box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
+    width: 300px;
+    display: none;
+}
+
+#noteTitle {
+    margin-top: 0px;
+    margin-bottom: 10px;
+    color: #00ffff;
+    text-shadow: 0 0 10px #00ffff;
+}
+
+#noteInput {
+    width: 295px;
+    height: 120px;
+    resize: none;
+    background: rgba(0, 0, 0, 0.7);
+    border: 0px;
+    border-radius: 5px; 
+    color: white;
+}
+
+#noteInput:focus {
+    outline: none;
+}
+
+#noteInput::selection {
+    background: #59299D;
+}
+
+#saveNote, 
+#exportNote, 
+#clearNote {
+    background: rgba(0, 0, 0, 0.7);
+    border: 2px solid #00ffff;
+    color: #00ff66;
+    padding: 5px;     
+    border-radius: 8px; 
+    margin-top: 6.5px;
+    font-weight: bold;   
+}
+
+#saveNote:hover, 
+#exportNote:hover,
+#clearNote:hover {
+    cursor: pointer;
+}
+
+#toast {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0, 20, 40, 0.95);
+    color: #00ff66;
+    padding: 15px 25px;
+    border-radius: 10px;
+    font-size: 16px;
+    text-align: center;
+    z-index: 9999;
+    opacity: 0;
+    transition: opacity 0.5s ease-in-out;
+    pointer-events: none;
+    border: 2px solid #00ff66;
+    text-shadow: 0 0 8px #00ff66;
+}
+
+#toast.show {
+    opacity: 1;
+}
+
+#dialogBox {
+    position: absolute;
+    bottom: 50px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 600px;
+    background: rgba(0, 20, 40, 0.95);
+    border: 2px solid #00ffff;
+    border-radius: 10px;
+    padding: 15px;
+    display: none;
+    color: #fff;
+    font-size: 16px;
+    text-shadow: 0 0 5px #00ffff;
+    box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
+}
+
+#dialogBox h3 {
+    margin: 0 0 10px;
+    color: #00ffff;
+}
+
+.dialogHint {
+    font-size: 12px;
+    color: #00ff66;
+    text-align: right;
+    margin-top: 10px;
+    margin-bottom: 0px;
+}
+
+#quizBtn {
+    position: absolute;
+    bottom: 55px;
+    left: 20px;
+    background: #000;
+    border: 2px solid #00ffff;
+    color: #00ff66;
+    padding: 10px 15px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    z-index: 100;
+}
+
+#quizModal {
+    display: none;
+    position: fixed;
+    top: 0; 
+    left: 0;
+    width: 100%; 
+    height: 100%;
+    background: rgba(0,0,0,0.8);
+    z-index: 9999;
+    justify-content: center;
+    align-items: center;
+    box-sizing: border-box;
+}
+
+#quizContent {
+    background: rgba(0, 20, 40, 0.95);
+    border: 2px solid #00ffff;
+    border-radius: 10px;
+    padding: 20px;
+    width: 500px;
+    max-height: 90vh;
+    overflow-y: auto;
+    color: #fff;
+    text-align: left;
+    position: relative;
+    box-sizing: border-box;
+}
+
+#quizContent h2 {
+    margin-top: 0;
+    color: #00ffff;
+    text-align: center;
+}
+
+#quizContent button:not(#closeQuiz) {
+    margin-right: 10px;
+    background: #000;
+    border: 2px solid #00ffff;
+    color: #00ff66;
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+#quizResult {
+    font-weight: bold;
+    color: #ffcc00;
+    text-align: center;
+}
+
+.optionBox {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border: 2px solid #00ffff;
+    border-radius: 8px;
+    padding: 8px 12px;
+    margin: 6px 0;
+    cursor: pointer;
+    background: rgba(0, 0, 0, 0.7);
+    transition: all 0.2s ease;
+}
+
+.optionBox.correct {
+    background: rgba(0, 255, 0, 0.2);
+    border-color: #00ff00;
+}
+
+.optionBox.wrong {
+    background: rgba(255, 0, 0, 0.2);
+    border-color: #ff4444;
+}
+
+.optionBox:hover {
+    background: rgba(0, 255, 255, 0.1);
+    border-color: #00ff66;
+}
+
+.optionBox input[type="radio"] {
+    transform: scale(1.2);
+    margin-bottom: 5px;
+    cursor: pointer;
+}
+
+.optionBox span {
+    flex: 1;
+    cursor: pointer;
+}
+
+#flashcardBtn {
+    position: absolute;
+    bottom: 55px;
+    left: 95px;
+    background: #000;
+    border: 2px solid #00ffff;
+    color: #00ff66;
+    padding: 10px 15px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    z-index: 100;
+}
+
+#flashcardModal {
+    display: none;
+    position: fixed;
+    top: 0; 
+    left: 0;
+    width: 100%; 
+    height: 100%;
+    background: rgba(0,0,0,0.8);
+    z-index: 9999;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+#flashcardContent {
+    background: rgba(0,20,40,0.95);
+    border: 2px solid #00ffff;
+    border-radius: 10px;
+    padding: 20px;
+    width: 90%;
+    max-width: 500px;
+    max-height: 90vh;
+    overflow-y: auto;
+    color: #fff;
+    text-align: center;
+    position: relative;
+    box-sizing: border-box;
+}
+
+#flashcardContent img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+}
+
+#flashcardControls {
+    margin-top: 15px;
+}
+
+#flashcardControls button {
+    background: #000;
+    border: 2px solid #00ffff;
+    color: #00ff66;
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+@media (max-width: 480px) {
+    #flashcardContent {
+        padding: 15px;
+        font-size: 14px;
+    }
+    #flashcardControls button {
+        padding: 5px 10px;
+        font-size: 14px;
+    }
+}

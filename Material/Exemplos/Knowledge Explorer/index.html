@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Knowledge Explorer</title>
+    <link rel="stylesheet" type="text/css" href="styles.css">
+</head>
+<body>
+    <canvas id="gameCanvas"></canvas>
+    
+    <div id="ui">
+        <canvas id="minimap"></canvas>
+        
+        <div id="nodeInfo">
+            <button id="closeBtn">&times;</button>
+            <h3 id="nodeTitle"></h3>
+            <p id="nodeContent"></p>
+            <div id="nodeConnections"></div>
+            <div id="nodeLinks"></div>
+        </div>
+        
+        <div id="instructions">
+            <b>WASD ou Setas:</b> Mover | <b>E:</b> Interagir (quando próximo) | <b>ESC:</b> Fechar Info
+        </div>
+    </div>
+
+    <div id="noteBox">
+        <button id="closeBtnNote">&times;</button>
+        <h3 id="noteTitle"></h3>
+        <textarea id="noteInput" rows="4"></textarea>
+        <button id="saveNote">Salvar</button>
+        <button id="exportNote">Exportar</button>
+        <button id="clearNote">Limpar</button>
+    </div>
+
+    <div id="dialogBox">
+        <button id="closeBtnDialog">&times;</button>
+        <h3 id="npcName"></h3>
+        <p id="dialogText"></p>
+        <p class="dialogHint">[Espaço] para continuar</p>
+    </div>
+
+    <div id="toast">Nota salva com sucesso!</div>
+
+    <button id="quizBtn">Quiz</button>
+
+    <div id="quizModal">
+        <div id="quizContent">
+            <button id="closeQuiz">&times;</button>
+            <h2>Quiz do Mapa</h2>
+            <div id="quizQuestions"></div>
+            <div id="quizResult"></div>
+        </div>
+    </div>
+
+    <button id="flashcardBtn">Flashcards</button>
+
+    <div id="flashcardModal">
+        <div id="flashcardContent">
+            <button id="closeFlashcard">&times;</button>
+            <h2 style="margin-top: 0px;">Flashcards</h2>
+            <div id="flashcardTitle"></div>
+            <div id="flashcardText"></div>
+            <div id="flashcardControls">
+                <button id="prevBtn">Anterior</button>
+                <button id="nextBtn">Próximo</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="game.js"></script>
+</body>
+</html>
