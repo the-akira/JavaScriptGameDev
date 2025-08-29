@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sokoban Puzzle</title>
+    <link rel="stylesheet" type="text/css" href="styles.css">
+</head>
+<body>
+    <div class="game-container">
+        <h1>Sokoban Puzzle</h1>
+        
+        <div class="info">
+            <div class="info-item">
+                <strong>Nível</strong> <span id="level">1</span>
+            </div>
+            <div class="info-item">
+                <strong>Movimentos</strong> <span id="moves">0</span>
+            </div>
+            <div class="info-item">
+                <strong>Caixas no Lugar</strong> <span id="boxes">0/0</span>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button onclick="resetLevel()">Reiniciar Nível</button>
+            <button onclick="previousLevel()" id="prevBtn">Anterior</button>
+            <button onclick="nextLevel()" id="nextBtn">Próximo</button>
+            <button onclick="toggleInstructions()">Instruções</button>
+            <button onclick="resetGame()">Resetar</button>
+        </div>
+
+        <div id="levelComplete" class="level-complete" style="display: none;">
+            <h2>Parabéns! Nível Completo!</h2>
+            <p>Você completou o nível com <span id="finalMoves">0</span> movimentos!</p>
+        </div>
+
+        <canvas id="gameCanvas" width="640" height="480"></canvas>
+
+        <div class="mobile-controls">
+            <button onclick="move('up')">⬆️</button>
+            <button onclick="move('left')">⬅️</button>
+            <button onclick="move('right')">➡️</button>
+            <button onclick="move('down')">⬇️</button>
+        </div>
+
+        <div id="instructions" class="instructions" style="display: none;">
+            <h3>Como Jogar</h3>
+            <ul>
+                <li><strong>Objetivo:</strong> Empurre todas as caixas para os locais de destino</li>
+                <li><strong>Movimento:</strong> Use as setas do teclado ou os botões na tela</li>
+                <li><strong>Regras:</strong>
+                    <ul>
+                        <li>Você só pode empurrar caixas, não puxá-las</li>
+                        <li>Não é possível empurrar duas caixas ao mesmo tempo</li>
+                        <li>Caixas não podem ser empurradas contra paredes ou outras caixas</li>
+                    </ul>
+                </li>
+                <li><strong>Legenda:</strong>
+                    <ul>
+                        <li>Jogador (círculo azul)</li>
+                        <li>Caixa (quadrado laranja)</li>
+                        <li>Local de destino (círculo dourado)</li>
+                        <li>Caixa no local correto (quadrado verde)</li>
+                        <li>Parede (retângulo marrom)</li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+    </div>
+    <script src="game.js"></script>
+</body>
+</html>
