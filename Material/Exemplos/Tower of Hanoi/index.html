@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Torre de Hanói - Jogo Matemático</title>
+    <link rel="stylesheet" type="text/css" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Torre de Hanói</h1>
+            <p>Jogo Matemático Clássico</p>
+        </div>
+
+        <div class="controls">
+            <div class="control-group">
+                <label for="difficulty">Dificuldade:</label>
+                <select id="difficulty">
+                    <option value="3">Fácil (3 discos)</option>
+                    <option value="4">Médio (4 discos)</option>
+                    <option value="5" selected>Difícil (5 discos)</option>
+                    <option value="6">Muito Difícil (6 discos)</option>
+                    <option value="7">Extremo (7 discos)</option>
+                    <option value="8">Insano (8 discos)</option>
+                </select>
+            </div>
+            
+            <button onclick="newGame()">Novo Jogo</button>
+            <button onclick="resetGame()">Reiniciar</button>
+            <button id="autoSolveBtn" onclick="toggleAutoSolve()">Resolver Automaticamente</button>
+        </div>
+
+        <div class="info-panel">
+            <div class="info-card">
+                <h3>Movimentos</h3>
+                <div class="value" id="moves">0</div>
+            </div>
+            <div class="info-card">
+                <h3>Mínimo Possível</h3>
+                <div class="value" id="minMoves">31</div>
+            </div>
+            <div class="info-card">
+                <h3>Tempo</h3>
+                <div class="value" id="time">00:00</div>
+            </div>
+            <div class="info-card">
+                <h3>Eficiência</h3>
+                <div class="value" id="efficiency">100%</div>
+            </div>
+        </div>
+
+        <div class="auto-solve-controls" id="autoControls" style="display: none;">
+            <div class="speed-control">
+                <label>Velocidade: </label>
+                <input type="range" id="speedSlider" min="50" max="2000" value="500" step="50">
+                <span id="speedValue">500ms</span>
+            </div>
+            <button onclick="pauseAutoSolve()" id="pauseBtn">Pausar</button>
+            <button onclick="stopAutoSolve()">Parar</button>
+        </div>
+
+        <div class="game-area">
+            <div class="towers" id="towers">
+                <div class="tower" data-tower="0">
+                    <div class="tower-label">Torre A</div>
+                </div>
+                <div class="tower" data-tower="1">
+                    <div class="tower-label">Torre B</div>
+                </div>
+                <div class="tower" data-tower="2">
+                    <div class="tower-label">Torre C</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="math-info">
+            <h3>Informações Matemáticas</h3>
+            <div class="math-content">
+                <div>
+                    <h4>Fórmula do Número Mínimo de Movimentos:</h4>
+                    <p><strong>2^n - 1</strong></p>
+                    <p>Onde <em>n</em> é o número de discos</p>
+                    <p>Para <span id="currentDisks">5</span> discos: 2^<span id="currentDisks2">5</span> - 1 = <span id="formulaResult">31</span> movimentos</p>
+                </div>
+                <div>
+                    <h4>Curiosidades:</h4>
+                    <ul>
+                        <li>Com 64 discos, seriam necessários 18.446.744.073.709.551.615 movimentos</li>
+                        <li>A 1 movimento por segundo, levaria 584 bilhões de anos!</li>
+                        <li>O problema foi inventado pelo matemático francês Édouard Lucas em 1883</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="overlay" id="overlay"></div>
+    <div class="success-message" id="successMessage">
+        <h2>Parabéns!</h2>
+        <p>Você resolveu a Torre de Hanói!</p>
+        <p id="finalStats"></p>
+        <button onclick="hideSuccess()">Continuar</button>
+    </div>
+
+    <script src="game.js"></script>
+</body>
+</html>
