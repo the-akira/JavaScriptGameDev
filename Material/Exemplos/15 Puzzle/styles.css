@@ -1,0 +1,215 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Arial', sans-serif;
+    background-color: #282a36;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: #f8f8f2;
+    padding: 20px;
+    padding-top: 30px;
+}
+
+.game-container {
+    background-color: #44475a;
+    border-radius: 12px;
+    padding: 25px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+    max-width: 500px;
+    width: 100%;
+}
+
+h1 {
+    text-align: center;
+    color: #ff79c6;
+    font-size: 2.5em;
+    margin-bottom: 20px;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+    font-weight: bold;
+    letter-spacing: 1px;
+}
+
+.game-info {
+    margin-bottom: 20px;
+    background-color: #282A36;
+    padding: 12px;
+    border-radius: 8px;
+}
+
+.moves-counter {
+    margin-bottom: 5px;
+}
+
+.moves-counter, .status {
+    font-size: 1.1em;
+    font-weight: bold;
+    color: #f8f8f2;
+    text-align: center;
+}
+
+.keyboard-hint {
+    text-align: center;
+    margin-bottom: 20px;
+    color: #50FA7B;
+    font-size: 0.95em;
+    background-color: #44475a;
+}
+
+.puzzle-board {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    grid-template-rows: repeat(4, 1fr);
+    gap: 6px;
+    width: 320px;
+    height: 320px;
+    margin: 0 auto 20px;
+    background-color: #282a36;
+    padding: 12px;
+    border-radius: 10px;
+    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.5);
+}
+
+.tile {
+    background-color: #bd93f9;
+    border: none;
+    border-radius: 6px;
+    font-size: 24px;
+    font-weight: bold;
+    color: #282a36;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    user-select: none;
+}
+
+.tile.correct {
+    background-color: #50fa7b;
+    color: #282a36;
+}
+
+.tile:hover {
+    background-color: #ff79c6;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 8px rgba(0, 0, 0, 0.4);
+}
+
+.tile.correct:hover {
+    background-color: #50fa7b;
+}
+
+.tile:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.empty {
+    background-color: #282a36;
+    box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.5);
+    cursor: default;
+}
+
+.empty:hover {
+    background-color: #282a36;
+    transform: none;
+    box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.5);
+}
+
+.controls {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.btn {
+    background-color: #ff5555;
+    color: #f8f8f2;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
+}
+
+.btn:hover {
+    background-color: #ff79c6;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 8px rgba(0, 0, 0, 0.4);
+}
+
+.btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.celebration {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background-color: #44475a;
+    color: #50fa7b;
+    padding: 20px 25px;
+    border-radius: 10px;
+    text-align: center;
+    font-size: 1.4em;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+    display: none;
+    z-index: 10;
+}
+
+@media (max-width: 480px) {
+    .puzzle-board {
+        width: 280px;
+        height: 280px;
+    }
+    
+    .tile {
+        font-size: 20px;
+    }
+    
+    h1 {
+        font-size: 2em;
+    }
+}
+
+@media (max-width: 360px) {
+    .puzzle-board {
+        width: 220px;
+        height: 220px;
+    }
+    
+    .tile {
+        font-size: 15px;
+    }
+    
+    h1 {
+        font-size: 1.5em;
+    }
+}
+
+@media (max-width: 300px) {
+    .puzzle-board {
+        width: 160px;
+        height: 160px;
+    }
+    
+    .tile {
+        font-size: 10px;
+    }
+    
+    h1 {
+        font-size: 1.05em;
+    }
+}

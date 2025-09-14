@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>15 Puzzle</title>
+    <link rel="stylesheet" type="text/css" href="styles.css">
+</head>
+<body tabindex="0">
+    <div class="game-container">
+        <h1>15 Puzzle</h1>
+        
+        <div class="game-info">
+            <div class="moves-counter">Movimentos: <span id="moves">0</span></div>
+            <div class="status" id="status">Embaralhe para começar!</div>
+        </div>
+
+        <div class="keyboard-hint">
+            Use as setas do teclado ou clique nas peças para jogar
+        </div>
+
+        <div class="puzzle-board" id="board"></div>
+
+        <div class="controls">
+            <button class="btn" onclick="resetPuzzle()">Novo Jogo</button>
+            <button class="btn" onclick="solvePuzzle()">Resolver</button>
+        </div>
+
+        <div class="celebration" id="celebration">
+            Parabéns!<br>
+            Você completou o puzzle!
+        </div>
+    </div>
+    <script src="game.js"></script>
+</body>
+</html>
