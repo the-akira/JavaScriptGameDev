@@ -1,7 +1,7 @@
 // Objeto contendo os URLs dos mapas
 const mapURLs = {
     map1: 'https://gist.githubusercontent.com/the-akira/427e8063e1828c09d4c135bf6d0700fe/raw/2a08154aa652d3b957b232d71e771b10bdab5750/gameMapSkull1.csv',
-    map2: 'https://gist.githubusercontent.com/the-akira/6dcd3eac16d67d3461dc37bca051a78c/raw/2297052e926afd2d79a7648e5ddfa5fbf560f3c6/gameMapSkull2.csv',
+    map2: 'https://gist.githubusercontent.com/the-akira/0bf95410bef6d6a25ebfa4cfef8ba79d/raw/b5dd5855f56aebc658b98c81cb542e2cde001e37/gamemapSkull2.csv',
 };
 
 // Método para obter o URL do mapa com base no nome do mapa
