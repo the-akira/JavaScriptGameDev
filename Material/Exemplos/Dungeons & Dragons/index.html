@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dungeons & Dragons</title>
+    <link rel="stylesheet" type="text/css" href="styles.css">
+</head>
+<body>
+    <h1>Dungeons & Dragons</h1>
+
+    <div class="info-panel">
+        <div>Turno: <span id="turn-counter">1</span></div>
+        <div>Jogador Ativo: <span id="active-player">Guerreiro</span></div>
+        <div>Ações Restantes: <span id="actions-left">2</span></div>
+        <div>Fase: <span id="game-phase">Jogador</span></div>
+    </div>
+
+    <div class="controls">
+        <button id="move-btn">Mover (D6)</button>
+        <button id="attack-btn">Atacar (D20)</button>
+        <button id="end-turn-btn">Finalizar Turno</button>
+        <button id="camera-left-btn">⬅️</button>
+        <button id="camera-right-btn">➡️</button>
+        <button id="camera-up-btn">⬆️</button>
+        <button id="camera-down-btn">⬇️</button>
+    </div>
+
+    <canvas id="gameCanvas" width="600" height="400"></canvas>
+
+    <canvas id="miniMap" width="150" height="150"></canvas>
+
+    <div class="log" id="game-log"></div>
+
+    <script src="game.js"></script>
+</body>
+</html>
