@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Batalha Naval</title>
+    <link rel="stylesheet" type="text/css" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Batalha Naval</h1>
+        
+        <div class="game-area">
+            <div class="board-container">
+                <div class="board-title">Seu Tabuleiro</div>
+                <div class="board-with-coords">
+                    <div class="coord-row top">
+                        <span>A</span><span>B</span><span>C</span><span>D</span><span>E</span>
+                        <span>F</span><span>G</span><span>H</span><span>I</span><span>J</span>
+                    </div>
+                    <div class="coord-column left">
+                        <span>1</span><span>2</span><span>3</span><span>4</span><span>5</span>
+                        <span>6</span><span>7</span><span>8</span><span>9</span><span>10</span>
+                    </div>
+                    <canvas id="playerBoard" width="400" height="400"></canvas>
+                </div>
+            </div>
+
+            <div class="board-container">
+                <div class="board-title">Tabuleiro Inimigo</div>
+                <div class="board-with-coords">
+                    <div class="coord-row top">
+                        <span>A</span><span>B</span><span>C</span><span>D</span><span>E</span>
+                        <span>F</span><span>G</span><span>H</span><span>I</span><span>J</span>
+                    </div>
+                    <div class="coord-column left">
+                        <span>1</span><span>2</span><span>3</span><span>4</span><span>5</span>
+                        <span>6</span><span>7</span><span>8</span><span>9</span><span>10</span>
+                    </div>
+                    <canvas id="enemyBoard" width="400" height="400"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <div class="info-panel">
+            <div class="status" id="status">Posicione seus navios! Clique no botão para rotacionar.</div>
+
+            <div class="turn-timer">
+                <div class="timer-bar-bg">
+                    <div class="timer-bar" id="enemyTurnBar"></div>
+                </div>
+            </div>
+            
+            <div>
+                <button id="rotateBtn">Rotacionar (Horizontal)</button>
+                <button id="resetBtn">Novo Jogo</button>
+            </div>
+            
+            <div class="ships-remaining">
+                <div class="ship-count">
+                    <h3>Seus Navios</h3>
+                    <p id="playerShips">0</p>
+                    <div class="ship-progress">
+                        <div class="progress-bar" id="playerProgress"></div>
+                    </div>
+                </div>
+                <div class="ship-count">
+                    <h3>Navios Inimigos</h3>
+                    <p id="enemyShips">5</p>
+                    <div class="ship-progress">
+                        <div class="progress-bar" id="enemyProgress"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="legend">
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #4a90e2;"></div>
+                    <span>Navio</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #ff6b6b;"></div>
+                    <span>Acerto</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #95a5a6;"></div>
+                    <span>Erro</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #e8f4f8;"></div>
+                    <span>Água</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="game.js"></script>
+</body>
+</html>

@@ -1,0 +1,259 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Arial', sans-serif;
+    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 20px;
+}
+
+.container {
+    background: white;
+    border-radius: 20px;
+    padding: 25px 45px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    max-width: 1200px;
+}
+
+h1 {
+    text-align: center;
+    color: #1e3c72;
+    margin-bottom: 20px;
+    margin-top: 0px;
+    font-size: 2.5em;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+}
+
+.game-area {
+    display: flex;
+    gap: 40px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.board-container {
+    text-align: center;
+}
+
+.board-title {
+    font-size: 1.3em;
+    font-weight: bold;
+    margin-bottom: 30px;
+    color: #2a5298;
+}
+
+canvas {
+    border: 3px solid #1e3c72;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.info-panel {
+    margin-top: 20px;
+    text-align: center;
+}
+
+.status {
+    font-size: 1.2em;
+    margin: 15px 0;
+    padding: 15px;
+    background: #f0f4f8;
+    border-radius: 10px;
+    color: #1e3c72;
+    font-weight: bold;
+}
+
+.ships-remaining {
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.ship-count {
+    background: #e8f0fe;
+    padding: 15px 25px;
+    border-radius: 10px;
+    border-left: 4px solid #2a5298;
+}
+
+.ship-count h3 {
+    color: #1e3c72;
+    margin-bottom: 5px;
+    font-size: 0.9em;
+}
+
+.ship-count p {
+    font-size: 1.5em;
+    font-weight: bold;
+    color: #2a5298;
+}
+
+button {
+    background: #2a5298;
+    color: white;
+    border: none;
+    padding: 15px 20px;
+    font-size: 1.1em;
+    border-radius: 10px;
+    cursor: pointer;
+    margin: 20px 10px;
+    transition: all 0.3s;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+button:hover {
+    background: #1e3c72;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0,0,0,0.2);
+}
+
+button:active {
+    transform: translateY(0);
+}
+
+#rotateBtn,
+#resetBtn {
+    margin-top: 6px;
+    margin-bottom: 6px;
+}
+
+#rotateBtn:disabled {
+    cursor: not-allowed;
+    opacity: 0.85;
+}
+
+.legend {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    margin-top: 20px;
+    flex-wrap: wrap;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.9em;
+}
+
+.legend-color {
+    width: 25px;
+    height: 25px;
+    border: 2px solid #333;
+    border-radius: 4px;
+}
+
+.board-with-coords {
+    position: relative;
+    display: inline-block;
+}
+
+.coord-row.top {
+    position: absolute;
+    top: -25px;
+    left: 22px;
+    display: flex;
+    justify-content: space-between;
+    width: 400px;
+    color: #1e3c72;
+    font-weight: bold;
+    font-size: 0.9em;
+}
+
+.coord-column.left {
+    position: absolute;
+    top: 5px;
+    left: -22px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 400px;
+    color: #1e3c72;
+    font-weight: bold;
+    font-size: 0.9em;
+}
+
+.coord-row span,
+.coord-column span {
+    width: 40px;
+    height: 40px;
+    text-align: center;
+    line-height: 40px;
+}
+
+.coord-row span {
+    width: 40px;
+    height: 20px;
+}
+
+.coord-column span {
+    height: 40px;
+    width: 20px;
+}
+
+.coord-row.top { 
+    left: 5px; 
+    top: -32px; 
+}
+
+.coord-column.left { 
+    left: -22px; 
+}
+
+.ship-progress {
+    width: 120px;
+    height: 10px;
+    background: #d0e3ff;
+    border-radius: 5px;
+    overflow: hidden;
+    margin-top: 5px;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.progress-bar {
+    height: 100%;
+    width: 100%;
+    background: linear-gradient(90deg, #2a5298, #4a90e2);
+    transition: width 0.5s ease;
+}
+
+.turn-timer {
+    width: 300px;
+    margin: 10px auto;
+    text-align: center;
+    display: none;
+}
+
+.timer-label {
+    font-size: 0.9em;
+    color: #1e3c72;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+
+.timer-bar-bg {
+    width: 100%;
+    height: 12px;
+    background: #d0e3ff;
+    border-radius: 6px;
+    overflow: hidden;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.timer-bar {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #4a90e2, #2a5298);
+    transition: width 0.08s linear;
+    transform-origin: left;
+}
