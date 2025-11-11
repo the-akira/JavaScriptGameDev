@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bomberman Clone</title>
+    <link rel="stylesheet" type="text/css" href="styles.css">
+</head>
+<body>
+    <h1>Bomberman</h1>
+    <canvas id="gameCanvas" width="480" height="480"></canvas>
+    
+    <div class="hud">
+        <div class="hud-row">
+            <div class="hud-item">
+                <p style="margin: 0px; margin-bottom: 4px;" class="hud-label">Score</p>
+                <span id="score" class="hud-value">0</span>
+            </div>
+            <div class="hud-item">
+                <p style="margin: 0px; margin-bottom: 4px;" class="hud-label">Vidas</p>
+                <span id="lives" class="hud-value">3</span>
+            </div>
+            <div class="hud-item">
+                <p style="margin: 0px; margin-bottom: 4px;" class="hud-label">Inimigos</p>
+                <span id="enemies" class="hud-value">0</span>
+            </div>
+        </div>
+
+        <div class="hud-controls">
+            <p style="margin-bottom: 0px;"><b>Mover:</b> Setas | <b>Bomba:</b> Espaço</p>
+        </div>
+    </div>
+    
+    <div class="game-over" id="gameOver">
+        <h1 id="gameOverTitle">Game Over!</h1>
+        <p id="gameOverMessage" style="font-size: 20px; margin: 10px 0;"></p>
+        <button onclick="restartGame()">Jogar Novamente</button>
+    </div>
+    
+    <script src="game.js"></script>
+</body>
+</html>
