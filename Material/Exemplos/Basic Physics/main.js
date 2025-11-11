@@ -480,7 +480,9 @@ canvas.addEventListener('click', (e) => {
     const color = colors[Math.floor(Math.random() * colors.length)];
     const radius = Math.random() * 12 + 12;
     
-    const ball = new PhysicsObject(x, y, radius, color);
+    const type = Math.random() < 0.5 ? 'normal' : 'bouncy';
+    
+    const ball = new PhysicsObject(x, y, radius, color, type);
     ball.vy = Math.random() * -8 - 2; // Impulso inicial para cima
     gameState.objects.push(ball);
     
