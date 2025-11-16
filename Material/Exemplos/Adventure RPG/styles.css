@@ -183,7 +183,7 @@ input[type="checkbox"]:focus {
 #areaSpellCooldownIndicator {
     position: absolute;
     bottom: 120px;
-    left: 20px; /* desloca um pouco para a direita do outro */
+    left: 20px;
     width: 100px;
     height: 80px;
     border: 3px solid #ff6600;
