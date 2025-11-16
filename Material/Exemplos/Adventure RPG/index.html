@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Adventure RPG</title>
+    <link rel="stylesheet" type="text/css" href="styles.css">
+</head>
+<body>
+    <canvas id="gameCanvas" width="640" height="640"></canvas>
+
+    <div id="gameContainer">
+        <div id="ui">
+            <div class="panel">
+                <h3>PERSONAGEM</h3>
+                <div class="stat"><span>Nível:</span><span id="level">1</span></div>
+                <div class="bar">
+                    <div class="bar-fill hp-bar" id="hpBar"></div>
+                    <div class="bar-text" id="hpText"></div>
+                </div>
+                <div class="bar">
+                    <div class="bar-fill exp-bar" id="expBar"></div>
+                    <div class="bar-text" id="expText"></div>
+                </div>
+                <div class="bar">
+                    <div class="bar-fill" id="manaBar" style="background:#4444ff;"></div>
+                    <div class="bar-text" id="manaText"></div>
+                </div>
+                <div class="stat" style="margin-top: 10px;"><span>Ataque:</span><span id="attack">5-10</span></div>
+                <div class="stat"><span>Mapa:</span><span id="mapName">Floresta</span></div>
+            </div>
+            
+            <div class="panel">
+                <h3>ALVO</h3>
+                <div id="target">
+                    <em style="color: #888;">Clique em um inimigo</em>
+                </div>
+            </div>
+            
+            <div class="panel">
+                <h3>LOG DE COMBATE</h3>
+                <div id="log"></div>
+            </div>
+            
+            <div class="panel">
+                <h3>CONTROLES</h3>
+                <div id="controls">
+                    • WASD/Setas - Mover<br>
+                    • Click - Atacar inimigo<br>
+                    • ESC - Cancelar alvo
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <canvas id="miniMap" width="200" height="200" style="border:1px solid #444; background:#111;"></canvas>
+
+    <div class="panel" style="position: absolute; bottom: 20px; right: 20px">
+        <h3>CONFIGURAÇÕES</h3>
+        <label style="display: flex; align-items: center; gap: 8px;">
+            <input type="checkbox" id="debugToggle">
+            <small style="font-size: 12px; margin-top: 3px;">Mostrar IA Inimigos</small>
+        </label>
+        <label style="display: flex; align-items: center; gap: 8px;">
+            <input type="checkbox" id="gridToggle" checked>
+            <small style="font-size: 12px; margin-top: 3px;">Mostrar Grid</small>
+        </label>
+    </div>
+
+    <div id="spellCooldownIndicator">
+        <div id="spellCooldownFill"></div>
+        <span>Magia (F)</span>
+    </div>
+
+    <div id="areaSpellCooldownIndicator">
+        <div id="areaSpellCooldownFill"></div>
+        <span>Área (G)</span>
+    </div>
+
+    <script src="game.js"></script>
+</body>
+</html>
