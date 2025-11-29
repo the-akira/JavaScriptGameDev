@@ -1,0 +1,60 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background: linear-gradient(to bottom, #87CEEB 0%, #E0F6FF 100%);
+    font-family: 'Arial', sans-serif;
+    min-height: 100vh;
+    padding: 25px;
+}
+
+#gameContainer {
+    text-align: center;
+}
+
+canvas {
+    border: 3px solid #8B4513;
+    background: linear-gradient(to bottom, #87CEEB 0%, #90EE90 70%, #7ccfeb 100%);
+    display: block;
+    margin: 0 auto;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    cursor: pointer;
+}
+
+h1 {
+    margin-bottom: 15px;
+    color: #333;
+}
+
+#score {
+    font-size: 24px;
+    font-weight: bold;
+    color: #333;
+    margin-top: 15px;
+}
+
+#instructions {
+    margin-top: 10px;
+    color: #555;
+    font-size: 16px;
+}
+
+.mute-button {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: rgba(0,0,0,0.5);
+    color: white;
+    border: none;
+    font-size: 24px;
+    padding: 6px 10px;
+    cursor: pointer;
+    z-index: 9999;
+}
+
+.mute-button:focus {
+    outline: none;
+}
