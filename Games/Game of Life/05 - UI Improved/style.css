@@ -1,0 +1,112 @@
+body {
+    background: #b8c3d4;
+    margin: 0;
+    padding: 0;
+}
+
+h1, p {
+    text-align: center;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 3rem;
+    color: #182d4f;
+    margin-top: 20px;
+    margin-bottom: 20px;
+}
+
+p {
+    font-size: 1.75rem;
+    margin-top: 8px;
+    margin-bottom: 12px;
+}
+
+#controls {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 10px;
+}
+
+#coordinates {
+    margin-top: 0px;
+    margin-bottom: 5px;
+}
+
+#buttonsDiv {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+#stats {
+    display: flex;
+    gap: 30px;
+    justify-content: center;
+    font-size: 1.2rem;
+    color: #182d4f;
+    font-family: Arial, Helvetica, sans-serif;
+    font-weight: bold;
+}
+
+#generation,
+#aliveCells {
+    font-weight: normal;
+}
+
+#speedControl {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    font-family: Arial, Helvetica, sans-serif;
+    color: #182d4f;
+    font-size: 1.2rem;
+}
+
+#speedControl input {
+    width: 200px;
+}
+
+#history {
+    padding-right: 50px;
+    padding-left: 50px;
+    margin-bottom: 30px;
+}
+
+#history > p {
+    font-size: 1.35rem;
+}
+
+#history > ol > li {
+    color: #182d4f;    
+    font-size: 1.15rem;
+}
+
+ol > li::marker {
+    font-weight: bold;
+}
+
+button {
+    margin: 0;
+    padding: 8px 16px;
+    font-size: 1.35rem;
+    border: 2.5px solid #182d4f;
+    background: white;
+}
+
+button:hover {
+    cursor: pointer;
+    background: #EFEFEF;
+}
+
+canvas {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    border: 2.5px solid #182d4f;
+    cursor: crosshair;
+}
+
+canvas.dragging {
+    cursor: grabbing;
+}
