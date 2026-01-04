@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Frogger</title>
+    <link rel="stylesheet" type="text/css" href="styles.css">
+</head>
+<body>
+    <canvas id="gameCanvas"></canvas>
+    <div class="info">
+        <div class="score">Pontuação: <span id="score">0</span></div>
+    </div>
+    <div class="game-over" id="gameOver">
+        <h2>GAME OVER!</h2>
+        <p>Pontuação Final: <span id="finalScore">0</span></p>
+        <button onclick="restartGame()">Jogar Novamente</button>
+    </div>
+    <script src="game.js"></script>
+</body>
+</html>
