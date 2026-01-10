@@ -1,3 +1,4 @@
+// Função que gera sequência fibonacci
 function fibonacci(n) {
     const result = [];
 
@@ -16,4 +17,5 @@ function fibonacci(n) {
     return result;
 }
 
+// Exemplo de uso
 console.log(fibonacci(10));

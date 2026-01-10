@@ -1,3 +1,4 @@
+// Algoritmo de ordenação Merge Sort
 function mergeSort(array) {
     if (array.length <= 1) {
         return array;
@@ -28,4 +29,5 @@ function merge(left, right) {
     return result.concat(left.slice(i)).concat(right.slice(j));
 }
 
+// Exemplo de uso
 console.log(mergeSort([44,13,56,134,3,7,4,24,1,32]));

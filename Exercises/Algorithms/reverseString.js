@@ -1,3 +1,4 @@
+// Inverte um texto
 function reverseString(str) {
     let result = "";
 
@@ -8,4 +9,5 @@ function reverseString(str) {
     return result;
 }
 
+// Exemplo de uso
 console.log(reverseString("algoritmo"));

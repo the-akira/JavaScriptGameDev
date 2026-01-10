@@ -1,3 +1,4 @@
+// Cálculo fatorial
 function factorial(n) {
     let result = 1;
     let expression = "";
@@ -10,4 +11,5 @@ function factorial(n) {
     return expression + " = " + result;
 }
 
+// Exemplo de uso
 console.log(factorial(7));

@@ -9,4 +9,5 @@ function gcd(a, b) {
     return a;
 }
 
+// Exemplo de uso
 console.log(gcd(20,10));

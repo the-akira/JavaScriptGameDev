@@ -13,5 +13,6 @@ function isPrime(n) {
     return true;
 }
 
+// Exemplo de uso
 console.log(isPrime(9)); // Não é primo
 console.log(isPrime(7)); // É primo
