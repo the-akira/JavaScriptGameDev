@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quebra-Cabeça</title>
+    <link rel="stylesheet" type="text/css" href="styles.css">
+</head>
+<body>
+    <canvas id="dragCanvas" style="position: fixed; top: 0; left: 0; pointer-events: none; z-index: 1000;"></canvas>
+    
+    <div class="container">
+        <h1>Quebra-Cabeça</h1>
+        
+        <div class="controls">
+            <label for="imageInput" class="image-btn">Escolher Imagem</label>
+            <input type="file" id="imageInput" accept="image/*">
+            
+            <select id="difficulty">
+                <option value="3">Fácil (3x3)</option>
+                <option value="4" selected>Médio (4x4)</option>
+                <option value="5">Difícil (5x5)</option>
+                <option value="6">Perito (6x6)</option>
+                <option value="7">Mestre (7x7)</option>
+            </select>
+            
+            <button class="btn" onclick="newGame()">Novo Jogo</button>
+        </div>
+        
+        <div class="game-area">
+            <div class="canvas-wrapper">
+                <h3>Peças Embaralhadas</h3>
+                <canvas id="piecesCanvas" width="400" height="400"></canvas>
+            </div>
+            
+            <div class="canvas-wrapper">
+                <h3>Monte Aqui</h3>
+                <canvas id="puzzleCanvas" width="400" height="400"></canvas>
+            </div>
+            
+            <div class="canvas-wrapper">
+                <h3>Imagem Original</h3>
+                <canvas id="originalCanvas" width="400" height="400"></canvas>
+            </div>
+        </div>
+        
+        <div class="info">
+            <div id="status">Peças colocadas: 0 / 0</div>
+            <div id="victory" class="victory" style="display: none;">
+                Parabéns! Você completou o quebra-cabeça!
+            </div>
+        </div>
+    </div>
+    
+    <script src="game.js"></script>
+</body>
+</html>

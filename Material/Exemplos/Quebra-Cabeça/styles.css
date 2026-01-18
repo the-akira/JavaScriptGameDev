@@ -1,0 +1,116 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background: #536480;
+    min-height: 100vh;
+    padding: 20px;
+}
+
+.container {
+    background: white;
+    padding: 30px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+h1 {
+    text-align: center;
+    color: #2a3d5c;
+    margin-bottom: 20px;
+}
+
+.controls {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.btn, .image-btn {
+    padding: 10px 20px;
+    background: #37578a;
+    color: white;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+.image-btn {
+    padding: 15px;
+}
+
+.btn:hover, .image-btn:hover {
+    background: #213f70;
+}
+
+input[type="file"] {
+    display: none;
+}
+
+select {
+    padding: 10px;
+    border: 2px solid #2a3d5c;
+    font-size: 16px;
+}
+
+select:hover {
+    cursor: pointer;
+}
+
+select:focus {
+    outline: none;
+}
+
+.game-area {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.canvas-wrapper {
+    text-align: center;
+}
+
+canvas {
+    border: 3px solid #2a3d5c;
+    display: block;
+    margin: 10px auto;
+    background: #EFEFEF;
+}
+
+#dragCanvas {
+    background: transparent !important;
+    border: none !important;
+}
+
+h3 {
+    color: #2a3d5c;
+    margin-bottom: 10px;
+}
+
+.info {
+    text-align: center;
+    margin-top: 20px;
+    font-size: 18px;
+    font-weight: bold;
+    color: #333;
+}
+
+#status {
+    color: #2a3d5c;
+}
+
+.victory {
+    background: #2a3d5c;
+    color: white;
+    padding: 20px;
+    margin-top: 20px;
+    font-size: 24px;
+}
