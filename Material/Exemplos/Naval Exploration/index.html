@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exploração Naval</title>
+    <link rel="stylesheet" type="text/css" href="styles.css">
+</head>
+<body>
+    <h1>Exploração Naval</h1>
+    <div class="game-container">
+        <canvas id="gameCanvas" width="800" height="600"></canvas>
+        <canvas id="minimapCanvas" width="200" height="150"></canvas>
+        <div id="hud">
+            <div class="region" id="hud-region">Oceano Inicial</div>
+            <div class="stat" id="hud-hp">HP: 100/100</div>
+            <div class="hp-bar-container">
+                <div class="hp-bar" id="hp-bar" style="width: 100%"></div>
+            </div>
+            <div class="stat" id="hud-score">Pontos: 0</div>
+        </div>
+        <div class="debug">
+            <input type="checkbox" id="debug-mode"><p>Debug Mode</p>
+        </div>
+    </div>
+    <div class="controls">
+        <p><strong>Controles:</strong> W/S - Acelerar/Desacelerar | A/D - Virar | ESPAÇO - Atirar Canhão | E - Entrar no Portal</p>
+    </div>
+    <div class="info">
+        <div id="stats">Área Explorada: 0%</div>
+    </div>
+    <div id="portal-transition"></div>
+    <script src="game.js"></script>
+</body>
+</html>
