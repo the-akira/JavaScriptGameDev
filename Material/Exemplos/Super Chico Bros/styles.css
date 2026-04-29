@@ -1,0 +1,19 @@
+  * { 
+    margin: 0; 
+    padding: 0; 
+    box-sizing: border-box; 
+  }
+
+  body {
+    background: #0a0a14;
+    user-select: none;
+  }
+  
+  #gameCanvas {
+    display: block;
+    margin: 0 auto;
+    margin-top: 50px;
+    image-rendering: pixelated;
+    border: 2px solid #cc0000;
+    box-shadow: 0 0 30px #cc000066, 0 0 80px #cc000022;
+  }
