@@ -3,7 +3,7 @@
 //  CONSTANTS
 // ═══════════════════════════════════════════════════════
 const W = 800, H = 480;
-const TS = 32;           // tile size
+const TS = 32;
 const COLS = 165;
 const ROWS = 15;
 const GRAV = 0.52;
