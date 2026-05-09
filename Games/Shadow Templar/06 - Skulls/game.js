@@ -275,7 +275,6 @@ class Game {
         this.menuActive = true; // Indica se o menu está ativo
         this.paused = false; // Estado de pausa inicial
         this.pauseMenuImage = new Image();
-        this.pauseMenuImage.onload = () => this.drawPauseMenu(); // Desenha o menu de pausa quando a imagem é carregada
         this.pauseMenuImage.src = 'assets/pause.png'; // Caminho da imagem do menu de pausa
         document.addEventListener('keydown', (event) => this.handleKeyDown(event));
     }
