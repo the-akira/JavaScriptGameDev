@@ -5283,10 +5283,13 @@ Tamanho: ${file.content.length} bytes\n`;
                         addOutput(`Conexão estabelecida com ${targetSystem.name}`, 'success');
                         addOutput(`Use o comando 'disconnect' para desconectar da rede.`, 'info');
                         addOutput(targetSystem.description, 'info');
+                        const previousPrompt = connectionHistory.length > 0
+                            ? `root@${connectionHistory[connectionHistory.length - 1].currentIP}:~$`
+                            : 'root@neural:~$';
                         connectionHistory.push({
                             files: JSON.parse(JSON.stringify(fileSystem['/'].contents)),
-                            prompt: document.querySelector('.prompt').textContent,
-                            currentIP: ip // Armazena o IP atual
+                            prompt: previousPrompt,
+                            currentIP: ip
                         });
 
                         // Entra no novo sistema
@@ -7946,7 +7949,10 @@ Eles vão me desconectar amanhã. Se você está lendo isso:
                 terminalBody.style.border = "";
                 
                 // 2. Restaura prompt e comandos
-                document.querySelector('.prompt').textContent = originalPrompt;
+                const correctPrompt = connectionHistory.length > 0
+                    ? `root@${connectionHistory[connectionHistory.length - 1].currentIP}:~$`
+                    : originalPrompt;
+                document.querySelector('.prompt').textContent = correctPrompt;
                 blockedCommands.forEach(cmd => {
                     commands[cmd] = originalCommands[cmd];
                 });
