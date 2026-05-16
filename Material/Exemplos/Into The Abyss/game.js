@@ -3590,9 +3590,18 @@ function resolveVertical(e, rect, map) {
     for (let tx = x0; tx <= x1; tx++) {
       const t = getTile(map, tx, ty);
       if (isSolid(t)) {
-        if (e.vy > 0) { e.y = ty * TILE - e.h; e.onGround = true; }
-        if (e.vy < 0) { e.y = (ty + 1) * TILE; }
-        e.vy = 0;
+        const tileTop    = ty * TILE;
+        const tileBottom = (ty + 1) * TILE;
+        const overlapY   = Math.min(e.y + e.h, tileBottom) - Math.max(e.y, tileTop);
+
+        if (e.vy > 0 && overlapY > 1) {
+          e.y = tileTop - e.h;
+          e.onGround = true;
+          e.vy = 0;
+        } else if (e.vy < 0 && overlapY > 1) {
+          e.y = tileBottom;
+          e.vy = 0;
+        }
       }
       // One-way platform (PLAT e DOOR_D — exceto quando dropThrough ativo)
       if ((t === T.PLAT || t === T.DOOR_D) && e.vy > 0 &&
