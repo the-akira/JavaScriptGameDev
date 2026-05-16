@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Into The Abyss</title>
+  <link rel="stylesheet" type="text/css" href="styles.css">
+</head>
+<body>
+  <div id="ui-wrapper">
+    <h1 class="title">Into The Abyss</h1>
+    <canvas id="game" width="800" height="480"></canvas>
+    <div id="hud">
+      <div class="hud-label">HP</div>
+      <div class="hud-bar-bg"><div id="hp-fill" class="hud-bar-fill" style="width:100%"></div></div>
+      <div class="hud-label">MP</div>
+      <div class="hud-bar-bg"><div id="mp-fill" class="hud-bar-fill" style="width:100%"></div></div>
+      <div id="speed-hud" style="display:none;margin-top:6px;">
+        <div class="hud-label" id="speed-label" style="color: #ffea00">VELOCIDADE</div>
+        <div class="hud-bar-bg"><div id="speed-fill" class="hud-bar-fill" style="width:100%;background:linear-gradient(90deg,#fffb00,#ffcc00);"></div></div>
+      </div>
+      <div id="shield-hud" style="display:none;margin-top:6px;">
+        <div class="hud-label" id="shield-label">ESCUDO</div>
+        <div class="hud-bar-bg"><div id="shield-fill" class="hud-bar-fill" style="width:100%;background:linear-gradient(90deg,#00aaff,#00eeff);"></div></div>
+      </div>
+      <div id="heal-hud" style="display:none;margin-top:6px;">
+        <div class="hud-label" id="heal-label">CURA</div>
+        <div class="hud-bar-bg">
+          <div id="heal-fill" class="hud-bar-fill" style="width:100%;background:linear-gradient(90deg,#006633,#00cc66);"></div>
+        </div>
+      </div>
+      <div id="arcane-hud" style="display:none;margin-top:6px;">
+        <div class="hud-label" id="arcane-label" style="color:#cc44ff">TEMPESTADE</div>
+        <div class="hud-bar-bg">
+          <div id="arcane-fill" class="hud-bar-fill" style="width:0%;background:linear-gradient(90deg,#6600cc,#cc44ff);"></div>
+        </div>
+      </div>
+      <div id="familiar-hud" style="display:none;margin-top:6px;">
+        <div class="hud-label" id="familiar-label" style="color:#88ccff">FAMILIAR</div>
+        <div class="hud-bar-bg">
+          <div id="familiar-fill" class="hud-bar-fill" style="width:100%;background:linear-gradient(90deg,#2255aa,#88ccff);"></div>
+        </div>
+      </div>
+      <div id="dash-hud" style="display:none;margin-top:6px;">
+        <div class="hud-label" id="dash-label" style="color:#aaaaff">DASH</div>
+        <div class="hud-bar-bg">
+          <div id="dash-fill" class="hud-bar-fill" style="width:100%;background:linear-gradient(90deg,#3333aa,#aaaaff);"></div>
+        </div>
+      </div>
+    </div>
+    <div class="controls-btn-container">
+      <button id="controls-btn" onclick="window.open('controls.html', '_blank')">Controles</button>
+    <div>
+    <canvas id="minimap" width="250" height="150"></canvas>
+    <div id="map-name"></div>
+    <div id="star-count"></div>
+  </div>
+  <script src="game.js"></script>
+</body>
+</html>
