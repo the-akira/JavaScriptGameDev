@@ -513,14 +513,121 @@ class Obstacle {
     }
 }
 
+class Bird {
+    constructor() {
+        this.x = canvas.width;
+        this.width = 40;
+        this.height = 25;
+
+        // Altura aleatória: baixa (perto do chão) ou alta (no ar)
+        const heightType = Math.random();
+        if (heightType < 0.5) {
+            // Altura baixa — obriga o jogador a pular
+            this.y = canvas.height - 110;
+        } else {
+            // Altura alta — obriga o jogador a passar por baixo (não pular)
+            this.y = canvas.height - 180;
+        }
+
+        this.flapTimer = 0;
+        this.flapState = 0; // 0 = asas para cima, 1 = asas para baixo
+    }
+
+    update() {
+        this.x -= gameSpeed;
+
+        // Bate as asas a cada 15 frames
+        this.flapTimer++;
+        if (this.flapTimer >= 15) {
+            this.flapTimer = 0;
+            this.flapState = this.flapState === 0 ? 1 : 0;
+        }
+    }
+
+    draw() {
+        const cx = this.x + this.width / 2;
+        const cy = this.y + this.height / 2;
+
+        ctx.save();
+        ctx.translate(cx, cy); // move origem para o centro do pássaro
+        ctx.scale(-1, 1);       // espelha horizontalmente
+        ctx.translate(-cx, -cy); // volta a origem
+
+        // Corpo
+        ctx.fillStyle = '#2C2C2C';
+        ctx.beginPath();
+        ctx.ellipse(cx, cy, 16, 9, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Cabeça
+        ctx.fillStyle = '#2C2C2C';
+        ctx.beginPath();
+        ctx.arc(cx + 16, cy - 3, 8, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Bico
+        ctx.fillStyle = '#FFA500';
+        ctx.beginPath();
+        ctx.moveTo(cx + 23, cy - 3);
+        ctx.lineTo(cx + 31, cy - 1);
+        ctx.lineTo(cx + 23, cy + 1);
+        ctx.closePath();
+        ctx.fill();
+
+        // Olho
+        ctx.fillStyle = '#fff';
+        ctx.beginPath();
+        ctx.arc(cx + 18, cy - 5, 2.5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#000';
+        ctx.beginPath();
+        ctx.arc(cx + 19, cy - 5, 1.2, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Asas (animadas)
+        ctx.fillStyle = '#444';
+        if (this.flapState === 0) {
+            // Asas para cima
+            ctx.beginPath();
+            ctx.moveTo(cx - 5, cy - 5);
+            ctx.quadraticCurveTo(cx - 10, cy - 28, cx + 5, cy - 20);
+            ctx.quadraticCurveTo(cx + 2, cy - 10, cx - 5, cy - 5);
+            ctx.fill();
+        } else {
+            // Asas para baixo
+            ctx.beginPath();
+            ctx.moveTo(cx - 5, cy + 5);
+            ctx.quadraticCurveTo(cx - 10, cy + 22, cx + 5, cy + 14);
+            ctx.quadraticCurveTo(cx + 2, cy + 8, cx - 5, cy + 5);
+            ctx.fill();
+        }
+
+        // Cauda
+        ctx.fillStyle = '#1a1a1a';
+        ctx.beginPath();
+        ctx.moveTo(cx - 14, cy);
+        ctx.lineTo(cx - 28, cy - 6);
+        ctx.lineTo(cx - 26, cy + 2);
+        ctx.lineTo(cx - 28, cy + 7);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.restore();
+    }
+}
+
 let obstacles = [];
+let birds = [];
 let frameCount = 0;
 let spawnInterval = 90;
 let nextSpawn = 90;
 
 function spawnObstacle() {
-    obstacles.push(new Obstacle());
-    // Intervalo aleatório entre 50 e 120 frames (mais variado)
+    if (Math.random() < 0.2) {
+        birds.push(new Bird());
+    } else {
+        obstacles.push(new Obstacle());
+    }
     nextSpawn = frameCount + Math.floor(Math.random() * 70) + 50;
 }
 
@@ -1701,7 +1808,8 @@ function drawSpeedUI() {
     // Texto
     ctx.fillStyle = '#fff';
     ctx.font = '14px Arial';
-    ctx.fillText(`Velocidade: ${gameSpeed.toFixed(1)}x`, x + 50, y + barHeight + 15);
+    ctx.textAlign = 'left';
+    ctx.fillText(`Velocidade: ${gameSpeed.toFixed(1)}x`, x, y + barHeight + 18);
 }
 
 function gameLoop() {
@@ -1858,6 +1966,20 @@ function gameLoop() {
         }
     }
 
+    for (let i = birds.length - 1; i >= 0; i--) {
+        birds[i].update();
+        birds[i].draw();
+
+        if (!invincible && checkCollision(horse, birds[i])) {
+            gameOver = true;
+            if (!isMuted) sndDeath.play();
+        }
+
+        if (birds[i].x + birds[i].width < 0) {
+            birds.splice(i, 1);
+        }
+    }
+
     for (let i = obstacles.length - 1; i >= 0; i--) {
         obstacles[i].update();
         obstacles[i].draw();
@@ -1945,6 +2067,7 @@ function resetGame() {
     gameOver = false;
     gameStarted = true;
     obstacles = [];
+    birds = [];
     frameCount = 0;
     spawnInterval = 90;
     nextSpawn = 90;
