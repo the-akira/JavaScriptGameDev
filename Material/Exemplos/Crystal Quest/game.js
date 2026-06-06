@@ -813,11 +813,41 @@ class Enemy {
       { tx: ~~(b.x / T),           ty: ~~((b.y+b.h-1) / T)  },
       { tx: ~~((b.x+b.w-1) / T),   ty: ~~((b.y+b.h-1) / T)  },
     ];
+    let blocked = false;
     for (const { tx, ty } of corners) {
-      if (tx < 0 || tx >= CFG.cols || ty < 0 || ty >= CFG.rows) return;
-      if (SOLID.has(tiles[ty][tx])) return; // bloqueia sem inverter velocidade
+      if (tx < 0 || tx >= CFG.cols || ty < 0 || ty >= CFG.rows) { blocked = true; break; }
+      if (SOLID.has(tiles[ty][tx])) { blocked = true; break; }
     }
-    this.x = nx; this.y = ny;
+    if (!blocked) { this.x = nx; this.y = ny; return; }
+ 
+    // Wall-slide: tenta mover só em X ou só em Y para deslizar ao longo da parede
+    // e evitar que o inimigo trave no canto de um tile
+    if (dx !== 0) {
+      const bx = { x: this.x + dx + 2, y: this.y + 5, w: 12, h: 9 };
+      const cxOnly = [
+        { tx: ~~(bx.x / T),           ty: ~~(bx.y / T)          },
+        { tx: ~~((bx.x+bx.w-1) / T),  ty: ~~(bx.y / T)          },
+        { tx: ~~(bx.x / T),           ty: ~~((bx.y+bx.h-1) / T) },
+        { tx: ~~((bx.x+bx.w-1) / T),  ty: ~~((bx.y+bx.h-1) / T) },
+      ];
+      if (cxOnly.every(({tx,ty}) =>
+          tx >= 0 && tx < CFG.cols && ty >= 0 && ty < CFG.rows && !SOLID.has(tiles[ty][tx]))) {
+        this.x += dx; return;
+      }
+    }
+    if (dy !== 0) {
+      const by = { x: this.x + 2, y: this.y + dy + 5, w: 12, h: 9 };
+      const cyOnly = [
+        { tx: ~~(by.x / T),           ty: ~~(by.y / T)          },
+        { tx: ~~((by.x+by.w-1) / T),  ty: ~~(by.y / T)          },
+        { tx: ~~(by.x / T),           ty: ~~((by.y+by.h-1) / T) },
+        { tx: ~~((by.x+by.w-1) / T),  ty: ~~((by.y+by.h-1) / T) },
+      ];
+      if (cyOnly.every(({tx,ty}) =>
+          tx >= 0 && tx < CFG.cols && ty >= 0 && ty < CFG.rows && !SOLID.has(tiles[ty][tx]))) {
+        this.y += dy;
+      }
+    }
   }
 
   hit(dmg) {
