@@ -808,9 +808,9 @@ class Enemy {
     const nx = this.x + dx, ny = this.y + dy;
     const b  = { x: nx+2, y: ny+5, w: 12, h: 9 };
     const corners = [
-      { tx: ~~(b.x / T),           ty: ~~(b.y / T)           },
-      { tx: ~~((b.x+b.w-1) / T),   ty: ~~(b.y / T)           },
-      { tx: ~~(b.x / T),           ty: ~~((b.y+b.h-1) / T)   },
+      { tx: ~~(b.x / T),           ty: ~~(b.y / T)          },
+      { tx: ~~((b.x+b.w-1) / T),   ty: ~~(b.y / T)          },
+      { tx: ~~(b.x / T),           ty: ~~((b.y+b.h-1) / T)  },
       { tx: ~~((b.x+b.w-1) / T),   ty: ~~((b.y+b.h-1) / T)  },
     ];
     for (const { tx, ty } of corners) {
