@@ -805,47 +805,56 @@ class Enemy {
  
   _move(dx, dy, tiles) {
     if (dx === 0 && dy === 0) return;
-    const nx = this.x + dx, ny = this.y + dy;
-    const b  = { x: nx+2, y: ny+5, w: 12, h: 9 };
-    const corners = [
-      { tx: ~~(b.x / T),           ty: ~~(b.y / T)          },
-      { tx: ~~((b.x+b.w-1) / T),   ty: ~~(b.y / T)          },
-      { tx: ~~(b.x / T),           ty: ~~((b.y+b.h-1) / T)  },
-      { tx: ~~((b.x+b.w-1) / T),   ty: ~~((b.y+b.h-1) / T)  },
-    ];
-    let blocked = false;
-    for (const { tx, ty } of corners) {
-      if (tx < 0 || tx >= CFG.cols || ty < 0 || ty >= CFG.rows) { blocked = true; break; }
-      if (SOLID.has(tiles[ty][tx])) { blocked = true; break; }
-    }
-    if (!blocked) { this.x = nx; this.y = ny; return; }
  
-    // Wall-slide: tenta mover só em X ou só em Y para deslizar ao longo da parede
-    // e evitar que o inimigo trave no canto de um tile
+    // Hitbox de movimento: 2px menor em cada lado vs. hitbox de combate.
+    // Isso dá margem suficiente para o slime deslizar por cantos sem travar.
+    const MX = 3, MY = 6, MW = 8, MH = 6; // offsets dentro da sprite
+ 
+    const isSolid = (px, py) => {
+      const tx = ~~(px / T), ty = ~~(py / T);
+      if (tx < 0 || tx >= CFG.cols || ty < 0 || ty >= CFG.rows) return true;
+      return SOLID.has(tiles[ty][tx]);
+    };
+ 
+    const blocked = (ex, ey) => {
+      const l = ex + MX, r = ex + MX + MW - 1;
+      const t = ey + MY, b = ey + MY + MH - 1;
+      return isSolid(l,t) || isSolid(r,t) || isSolid(l,b) || isSolid(r,b);
+    };
+ 
+    const nx = this.x + dx, ny = this.y + dy;
+    if (!blocked(nx, ny)) { this.x = nx; this.y = ny; return; }
+ 
+    // Bloqueado — tenta o eixo individual
+    if (dx !== 0 && !blocked(nx, this.y)) { this.x = nx; return; }
+    if (dy !== 0 && !blocked(this.x, ny)) { this.y = ny; return; }
+ 
+    // Ainda bloqueado num único eixo: micro-snap para escapar de cantos.
+    // Verifica se o hitbox está ultrapassando o canto de um tile por menos
+    // de SNAP pixels — se sim, alinha e tenta mover de novo.
+    const SNAP = 3;
+ 
     if (dx !== 0) {
-      const bx = { x: this.x + dx + 2, y: this.y + 5, w: 12, h: 9 };
-      const cxOnly = [
-        { tx: ~~(bx.x / T),           ty: ~~(bx.y / T)          },
-        { tx: ~~((bx.x+bx.w-1) / T),  ty: ~~(bx.y / T)          },
-        { tx: ~~(bx.x / T),           ty: ~~((bx.y+bx.h-1) / T) },
-        { tx: ~~((bx.x+bx.w-1) / T),  ty: ~~((bx.y+bx.h-1) / T) },
-      ];
-      if (cxOnly.every(({tx,ty}) =>
-          tx >= 0 && tx < CFG.cols && ty >= 0 && ty < CFG.rows && !SOLID.has(tiles[ty][tx]))) {
-        this.x += dx; return;
+      // Movendo em X: verifica se dá para alinhar Y ao grid para escapar do canto
+      const ey = this.y + MY;
+      const snapUp   = Math.ceil(ey / T) * T - MY;        // alinha borda de cima ao tile acima
+      const snapDown = Math.floor(ey / T) * T - MY;       // alinha borda de cima ao tile atual
+      for (const sy of [snapUp, snapDown]) {
+        if (Math.abs(sy - this.y) <= SNAP && !blocked(nx, sy)) {
+          this.y = sy; this.x = nx; return;
+        }
       }
     }
+ 
     if (dy !== 0) {
-      const by = { x: this.x + 2, y: this.y + dy + 5, w: 12, h: 9 };
-      const cyOnly = [
-        { tx: ~~(by.x / T),           ty: ~~(by.y / T)          },
-        { tx: ~~((by.x+by.w-1) / T),  ty: ~~(by.y / T)          },
-        { tx: ~~(by.x / T),           ty: ~~((by.y+by.h-1) / T) },
-        { tx: ~~((by.x+by.w-1) / T),  ty: ~~((by.y+by.h-1) / T) },
-      ];
-      if (cyOnly.every(({tx,ty}) =>
-          tx >= 0 && tx < CFG.cols && ty >= 0 && ty < CFG.rows && !SOLID.has(tiles[ty][tx]))) {
-        this.y += dy;
+      // Movendo em Y: verifica se dá para alinhar X ao grid para escapar do canto
+      const ex = this.x + MX;
+      const snapLeft  = Math.ceil(ex / T) * T - MX;
+      const snapRight = Math.floor(ex / T) * T - MX;
+      for (const sx of [snapLeft, snapRight]) {
+        if (Math.abs(sx - this.x) <= SNAP && !blocked(sx, ny)) {
+          this.x = sx; this.y = ny; return;
+        }
       }
     }
   }
