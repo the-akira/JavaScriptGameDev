@@ -593,7 +593,103 @@ class Player {
 const ENEMY_STATS = {
   slime : { hp: 2, speed: 0.5,  dmg: 1 },
   bat   : { hp: 1, speed: 1.1,  dmg: 1 },
-  knight: { hp: 4, speed: 0.6,  dmg: 2 },
+  knight: { hp: 4, speed: 0.5,  dmg: 2 },
+};
+
+// ============================================================
+// A* PATHFINDING — busca caminho em grid de tiles
+// ============================================================
+const AStar = {
+  /**
+   * Retorna array de {tx, ty} do tile seguinte até o destino,
+   * ou [] se não há caminho / origem == destino.
+   */
+  find(tiles, fromTx, fromTy, toTx, toTy) {
+    // Mesma célula — sem necessidade de mover
+    if (fromTx === toTx && fromTy === toTy) return [];
+ 
+    const cols = CFG.cols, rows = CFG.rows;
+    const key  = (x, y) => y * cols + x;
+ 
+    // Heurística de Manhattan (sem diagonais aqui para simplificar custo)
+    const h = (x, y) => Math.abs(x - toTx) + Math.abs(y - toTy);
+ 
+    // Nós
+    const gScore  = new Map();
+    const fScore  = new Map();
+    const cameFrom = new Map();
+    const open    = new Set();
+    const closed  = new Set();
+ 
+    const startK = key(fromTx, fromTy);
+    gScore.set(startK, 0);
+    fScore.set(startK, h(fromTx, fromTy));
+    open.add(startK);
+ 
+    // Nó atual com menor fScore
+    const popBest = () => {
+      let best = null, bestF = Infinity;
+      for (const k of open) {
+        const f = fScore.get(k) ?? Infinity;
+        if (f < bestF) { bestF = f; best = k; }
+      }
+      return best;
+    };
+ 
+    // 4 direções + diagonais (custo diagonal ≈ 1.414)
+    const DIRS = [
+      [ 1, 0,1],[-1, 0,1],[ 0, 1,1],[ 0,-1,1],
+      [ 1, 1,1.414],[-1, 1,1.414],[ 1,-1,1.414],[-1,-1,1.414],
+    ];
+ 
+    while (open.size > 0) {
+      const curK = popBest();
+      if (curK === null) break;
+ 
+      const cx = curK % cols;
+      const cy = ~~(curK / cols);
+ 
+      if (cx === toTx && cy === toTy) {
+        // Reconstrói caminho
+        const path = [];
+        let k = curK;
+        while (cameFrom.has(k)) {
+          path.push({ tx: k % cols, ty: ~~(k / cols) });
+          k = cameFrom.get(k);
+        }
+        path.reverse();
+        return path;
+      }
+ 
+      open.delete(curK);
+      closed.add(curK);
+ 
+      for (const [dx, dy, cost] of DIRS) {
+        const nx = cx + dx, ny = cy + dy;
+        if (nx < 0 || nx >= cols || ny < 0 || ny >= rows) continue;
+        if (SOLID.has(tiles[ny][nx])) continue;
+ 
+        // Para diagonais, verifica se os dois tiles adjacentes são livres
+        // (evita cortar quinas de paredes)
+        if (dx !== 0 && dy !== 0) {
+          if (SOLID.has(tiles[cy][nx]) || SOLID.has(tiles[ny][cx])) continue;
+        }
+ 
+        const nk = key(nx, ny);
+        if (closed.has(nk)) continue;
+ 
+        const tentG = (gScore.get(curK) ?? Infinity) + cost;
+        if (tentG < (gScore.get(nk) ?? Infinity)) {
+          cameFrom.set(nk, curK);
+          gScore.set(nk, tentG);
+          fScore.set(nk, tentG + h(nx, ny));
+          open.add(nk);
+        }
+      }
+    }
+ 
+    return []; // sem caminho
+  },
 };
 
 class Enemy {
@@ -612,6 +708,11 @@ class Enemy {
     this.frame   = 0;
     this.fClock  = 0;
     this.aiClock = 0;
+    // A* state
+    this._path       = [];   // caminho atual [{tx,ty}, ...]
+    this._pathClock  = 0;    // quando recalcular
+    // Morcego não usa A* — vaga livremente
+    this._useAStar   = (this.type !== 'bat');
   }
 
   bounds() { return { x: this.x+2, y: this.y+5, w: 12, h: 9 }; }
@@ -621,61 +722,100 @@ class Enemy {
     return a.x < b.x+b.w && a.x+a.w > b.x && a.y < b.y+b.h && a.y+a.h > b.y;
   }
 
+  _tilePos() {
+    return {
+      tx: Math.max(0, Math.min(CFG.cols-1, ~~((this.x + T/2) / T))),
+      ty: Math.max(0, Math.min(CFG.rows-1, ~~((this.y + T/2) / T))),
+    };
+  }
+ 
   update(tiles, player) {
     if (this.dead) return;
     this.aiClock++;
-
-    // IA: morcego vaga aleatoriamente; slime/knight perseguem o jogador
+    this._pathClock++;
+ 
     if (this.type === 'bat') {
+      // ── Morcego: vagueia aleatoriamente (sem A*) ─────────
       if (this.aiClock % 35 === 0) {
         this.vx = (Math.random()*2-1) * this.speed;
         this.vy = (Math.random()*2-1) * this.speed;
       }
     } else {
+      // ── Slime / Knight: A* para contornar obstáculos ────
+ 
       const pdx  = player.x - this.x;
       const pdy  = player.y - this.y;
       const dist = Math.hypot(pdx, pdy);
-      if (dist < 96 && this.aiClock % 20 === 0 && dist > 0) {
-        this.vx = (pdx / dist) * this.speed;
-        this.vy = (pdy / dist) * this.speed;
-      } else if (this.aiClock % 60 === 0) {
-        const dirs = [[1,0],[-1,0],[0,1],[0,-1]];
-        const d = dirs[~~(Math.random() * 4)];
-        this.vx = d[0] * this.speed; this.vy = d[1] * this.speed;
+ 
+      // Recalcula o caminho a cada ~20 frames (ou quando chegou ao fim)
+      const recalcInterval = this.type === 'knight' ? 15 : 20;
+      if (this._pathClock >= recalcInterval || this._path.length === 0) {
+        this._pathClock = 0;
+ 
+        if (dist < 160) {
+          // Dentro do raio de perseguição — usa A*
+          const me  = this._tilePos();
+          const ptx = Math.max(0, Math.min(CFG.cols-1, ~~((player.x + T/2) / T)));
+          const pty = Math.max(0, Math.min(CFG.rows-1, ~~((player.y + T/2) / T)));
+          this._path = AStar.find(tiles, me.tx, me.ty, ptx, pty);
+        } else {
+          // Longe demais — vagueia um pouco
+          if (this.aiClock % 60 === 0) {
+            const dirs = [[1,0],[-1,0],[0,1],[0,-1]];
+            const d = dirs[~~(Math.random() * 4)];
+            this.vx = d[0] * this.speed;
+            this.vy = d[1] * this.speed;
+          }
+          this._path = [];
+        }
       }
-      // Cavaleiro carrega quando perto
-      if (this.type === 'knight') {
-        const dist2 = Math.hypot(pdx, pdy);
-        if (dist2 < 48 && this.aiClock % 30 === 0 && dist2 > 0) {
-          this.vx = (pdx / dist2) * this.speed * 2;
-          this.vy = (pdy / dist2) * this.speed * 2;
+ 
+      // Segue o próximo tile do caminho
+      if (this._path.length > 0) {
+        const next  = this._path[0];
+        const targX = next.tx * T;
+        const targY = next.ty * T;
+        const ddx   = targX - this.x;
+        const ddy   = targY - this.y;
+        const dlen  = Math.hypot(ddx, ddy);
+ 
+        // Chega perto do centro do tile-alvo → avança para o próximo
+        if (dlen < this.speed + 1) {
+          this._path.shift();
+          // Snapping suave ao tile quando chega bem perto
+          if (dlen < 1) { this.x = targX; this.y = targY; }
+        }
+ 
+        if (dlen > 0.5) {
+          let spd = this.speed;
+          // Carga do knight quando muito próximo
+          if (this.type === 'knight' && dist < 48) spd *= 2;
+          this.vx = (ddx / dlen) * spd;
+          this.vy = (ddy / dlen) * spd;
         }
       }
     }
-
+ 
     this._move(this.vx, 0, tiles);
     this._move(0, this.vy, tiles);
-
+ 
     if (++this.fClock >= 12) { this.frame = 1 - this.frame; this.fClock = 0; }
     if (this.flash > 0) this.flash--;
   }
-
+ 
   _move(dx, dy, tiles) {
+    if (dx === 0 && dy === 0) return;
     const nx = this.x + dx, ny = this.y + dy;
     const b  = { x: nx+2, y: ny+5, w: 12, h: 9 };
     const corners = [
-      { tx: ~~(b.x / T),       ty: ~~(b.y / T)       },
-      { tx: ~~((b.x+b.w) / T), ty: ~~(b.y / T)       },
-      { tx: ~~(b.x / T),       ty: ~~((b.y+b.h) / T) },
-      { tx: ~~((b.x+b.w) / T), ty: ~~((b.y+b.h) / T) },
+      { tx: ~~(b.x / T),           ty: ~~(b.y / T)           },
+      { tx: ~~((b.x+b.w-1) / T),   ty: ~~(b.y / T)           },
+      { tx: ~~(b.x / T),           ty: ~~((b.y+b.h-1) / T)   },
+      { tx: ~~((b.x+b.w-1) / T),   ty: ~~((b.y+b.h-1) / T)  },
     ];
     for (const { tx, ty } of corners) {
-      if (tx < 0 || tx >= CFG.cols || ty < 0 || ty >= CFG.rows) {
-        this.vx = -this.vx; this.vy = -this.vy; return;
-      }
-      if (SOLID.has(tiles[ty][tx])) {
-        this.vx = -this.vx; this.vy = -this.vy; return;
-      }
+      if (tx < 0 || tx >= CFG.cols || ty < 0 || ty >= CFG.rows) return;
+      if (SOLID.has(tiles[ty][tx])) return; // bloqueia sem inverter velocidade
     }
     this.x = nx; this.y = ny;
   }
