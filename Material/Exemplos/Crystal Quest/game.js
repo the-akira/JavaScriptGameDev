@@ -279,13 +279,22 @@ const Sprites = {
       rect(gx+4, gy+10,2,   3, C.batA); rect(gx+10,gy+10, 2, 3, C.batA);
 
     } else if (type === 'knight') {
-      rect(gx+3, gy+2,  10,13, C.knightA);
-      rect(gx+4, gy+2,   8, 5, C.knightB);
-      rect(gx+5, gy+5,   6, 2, C.knightC);
-      rect(gx+5, gy+4,   2, 2, C.white); rect(gx+9,gy+4, 2, 2, C.white);
-      rect(gx+3, gy+13,  3, 3, C.knightB); rect(gx+10,gy+13, 3, 3, C.knightB);
-      rect(gx+14,gy+1,   2,13, C.knightC); // lança
-      rect(gx+13,gy,     4, 3, C.white);
+      // Pernas — alternam com o frame (marcha)
+      const legL = frame === 0 ? 1 : 0;
+      const legR = frame === 0 ? 0 : 1;
+      rect(gx+3,  gy+12+legL, 3, 3, C.knightB); // perna esquerda sobe/desce
+      rect(gx+10, gy+12+legR, 3, 3, C.knightB); // perna direita oposta
+
+      // Corpo e armadura (estáticos)
+      rect(gx+3, gy+2,  10, 11, C.knightA);
+      rect(gx+4, gy+2,   8,  5, C.knightB);
+      rect(gx+5, gy+5,   6,  2, C.knightC);
+      rect(gx+5, gy+4,   2,  2, C.white); rect(gx+9, gy+4, 2, 2, C.white);
+
+      // Lança — balança levemente com o frame
+      const lanceOff = frame === 0 ? 0 : 1;
+      rect(gx+14, gy+1+lanceOff, 2, 13, C.knightC);
+      rect(gx+13, gy+lanceOff,   4,  3, C.white);
     }
 
     ctx.globalAlpha = 1;
@@ -690,6 +699,77 @@ const AStar = {
  
     return []; // sem caminho
   },
+
+  findCardinal(tiles, fromTx, fromTy, toTx, toTy) {
+    if (fromTx === toTx && fromTy === toTy) return [];
+
+    const cols = CFG.cols, rows = CFG.rows;
+    const key  = (x, y) => y * cols + x;
+    const h    = (x, y) => Math.abs(x - toTx) + Math.abs(y - toTy);
+
+    const gScore   = new Map();
+    const fScore   = new Map();
+    const cameFrom = new Map();
+    const open     = new Set();
+    const closed   = new Set();
+
+    const startK = key(fromTx, fromTy);
+    gScore.set(startK, 0);
+    fScore.set(startK, h(fromTx, fromTy));
+    open.add(startK);
+
+    const popBest = () => {
+      let best = null, bestF = Infinity;
+      for (const k of open) {
+        const f = fScore.get(k) ?? Infinity;
+        if (f < bestF) { bestF = f; best = k; }
+      }
+      return best;
+    };
+
+    // Só 4 direções — sem diagonal
+    const DIRS = [ [1,0],[-1,0],[0,1],[0,-1] ];
+
+    while (open.size > 0) {
+      const curK = popBest();
+      if (curK === null) break;
+      const cx = curK % cols;
+      const cy = ~~(curK / cols);
+
+      if (cx === toTx && cy === toTy) {
+        const path = [];
+        let k = curK;
+        while (cameFrom.has(k)) {
+          path.push({ tx: k % cols, ty: ~~(k / cols) });
+          k = cameFrom.get(k);
+        }
+        path.reverse();
+        return path;
+      }
+
+      open.delete(curK);
+      closed.add(curK);
+
+      for (const [dx, dy] of DIRS) {
+        const nx = cx + dx, ny = cy + dy;
+        if (nx < 0 || nx >= cols || ny < 0 || ny >= rows) continue;
+        if (SOLID.has(tiles[ny][nx])) continue;
+
+        const nk = key(nx, ny);
+        if (closed.has(nk)) continue;
+
+        const tentG = (gScore.get(curK) ?? Infinity) + 1;
+        if (tentG < (gScore.get(nk) ?? Infinity)) {
+          cameFrom.set(nk, curK);
+          gScore.set(nk, tentG);
+          fScore.set(nk, tentG + h(nx, ny));
+          open.add(nk);
+        }
+      }
+    }
+
+    return [];
+  },
 };
 
 class Enemy {
@@ -742,7 +822,6 @@ class Enemy {
       }
     } else {
       // ── Slime / Knight: A* para contornar obstáculos ────
- 
       const pdx  = player.x - this.x;
       const pdy  = player.y - this.y;
       const dist = Math.hypot(pdx, pdy);
@@ -757,7 +836,9 @@ class Enemy {
           const me  = this._tilePos();
           const ptx = Math.max(0, Math.min(CFG.cols-1, ~~((player.x + T/2) / T)));
           const pty = Math.max(0, Math.min(CFG.rows-1, ~~((player.y + T/2) / T)));
-          this._path = AStar.find(tiles, me.tx, me.ty, ptx, pty);
+          this._path = this.type === 'knight'
+            ? AStar.findCardinal(tiles, me.tx, me.ty, ptx, pty)
+            : AStar.find(tiles, me.tx, me.ty, ptx, pty);
         } else {
           // Longe demais — vagueia um pouco
           if (this.aiClock % 60 === 0) {
@@ -789,7 +870,7 @@ class Enemy {
         if (dlen > 0.5) {
           let spd = this.speed;
           // Carga do knight quando muito próximo
-          if (this.type === 'knight' && dist < 48) spd *= 2;
+          if (this.type === 'knight' && dist < 48) spd *= 1.25;
           this.vx = (ddx / dlen) * spd;
           this.vy = (ddy / dlen) * spd;
         }
