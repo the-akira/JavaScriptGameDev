@@ -285,6 +285,9 @@ const Sprites = {
       rect(gx+3,  gy+12+legL, 3, 3, C.knightB); // perna esquerda sobe/desce
       rect(gx+10, gy+12+legR, 3, 3, C.knightB); // perna direita oposta
 
+      // Mão
+      rect(gx+10, gy+5+legR, 6, 3, C.knightB);
+
       // Corpo e armadura (estáticos)
       rect(gx+3, gy+2,  10, 11, C.knightA);
       rect(gx+4, gy+2,   8,  5, C.knightB);
@@ -609,10 +612,7 @@ const ENEMY_STATS = {
 // A* PATHFINDING — busca caminho em grid de tiles
 // ============================================================
 const AStar = {
-  /**
-   * Retorna array de {tx, ty} do tile seguinte até o destino,
-   * ou [] se não há caminho / origem == destino.
-   */
+
   find(tiles, fromTx, fromTy, toTx, toTy) {
     // Mesma célula — sem necessidade de mover
     if (fromTx === toTx && fromTy === toTy) return [];
