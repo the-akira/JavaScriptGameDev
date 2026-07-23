@@ -1,0 +1,82 @@
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+body {
+  background: #0a0a0f;
+  font-family: "Press Start 2P", monospace;
+}
+#controls-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem 1rem;
+  box-sizing: border-box;
+}
+#controls-modal {
+  background: #0f0e08;
+  border: 2px solid #4a3a1a;
+  padding: 32px 40px;
+  width: 100%;
+  max-width: 520px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+#controls-modal-title {
+  color: #f0c040;
+  font-size: 24px;
+  letter-spacing: 5px;
+  text-shadow: 0 0 12px #f0a000;
+}
+.ctrl-divider {
+  border: none;
+  border-top: 2px solid #2a2010;
+  width: 100%;
+  margin: 0;
+}
+#controls-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  width: 100%;
+}
+.ctrl-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.ctrl-group-title {
+  color: #6a5a2a;
+  font-size: 14px;
+  letter-spacing: 3px;
+  margin-bottom: 2px;
+}
+.ctrl-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.ctrl-keys {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 140px;
+  font-size: 13px;
+  color: #c0a030;
+}
+kbd {
+  background: #1e1c10;
+  border: 1px solid #5a4a1a;
+  border-bottom: 3px solid #3a2a0a;
+  color: #f0c040;
+  font-family: "Press Start 2P", monospace;
+  font-size: 12px;
+  padding: 5px 8px;
+  border-radius: 2px;
+  display: inline-block;
+  line-height: 1.4;
+}
+.ctrl-desc {
+  color: #8a7a4a;
+  font-size: 12px;
+  letter-spacing: 1.5px;
+}

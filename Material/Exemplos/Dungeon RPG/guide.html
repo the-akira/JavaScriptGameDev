@@ -1,0 +1,1128 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Construindo Dungeon Quest — Guia de Desenvolvimento</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Spectral:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500;600&family=Press+Start+2P&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/base16/tomorrow-night.min.css">
+<link rel="stylesheet" type="text/css" href="styles/guide.css">
+</head>
+<body>
+
+<button id="sidebar-toggle" aria-label="Abrir sumário">☰</button>
+<div id="scrim"></div>
+
+<div id="app">
+  <nav id="sidebar" aria-label="Sumário">
+    <div id="book-brand">
+      <span class="eyebrow">GUIA DE DESENVOLVIMENTO</span>
+      <h1>Construindo<br>Dungeon Quest</h1>
+      <p>Documentação técnica do RPG 2D <code style="background:none;border:none;padding:0;color:var(--gold-dim);">index.html</code></p>
+    </div>
+    <div id="search-wrap">
+      <input id="search-input" type="text" placeholder="Buscar no guia..." autocomplete="off">
+      <div id="search-count"></div>
+    </div>
+    <div id="nav-scroll"></div>
+  </nav>
+
+  <main id="content">
+    <div id="content-inner">
+
+<section class="chapter cover" id="cover" data-section="Início" data-title="Capa">
+  <span class="kicker">INDEX.HTML · ENGENHARIA REVERSA GUIADA</span>
+  <h1>Como <em>Dungeon Quest</em><br>foi construído</h1>
+  <p class="dek">Um guia técnico, capítulo por capítulo, sobre a arquitetura de um RPG de ação 2D completo — mapas, combate, inimigos, missões, economia e save system — vivendo inteiro dentro de um único arquivo HTML.</p>
+  <div class="meta-row">
+    <div class="meta">ARQUIVO-FONTE<b>index.html</b></div>
+    <div class="meta">LINGUAGEM<b>JavaScript + Canvas 2D</b></div>
+    <div class="meta">ESCOPO<b>~24.000 linhas · 1 arquivo</b></div>
+    <div class="meta">TIPO<b>Action-RPG top-down</b></div>
+  </div>
+  <div id="toc-inline"></div>
+</section>
+
+<section class="chapter" id="ch01" data-section="Fundamentos" data-title="Arquitetura Geral">
+  <span class="eyebrow">CAPÍTULO 01</span>
+  <h2>Arquitetura Geral</h2>
+  <p class="subtitle">Por que um arquivo só, e como esse arquivo se organiza por dentro.</p>
+
+  <p class="lead">Dungeon Quest é um jogo de ação 2D visto de cima (estilo Zelda clássico), inteiramente contido em <code>index.html</code>: um único arquivo com <code>&lt;style&gt;</code>, <code>&lt;body&gt;</code> (o HUD e os overlays de UI) e um <code>&lt;script&gt;</code> com o motor do jogo inteiro. Não há bundler, não há módulos, não há dependências externas além de uma fonte do Google Fonts para o título.</p>
+
+  <p>Essa escolha não é ingenuidade — é uma decisão deliberada de portabilidade: abrir o arquivo em qualquer navegador é o suficiente para jogar. O preço dessa escolha é organização disciplinada dentro de um espaço de nomes global, e é exatamente essa disciplina que este guia vai desmontar.</p>
+
+  <h3>As três camadas do arquivo</h3>
+  <div class="arch-diagram">
+    <div class="arch-row"><span class="arch-box">&lt;style&gt;</span><span class="arch-arrow">→</span><span style="color:var(--ink-dim)">CSS do HUD, telas de overlay (mapa-múndi, save, diálogo) e da tela de título</span></div>
+    <div class="arch-row"><span class="arch-box">&lt;body&gt;</span><span class="arch-arrow">→</span><span style="color:var(--ink-dim)">&lt;canvas id="gameCanvas"&gt;, painel de HUD lateral, minimapa e overlays DOM</span></div>
+    <div class="arch-row"><span class="arch-box">&lt;script&gt;</span><span class="arch-arrow">→</span><span style="color:var(--ink-dim)">Constantes → Tiles/Mapas → Classes de entidade → Sistemas → class Game → boot</span></div>
+  </div>
+
+  <p>Dentro da tag <code>&lt;script&gt;</code>, o código segue uma ordem de leitura consistente, sinalizada por blocos de comentário como marcadores de capítulo:</p>
+
+  <pre><code class="language-javascript">// ============================================================
+//  CONSTANTES GLOBAIS
+// ============================================================
+const TILE_SIZE  = 32;
+const CANVAS_W   = 800;
+const CANVAS_H   = 576;
+...</code></pre>
+  <div class="code-label"><span class="path">index.html · linha ~692</span></div>
+
+  <p>Esse padrão de comentário em caixa (<code>// ====...====</code>) aparece antes de cada classe importante — mais de 90 vezes no arquivo — e funciona como um índice manual de navegação para quem lê o código com <kbd>Ctrl+F</kbd>. É um detalhe pequeno, mas é o que torna um arquivo de 24 mil linhas navegável sem tooling.</p>
+
+  <h3>A ordem de definição importa</h3>
+  <p>Como tudo é <code>class</code> e <code>const</code> no escopo de módulo do <code>&lt;script&gt;</code>, a ordem de declaração segue a ordem de dependência: primeiro o que não depende de nada (constantes de tile, tipos), depois o que depende só disso (definições de mapa), depois classes de baixo nível (<code>InputManager</code>, <code>Camera</code>), depois entidades (<code>Entity</code> → <code>Player</code>, <code>Enemy</code>), depois sistemas que orquestram entidades (<code>QuestSystem</code>, <code>ShopSystem</code>, <code>SaveSystem</code>), e por fim <code>class Game</code>, que amarra tudo.</p>
+
+  <div class="arch-diagram">
+    <div class="arch-row"><span class="arch-box">1. Constantes</span></div>
+    <div class="arch-row" style="padding-left:20px"><span class="arch-arrow">↓</span></div>
+    <div class="arch-row"><span class="arch-box">2. T / TILE_COLORS / MAP_DEFS</span></div>
+    <div class="arch-row" style="padding-left:20px"><span class="arch-arrow">↓</span></div>
+    <div class="arch-row"><span class="arch-box">3. InputManager · Camera · TileRenderer</span></div>
+    <div class="arch-row" style="padding-left:20px"><span class="arch-arrow">↓</span></div>
+    <div class="arch-row"><span class="arch-box">4. Entity → Player · Enemy → Boss · NPC · WorldItem</span></div>
+    <div class="arch-row" style="padding-left:20px"><span class="arch-arrow">↓</span></div>
+    <div class="arch-row"><span class="arch-box">5. QuestSystem · ShopSystem · InventorySystem · DialogSystem</span></div>
+    <div class="arch-row" style="padding-left:20px"><span class="arch-arrow">↓</span></div>
+    <div class="arch-row"><span class="arch-box">6. ActiveMap · MapManager · WorldMap · SaveSystem</span></div>
+    <div class="arch-row" style="padding-left:20px"><span class="arch-arrow">↓</span></div>
+    <div class="arch-row"><span class="arch-box" style="border-color:var(--gold);color:#fff">7. class Game — orquestra tudo</span></div>
+  </div>
+
+  <h3>O laço principal (game loop)</h3>
+  <p>No fim do arquivo, <code>class Game</code> é instanciada e inicia um loop clássico de <code>requestAnimationFrame</code> com delta time em segundos, limitado a 50ms para evitar "saltos" quando a aba perde foco:</p>
+
+  <pre><code class="language-javascript">_loop(ts){
+  const dt = Math.min((ts - (this._lastTime ?? ts)) / 1000, 0.05);
+  this._lastTime = ts;
+  this._update(dt);
+  this._draw();
+  requestAnimationFrame(ts2 => this._loop(ts2));
+}</code></pre>
+  <div class="code-label"><span class="path">class Game._loop · linha ~22586</span></div>
+
+  <p><code>_update(dt)</code> é um grande roteador de estado: primeiro atualiza o input, depois checa — em ordem de prioridade — se alguma tela modal está ativa (tela de save, tela de personagem, de equipamento, de armas, bestiário, diálogo, loja...). Se estiver, delega o update para aquela tela e sai cedo (<code>return</code>). Só quando nenhum overlay está ativo o update "cai" para a simulação normal do mundo: player, câmera, inimigos, projéteis, partículas.</p>
+
+  <div class="callout tip">
+    <span class="callout-tag">Padrão a observar</span>
+    Esse "early return em cascata" é o mecanismo central de gerência de estado do jogo inteiro. Não existe uma máquina de estados formal (enum + switch) — existe uma sequência de <code>if (tela.active) { tela.update(); return; }</code>. Simples, mas eficaz para o tamanho do projeto, e é o padrão que qualquer nova tela modal deve seguir.
+  </div>
+
+  <h3>Desenho: <code>_draw()</code></h3>
+  <p>Espelhando o update, <code>_draw()</code> desenha o mundo (tiles → objetos → itens → NPCs → inimigos → player → projéteis → partículas, nessa ordem de profundidade), aplica a escala de câmera via <code>ctx.scale</code>, desenha o fade de transição de mapa por cima, e finalmente desenha a tela modal ativa (se houver) por cima de tudo. O HUD lateral não é desenhado no canvas — é DOM/CSS real, atualizado por chamadas pontuais como <code>this.hud.update(...)</code>.</p>
+
+  <div class="chapter-nav">
+    <a href="#cover" class="prev"><span class="dir">← Anterior</span>Capa</a>
+    <a href="#ch02" class="next"><span class="dir">Próximo →</span>Tiles e Mapas</a>
+  </div>
+</section>
+
+<section class="chapter" id="ch02" data-section="Fundamentos" data-title="Tiles e Mapas">
+  <span class="eyebrow">CAPÍTULO 02</span>
+  <h2>Tiles e Mapas</h2>
+  <p class="subtitle">Como o mundo é descrito em dados, não em código.</p>
+
+  <p class="lead">Todo mapa do jogo é uma matriz 2D de números. Um tile é um inteiro; um mapa é uma matriz desses inteiros; e um dicionário central traduz cada inteiro em cor, colisão e comportamento. Essa indireção — número → significado — é o que permite ter dezenas de mapas sem escrever uma linha de lógica de desenho para cada um.</p>
+
+  <h3>O dicionário <code>T</code></h3>
+  <p>A constante <code>T</code> nomeia cada tipo de tile com uma constante inteira, para que o resto do código nunca precise usar números mágicos:</p>
+
+  <pre><code class="language-javascript">const T = {
+  FLOOR:   0, WALL:    1, WATER:   2, GRASS:   3,
+  TREE:    4, SAND:    5, LAVA:    6, STONE:   7,
+  BRICK:   8, STAIRS_D:9, STAIRS_U:10, DOOR:  11,
+  PILLAR:  12, FLOWER: 13, PATH:   14, BREAKABLE: 15,
+  BUSH: 16, FLOWER2: 17, BUSH2: 18, BOX: 19,
+  SWAMP_FLOOR: 20, SWAMP_MUD: 21, SWAMP_TREE: 22,
+  ...
+  CATHEDRAL_CHECKER: 41, CHURCH_FLOOR: 42, CHURCH_WALL: 43,
+};</code></pre>
+  <div class="code-label"><span class="path">const T · linha ~732</span></div>
+
+  <p>Há 44 tipos de tile no total, agrupados por bioma/ambiente: o conjunto base (grama, água, lava, pedra), depois famílias temáticas para cada mapa especial — pântano (<code>SWAMP_*</code>), floresta de outono (<code>AUTUMN_*</code>), caverna (<code>CAVE_*</code>), zona cinza/corrompida (<code>GRAY_*</code>, <code>BLACK_*</code>) e a catedral final (<code>CATHEDRAL_*</code>, <code>CHURCH_*</code>). Cada bioma novo no jogo, historicamente, nasceu como um punhado de entradas novas em <code>T</code>.</p>
+
+  <h3><code>TILE_COLORS</code>: onde o significado mora</h3>
+  <p>Cada valor de <code>T</code> tem uma entrada correspondente em <code>TILE_COLORS</code>, que define cor base, cor de detalhe, e três flags de comportamento:</p>
+
+  <pre><code class="language-javascript">const TILE_COLORS = {
+  [T.FLOOR]:   { base:'#2a3a2a', accent:'#283228', solid:false },
+  [T.WALL]:    { base:'#3a3028', accent:'#2a2018', solid:true  },
+  [T.WATER]:   { base:'#1a4a7a', accent:'#1a3a6a', solid:true, anim:true },
+  [T.BREAKABLE]: { base:'#6a5a4a', accent:'#5a4a3a', solid:true, breakable:true },
+  ...
+};</code></pre>
+  <div class="code-label"><span class="path">const TILE_COLORS · linha ~756</span></div>
+
+  <table>
+    <tr><th>Flag</th><th>Efeito</th></tr>
+    <tr><td><code>solid</code></td><td>Bloqueia movimento e projéteis (colisão AABB contra a grade)</td></tr>
+    <tr><td><code>anim</code></td><td>Recebe um leve deslocamento senoidal por tempo, para dar sensação de água/lava viva</td></tr>
+    <tr><td><code>breakable</code></td><td>Pode ser destruído por armas com alcance suficiente, vira <code>T.FLOOR</code> e some (ou dropa item)</td></tr>
+  </table>
+
+  <p>Repare que <strong>nenhuma outra parte do código precisa saber a cor de um tile</strong> — <code>TileRenderer</code> lê <code>TILE_COLORS[tileId]</code> e desenha; a física lê <code>.solid</code>; o sistema de quebra lê <code>.breakable</code>. Adicionar um tile novo é, na prática, adicionar uma linha em <code>T</code> e uma em <code>TILE_COLORS</code> — o resto do motor já sabe lidar com ele.</p>
+
+  <div class="swatch-grid">
+    <div class="swatch"><div class="fill" style="background:#2a3a2a"></div><div class="label"><b>FLOOR</b>#2a3a2a</div></div>
+    <div class="swatch"><div class="fill" style="background:#1a4a7a"></div><div class="label"><b>WATER</b>#1a4a7a</div></div>
+    <div class="swatch"><div class="fill" style="background:#8a2a00"></div><div class="label"><b>LAVA</b>#8a2a00</div></div>
+    <div class="swatch"><div class="fill" style="background:#8a6020"></div><div class="label"><b>BRICK</b>#8a6020</div></div>
+    <div class="swatch"><div class="fill" style="background:#2a6a1a"></div><div class="label"><b>BUSH</b>#2a6a1a</div></div>
+    <div class="swatch"><div class="fill" style="background:#0d0710"></div><div class="label"><b>BLACK_BRICK</b>#0d0710</div></div>
+    <div class="swatch"><div class="fill" style="background:#d8cca0"></div><div class="label"><b>CATHEDRAL_CHECKER</b>#d8cca0</div></div>
+    <div class="swatch"><div class="fill" style="background:#a89870"></div><div class="label"><b>CHURCH_WALL</b>#a89870</div></div>
+  </div>
+
+  <h3>Anatomia de um <code>MAP_DEFS</code></h3>
+  <p>Cada mapa é uma entrada no objeto gigante <code>MAP_DEFS</code>. Veja a definição real da vila inicial, simplificada:</p>
+
+  <pre><code class="language-javascript">'village': {
+  id:'village', name:'Vila da Floresta',
+  tileW:25, tileH:18,
+  tiles:[ /* matriz 18 x 25 de valores de T */ ],
+  connections:{
+    east: { mapId:'forest_path',      spawnX:1,  spawnY:5 },
+    south:{ mapId:'dungeon_entrance', spawnX:7,  spawnY:1 },
+    north:{ mapId:'deep_forest',      spawnX:19, spawnY:27 },
+    west: { mapId:'autumn_forest',    spawnX:22, spawnY:8  },
+  },
+  spawnDefault:{ x:7, y:5 },
+  enemies:[ { type:'slime', tx:18, ty:2 }, { type:'goblin', tx:20, ty:16 }, ... ],
+  items:[ { type:'gem', tx:10, ty:5 }, { type:'heart', tx:3, ty:5 }, ... ],
+  objects:[ { type:'chest', tx:3, ty:3 } ],
+  npcs:[ { id:'elder', tx:15, ty:4 }, { id:'traveler', tx:20, ty:8 } ],
+  questGivers:[ { id:'quest_guard', tx:12, ty:9 } ],
+  merchants:[ { id:'zelara', tx:9, ty:6 } ],
+  artifacts:[ { type:'book', tx:12, ty:4, title:'Crônicas da Vila', pages:[ /* ... */ ] } ],
+}</code></pre>
+  <div class="code-label"><span class="path">MAP_DEFS.village · linha ~820</span></div>
+
+  <p>Todas as coordenadas de conteúdo (<code>tx</code>/<code>ty</code>) são em <strong>tiles</strong>, não pixels — a conversão para pixels (<code>tx * TILE_SIZE</code>) acontece só na hora de instanciar o objeto real no mapa. Isso deixa o arquivo de definição legível e fácil de desenhar à mão em uma grade mental.</p>
+
+  <div class="callout warn">
+    <span class="callout-tag">Regra de abertura de borda</span>
+    O próprio código documenta essa regra em comentário: o tile na borda do mapa (linha 0, última linha, coluna 0, última coluna) correspondente a uma direção de <code>connections</code> precisa ser <strong>não-sólido</strong>. É assim que o jogador consegue fisicamente alcançar aquela célula de borda para a troca de mapa ser detectada — se a borda for parede, a conexão nunca dispara.
+  </div>
+
+  <h3>O que vive dentro de um mapa</h3>
+  <p>Além da matriz de tiles, cada <code>MAP_DEFS</code> pode declarar listas de conteúdo que o <code>ActiveMap</code> instancia como objetos reais ao carregar o mapa:</p>
+  <table>
+    <tr><th>Chave</th><th>Instancia</th></tr>
+    <tr><td><code>enemies</code></td><td>Inimigos (<code>Enemy</code>/subclasses) na posição de tile dada</td></tr>
+    <tr><td><code>items</code></td><td><code>WorldItem</code> — gemas, corações, chaves, flechas soltas no chão</td></tr>
+    <tr><td><code>objects</code></td><td><code>WorldObject</code> — baús e afins</td></tr>
+    <tr><td><code>npcs</code> / <code>questGivers</code> / <code>merchants</code></td><td><code>NPC</code>, <code>QuestGiver</code>, <code>Merchant</code></td></tr>
+    <tr><td><code>artifacts</code></td><td>Livros/pergaminhos legíveis via <code>ArtifactReader</code></td></tr>
+    <tr><td><code>pushableBlocks</code> / <code>plates</code></td><td><code>PushableBlock</code> + placas de pressão para puzzles</td></tr>
+    <tr><td><code>waypoints</code></td><td>Pontos de viagem rápida (<code>Waypoint</code> / <code>FastTravelMenu</code>)</td></tr>
+  </table>
+
+  <div class="chapter-nav">
+    <a href="#ch01" class="prev"><span class="dir">← Anterior</span>Arquitetura Geral</a>
+    <a href="#ch03" class="next"><span class="dir">Próximo →</span>Navegação entre Mapas</a>
+  </div>
+</section>
+
+<section class="chapter" id="ch03" data-section="Fundamentos" data-title="Navegação entre Mapas">
+  <span class="eyebrow">CAPÍTULO 03</span>
+  <h2>Navegação entre Mapas</h2>
+  <p class="subtitle">ActiveMap, MapManager e o mapa-múndi — e um bug real de coordenadas negativas.</p>
+
+  <p class="lead">Três classes dividem a responsabilidade de "onde o jogador está": <code>ActiveMap</code> é o mapa carregado agora (tiles + entidades vivas), <code>MapManager</code> troca de um <code>ActiveMap</code> para outro com fade e preserva estado entre visitas, e <code>WorldMap</code> desenha a visão aérea de todos os mapas conectados (tecla <kbd>M</kbd>).</p>
+
+  <h3>Troca de mapa com fade</h3>
+  <p><code>MapManager</code> não troca de mapa instantaneamente — ele anima uma cortina preta no próprio canvas (não é um elemento DOM) com dois estágios: escurece, executa a troca real no meio do escurecimento (<code>_fadeMidCb</code>), depois clareia:</p>
+
+  <pre><code class="language-javascript">updateFade(dt){
+  if(this._fadeDir===0) return;
+  if(this._fadeDir===1){
+    this._fadeAlpha = Math.min(1, this._fadeAlpha + dt/0.22);
+    if(this._fadeAlpha>=1 && !this._fadeMidDone){
+      this._fadeMidDone = true;
+      this._fadeMidCb?.();     // troca o mapa de verdade aqui, na tela preta
+      this._fadeDir = -1;      // agora clareia
+    }
+  } else {
+    this._fadeAlpha = Math.max(0, this._fadeAlpha - dt/0.28);
+    if(this._fadeAlpha<=0){ this._fadeDir=0; this._fadeCb?.(); this._fadeCb=null; }
+  }
+}</code></pre>
+  <div class="code-label"><span class="path">MapManager.updateFade · linha ~21301</span></div>
+
+  <p>Trocar o mapa "no escuro" evita que o jogador veja o pop-in de tiles e entidades sendo recriados — um truque simples de mascaramento visual bastante comum em jogos 2D.</p>
+
+  <h3>Estado por mapa persiste entre visitas</h3>
+  <p>Antes de trocar de mapa, <code>MapManager._saveMapState()</code> tira uma "foto" do mapa atual: itens já coletados, baús abertos, tiles quebráveis destruídos, estado de interruptores e itens dropados no chão. Essa foto fica em <code>this.mapStates[mapId]</code> — um objeto vivo em memória, separado do <code>SaveSystem</code> (que persiste em <code>localStorage</code>). Isso é o que garante que, ao sair da vila e voltar, o baú que você já abriu continue aberto.</p>
+
+  <h3>O mapa-múndi e o bug de coordenadas negativas</h3>
+  <p>A visão aérea (<code>WorldMap</code>) posiciona cada mapa numa grade lógica <code>{gx, gy}</code> definida em <code>WORLD_LAYOUT</code>. O problema: conforme o mundo cresceu para novas direções (mapas ao norte e a oeste da vila inicial), algumas células passaram a ter <code>gx</code> ou <code>gy</code> negativos — e um <code>&lt;canvas&gt;</code> não tem coordenadas negativas utilizáveis diretamente sem cortar conteúdo.</p>
+
+  <p>A correção foi calcular um deslocamento (offset) a partir do menor <code>gx</code>/<code>gy</code> de todo o layout, e usar esse offset em toda conversão de grade → pixel:</p>
+
+  <pre><code class="language-javascript">_rebuildLayout() {
+  const gxs = Object.values(WORLD_LAYOUT).map(v => v.gx);
+  const gys = Object.values(WORLD_LAYOUT).map(v => v.gy);
+  // Guarda o menor gx/gy como offset — permite coordenadas negativas
+  // (ex: mapas ao norte/oeste do "mapa 0,0" original) sem cortar o canvas.
+  this._minGx = Math.min(...gxs);
+  this._minGy = Math.min(...gys);
+  const maxGx = Math.max(...gxs);
+  const maxGy = Math.max(...gys);
+  this._totalW = (maxGx - this._minGx + 1) * this.CELL_W + this.PAD_X * 2;
+  this._totalH = (maxGy - this._minGy + 1) * this.CELL_H + this.PAD_Y * 2;
+  this._canvas.width  = this._totalW;
+  this._canvas.height = this._totalH;
+}
+
+_cellRect(mapId) {
+  const pos = WORLD_LAYOUT[mapId];
+  if (!pos) return null;
+  return {
+    x: this.PAD_X + (pos.gx - this._minGx) * this.CELL_W,
+    y: this.PAD_Y + (pos.gy - this._minGy) * this.CELL_H,
+    w: this.CELL_W - 14, h: this.CELL_H - 14,
+  };
+}</code></pre>
+  <div class="code-label"><span class="path">class WorldMap · linha ~21997</span></div>
+
+  <div class="callout">
+    <span class="callout-tag">Lição de arquitetura</span>
+    Sempre que uma coordenada "lógica" (grade do mundo, índice de inventário, id de slot) pode variar livremente — inclusive para negativo — e precisa virar uma coordenada "física" (pixel, índice de array), vale a pena calcular o mínimo do conjunto de dados <em>antes</em> de desenhar, em vez de assumir que tudo começa em zero. É exatamente esse tipo de suposição implícita que quebra silenciosamente quando o conteúdo cresce em uma direção não prevista.
+  </div>
+
+  <h3>Como uma troca de mapa é disparada</h3>
+  <p>O gatilho é puramente geométrico: quando o jogador atinge a última linha/coluna válida de tile em uma direção que tem entrada em <code>connections</code>, o <code>MapManager</code> inicia o fade e, no callback do meio, chama <code>load(nextMapId, player, spawnOverride)</code> — que reposiciona o player no <code>spawnX</code>/<code>spawnY</code> do mapa de destino, já convertido de tile para pixel e centralizado na célula.</p>
+
+  <div class="chapter-nav">
+    <a href="#ch02" class="prev"><span class="dir">← Anterior</span>Tiles e Mapas</a>
+    <a href="#ch04" class="next"><span class="dir">Próximo →</span>Câmera e Entrada</a>
+  </div>
+</section>
+
+<section class="chapter" id="ch04" data-section="Fundamentos" data-title="Câmera e Entrada">
+  <span class="eyebrow">CAPÍTULO 04</span>
+  <h2>Câmera e Entrada</h2>
+  <p class="subtitle">Duas classes pequenas que resolvem dois problemas clássicos de jogos em canvas.</p>
+
+  <h3><code>InputManager</code>: teclas com estado de "acabou de apertar"</h3>
+  <p>Jogos precisam distinguir "a tecla está pressionada agora" (útil para movimento contínuo) de "a tecla foi pressionada neste frame" (útil para ações de disparo único, como atacar ou abrir um menu). O <code>InputManager</code> resolve isso com dois mapas — <code>keys</code> (estado contínuo) e um buffer que vira <code>justPressed</code> a cada frame:</p>
+
+  <pre><code class="language-javascript">update() {
+  this.justPressed = this._pressBuffer;
+  this._pressBuffer = {};
+}
+isDown(code) { return !!this.keys[code]; }
+isJust(code) { return !!this.justPressed[code]; }</code></pre>
+  <div class="code-label"><span class="path">class InputManager · linha ~1678</span></div>
+
+  <p>Cada ação do jogo tem um método semântico próprio construído em cima dessas duas primitivas — <code>isAttack()</code>, <code>isBomb()</code>, <code>isGrapple()</code>, <code>isDash()</code> — o que significa que o resto do código nunca compara <code>'KeyZ'</code> diretamente; ele pergunta <code>input.isAttack()</code>. Trocar o bind de uma tecla é uma mudança de uma linha, em um único lugar.</p>
+
+  <table>
+    <tr><th>Ação</th><th>Tecla(s)</th></tr>
+    <tr><td>Mover</td><td>Setas / WASD (diagonal normalizado ×0.707)</td></tr>
+    <tr><td>Atacar / Atirar / Interagir</td><td><kbd>Z</kbd> ou <kbd>Espaço</kbd> / <kbd>C</kbd> / <kbd>X</kbd></td></tr>
+    <tr><td>Bomba / Napalm / Choque</td><td><kbd>J</kbd> / <kbd>H</kbd> / <kbd>Y</kbd></td></tr>
+    <tr><td>Gancho / Lança / Escudo</td><td><kbd>K</kbd> / <kbd>V</kbd> / <kbd>U</kbd></td></tr>
+    <tr><td>Dash / Furtividade</td><td><kbd>Shift</kbd> / <kbd>O</kbd></td></tr>
+  </table>
+
+  <h3><code>Camera</code>: seguir com suavização, sem sair do mapa</h3>
+  <p>A câmera não gruda direto no jogador — ela persegue um alvo com interpolação exponencial (<em>lerp</em>), o que produz aquele leve "atraso" suave característico de RPGs top-down:</p>
+
+  <pre><code class="language-javascript">follow(ex, ey, mapW, mapH) {
+  const vw = viewW(), vh = viewH();
+  const tx = ex - vw/2, ty = ey - vh/2;
+  this.x += (tx - this.x) * 0.12;   // 12% da distância a cada frame
+  this.y += (ty - this.y) * 0.12;
+  this.x = Math.max(0, Math.min(Math.max(0, mapW - vw), this.x));
+  this.y = Math.max(0, Math.min(Math.max(0, mapH - vh), this.y));
+  this._updateOffset();
+}</code></pre>
+  <div class="code-label"><span class="path">class Camera.follow · linha ~1729</span></div>
+
+  <p>O clamp com <code>Math.max(0, Math.min(...))</code> é o que impede a câmera de mostrar área fora do mapa nas bordas — ela trava assim que a janela de visão encosta na borda do mundo. <code>snapTo()</code> é a mesma lógica sem interpolação, usada ao trocar de mapa (a câmera não deveria "voar" suavemente de um mapa para o outro).</p>
+
+  <div class="callout tip">
+    <span class="callout-tag">Detalhe sutil</span>
+    <code>_updateOffset()</code> arredonda a posição da câmera para o pixel mais próximo em <em>espaço de tela</em> (<code>Math.round(this.x * GAME_SCALE) / GAME_SCALE</code>) antes de desenhar. Isso evita o "sub-pixel jitter" — tremulação visual que aparece quando sprites com <code>image-rendering: pixelated</code> são desenhados em posições fracionárias.
+  </div>
+
+  <div class="chapter-nav">
+    <a href="#ch03" class="prev"><span class="dir">← Anterior</span>Navegação entre Mapas</a>
+    <a href="#ch05" class="next"><span class="dir">Próximo →</span>Entidades e o Jogador</a>
+  </div>
+</section>
+
+<section class="chapter" id="ch05" data-section="Personagens" data-title="Entidades e o Jogador">
+  <span class="eyebrow">CAPÍTULO 05</span>
+  <h2>Entidades e o Jogador</h2>
+  <p class="subtitle">Uma base pequena e comum sob o jogador, os inimigos e os NPCs.</p>
+
+  <h3>A classe <code>Entity</code>: o mínimo que toda coisa viva precisa</h3>
+  <p>No topo da hierarquia está <code>Entity</code> — não uma classe abstrata formal, mas uma base concreta com o que qualquer coisa com posição, vida e animação precisa:</p>
+
+  <pre><code class="language-javascript">class Entity {
+  constructor(x, y, w, h) {
+    this.x=x; this.y=y; this.w=w; this.h=h;
+    this.vx=0; this.vy=0; this.hp=1; this.maxHp=1;
+    this.alive=true; this.facing='south';
+    this.animFrame=0; this.animTimer=0; this.animSpeed=0.12;
+    this.invincible=0; this.knockback={x:0,y:0,t:0};
+    this.stunTimer=0;
+  }
+  get cx(){ return this.x+this.w/2; }
+  get cy(){ return this.y+this.h/2; }
+
+  hit(dmg, srcX, srcY) {
+    if(this.invincible>0) return false;
+    this.hp-=dmg; this.invincible=0.8;
+    const dx=this.cx-srcX, dy=this.cy-srcY, d=Math.sqrt(dx*dx+dy*dy)||1;
+    this.applyKnockback(dx/d, dy/d, 120);
+    if(this.hp<=0) this.alive=false;
+    this._spawnDamageText(dmg);
+    return true;
+  }
+}</code></pre>
+  <div class="code-label"><span class="path">class Entity · linha ~3022</span></div>
+
+  <p><code>Player</code>, <code>Enemy</code> e todas as suas subclasses (Goblin, Mage, os oito chefes, etc.) estendem <code>Entity</code>. O que <code>Entity</code> fornece de graça a qualquer descendente:</p>
+  <ul>
+    <li><strong>Centro geométrico</strong> (<code>cx</code>/<code>cy</code>) calculado a partir de canto + largura/altura — usado para distância, mira e colisão circular aproximada.</li>
+    <li><strong>Dano e i-frames</strong>: <code>hit()</code> ignora golpes durante <code>invincible &gt; 0</code>, aplica <em>knockback</em> proporcional à direção do golpe, e sinaliza morte via <code>alive = false</code> — nunca removendo o objeto na hora, o que evita mutar arrays durante a iteração.</li>
+    <li><strong>Texto de dano flutuante</strong>: <code>_spawnDamageText()</code> decide a cor (vermelho para o jogador, amarelo para inimigos) checando <code>this instanceof Player</code>.</li>
+    <li><strong>Timers genéricos</strong>: <code>updateTimers()</code> decai invencibilidade e aplica o vetor de knockback ao longo do tempo; <code>updateAnim()</code> avança o frame de sprite só quando <code>moving</code> é verdadeiro.</li>
+  </ul>
+
+  <div class="callout">
+    <span class="callout-tag">Por que isso importa</span>
+    Como <code>hit()</code>, o knockback e a invencibilidade vivem em <code>Entity</code> e não em cada subclasse, todo objeto do jogo — de um <code>Goblin</code> a um <code>AngelBoss</code> de três fases — ganha essas regras de combate automaticamente. Uma nova classe de inimigo praticamente nunca precisa reimplementar "levar dano".
+  </div>
+
+  <h3><code>Player</code>: o maior estado do jogo</h3>
+  <p>O construtor de <code>Player</code> é, de longe, o bloco de inicialização mais longo do arquivo — porque o jogador acumula praticamente todos os sistemas de progressão do jogo em um único objeto: vida, munição de cada arma consumível (flechas, bombas, napalm, bomba de choque), cooldowns de habilidades (dash, gancho, escudo arcano, lança, furtividade), atributos de RPG e equipamento.</p>
+
+  <pre><code class="language-javascript">// ── Progressão ──────────────────────────────────────────
+this.level      = 1;
+this.xp         = 0;
+this.statPoints = 0;
+this.attrs = { forca:0, agilidade:0, vitalidade:0, precisao:0, arcano:0 };
+this.inventory       = [];
+this.equipment        = { armor: null, ring: null, helmet: null };
+this.activeWeapon     = WEAPON_DEFS[0];   // espada por padrão
+this.unlockedWeapons  = ['sword'];
+
+static xpThreshold(level) { return 20 * level * (level + 1) / 2; }</code></pre>
+  <div class="code-label"><span class="path">class Player.constructor · linha ~3072</span></div>
+
+  <p>Cada consumível segue o mesmo trio de campos — quantidade atual, máximo e cooldown — o que dá ao código uma simetria fácil de estender: uma nova arma consumível é, essencialmente, mais um trio <code>xxx</code> / <code>maxXxx</code> / <code>xxxCdMax</code> mais o botão correspondente no <code>InputManager</code>.</p>
+
+  <h3>Atributos → estatísticas derivadas</h3>
+  <p>Os cinco atributos de RPG (<code>forca</code>, <code>agilidade</code>, <code>vitalidade</code>, <code>precisao</code>, <code>arcano</code>) não afetam nada diretamente — eles são insumos de <code>_applyStats()</code>, chamado sempre que algo muda (subir de nível, trocar equipamento, gastar ponto de atributo), que recalcula os números reais de jogo:</p>
+
+  <pre><code class="language-javascript">_applyStats() {
+  const a = this.attrs;
+  this.attackDmg  = Math.round((1 + a.forca) * (this.activeWeapon?.dmgMult ?? 1.0));
+  this.speed      = 110 + a.agilidade * 10;
+  this.dashCdMax  = Math.max(0.6, 1.8 - a.agilidade * 0.2);
+  ...
+}</code></pre>
+  <div class="code-label"><span class="path">Player._applyStats · linha ~3169</span></div>
+
+  <p>Esse padrão — <strong>atributos brutos separados de estatísticas derivadas, recalculadas por uma função central</strong> — evita o bug clássico de "esqueci de atualizar o dano depois de trocar a armadura": qualquer coisa que mude equipamento ou atributos só precisa lembrar de chamar <code>_applyStats()</code> uma vez, em vez de tocar em cada estatística manualmente.</p>
+
+  <h3>Defesa em camadas no <code>hit()</code> do jogador</h3>
+  <p><code>Player</code> sobrescreve <code>hit()</code> de <code>Entity</code> para inserir três camadas de mitigação <em>antes</em> de chamar <code>super.hit()</code>: primeiro o Escudo Arcano (bloqueio total, consome carga), depois um amuleto temporário que reduz 1 de dano, depois a defesa plana da armadura equipada — só o resíduo final chega ao <code>hit()</code> base, que desconta HP.</p>
+
+  <div class="chapter-nav">
+    <a href="#ch04" class="prev"><span class="dir">← Anterior</span>Câmera e Entrada</a>
+    <a href="#ch06" class="next"><span class="dir">Próximo →</span>Armas e Combate</a>
+  </div>
+</section>
+
+<section class="chapter" id="ch06" data-section="Personagens" data-title="Armas e Combate">
+  <span class="eyebrow">CAPÍTULO 06</span>
+  <h2>Armas e Combate</h2>
+  <p class="subtitle">Uma arma corpo-a-corpo é dado, não código; um projétil é uma classe própria.</p>
+
+  <h3><code>WEAPON_DEFS</code>: armas como configuração</h3>
+  <p>As quatro armas corpo-a-corpo do jogo (espada, adaga, machado e uma quarta desbloqueada mais tarde) não são quatro classes — são quatro objetos de configuração na lista <code>WEAPON_DEFS</code>, cada um com sua própria janela de tempo, alcance e função de desenho:</p>
+
+  <pre><code class="language-javascript">const WEAPON_DEFS = [
+  {
+    id: 'sword', name: 'ESPADA', unlockLevel: 1, color: '#c8d8f0',
+    desc: 'Arma inicial. Balanceada e ágil.',
+    attackDur: 0.25, attackRange: 36, spread: Math.PI * 0.7,
+    dmgMult: 1.0, swingArc: 1.2,
+    draw(ctx) { /* pixel-art da lâmina, ctx já rotacionado pro swing */ },
+  },
+  {
+    id: 'dagger', name: 'ADAGA', unlockLevel: 3, color: '#e0e060',
+    desc: 'Ultra rápida, baixo alcance.',
+    attackDur: 0.10, attackRange: 22, spread: Math.PI * 0.3,
+    dmgMult: 0.7, swingArc: 0.4,
+  },
+  {
+    id: 'axe', name: 'MACHADO', unlockLevel: 5, color: '#e06030',
+    desc: 'Alto dano, swing lento. Lv.5.',
+    attackDur: 0.38, attackRange: 32, spread: Math.PI * 0.55,
+    dmgMult: 1.0, swingArc: 1.6,
+  },
+  // ... quarta arma, desbloqueada em nível mais alto
+];</code></pre>
+  <div class="code-label"><span class="path">const WEAPON_DEFS · linha ~19949</span></div>
+
+  <p>Cada arma equilibra três eixos: <strong>duração do golpe</strong> (<code>attackDur</code> — quanto tempo o hitbox fica ativo), <strong>alcance/abertura</strong> (<code>attackRange</code> + <code>spread</code>, o cone de ataque) e <strong>multiplicador de dano</strong> (<code>dmgMult</code>, aplicado sobre o dano base calculado a partir de força). A adaga troca dano por velocidade; o machado troca velocidade por dano — um trade-off clássico de RPG expresso inteiramente em quatro números.</p>
+
+  <p>Trocar de arma ativa (tecla <kbd>T</kbd>, tela <code>WeaponScreen</code>) apenas substitui a referência <code>player.activeWeapon</code> — todo o resto do sistema de ataque já lê os números da arma corrente dinamicamente:</p>
+
+  <pre><code class="language-javascript">attack() {
+  if(this.attackTimer<=0){
+    const w = this.activeWeapon ?? WEAPON_DEFS[0];
+    this.attackDur = w.attackDur;
+    this.attackRange = w.attackRange;
+    this.isAttacking = true; this.attackTimer = this.attackDur;
+    this._hitTiles.clear();
+    const fa={east:0,south:Math.PI/2,west:Math.PI,north:-Math.PI/2};
+    this.attackAngle = fa[this.facing] ?? 0;
+  }
+}</code></pre>
+  <div class="code-label"><span class="path">Player.attack · linha ~3200</span></div>
+
+  <p><code>_hitTiles</code> é um <code>Set</code> zerado a cada novo golpe, usado para garantir que cada tile quebrável só receba dano <strong>uma vez por swing</strong>, mesmo que o hitbox o sobreponha por vários frames consecutivos.</p>
+
+  <h3>Projéteis: cada um é sua própria classe</h3>
+  <p>Diferente das armas corpo-a-corpo, tudo que viaja pela tela — flecha, bomba, napalm, bumerangue, lança, gancho — é uma classe independente com seu próprio <code>update(dt, map, ...)</code> e <code>draw(ctx, camera)</code>. O padrão comum entre elas: nascem no <code>cx</code>/<code>cy</code> do jogador com um vetor de direção, colidem contra tiles sólidos e contra inimigos, e se auto-destroem (<code>alive = false</code>) ao expirar ou colidir.</p>
+
+  <table>
+    <tr><th>Classe</th><th>Comportamento distintivo</th></tr>
+    <tr><td><code>Arrow</code></td><td>Linha reta, some ao acertar parede ou inimigo; consumível limitado (<code>player.arrows</code>)</td></tr>
+    <tr><td><code>Bomb</code></td><td>Arco balístico até pousar, depois detona em raio</td></tr>
+    <tr><td><code>Napalm</code> / <code>FireZone</code></td><td>Ao pousar, cria uma <code>FireZone</code> que causa dano contínuo por alguns segundos</td></tr>
+    <tr><td><code>ShockBomb</code></td><td>Detona em área e aplica <code>stunTimer</code> aos inimigos atingidos — o único efeito de controle de grupo do jogo</td></tr>
+    <tr><td><code>Boomerang</code></td><td>Vai até uma distância máxima e retorna à origem, podendo acertar inimigos duas vezes (ida e volta)</td></tr>
+    <tr><td><code>Spear</code></td><td>Investida longa em linha reta, com <code>spearCdMax</code> de 12s — habilidade de alto impacto e uso raro</td></tr>
+    <tr><td><code>GrappleHook</code></td><td>Não causa dano — puxa o jogador até um ponto ancorável, usado para mobilidade/puzzles</td></tr>
+  </table>
+
+  <p>Todas essas instâncias vivem em arrays soltos dentro de <code>class Game</code> (<code>this.arrows</code>, <code>this.bombProjectiles</code>, <code>this.grapples</code>, ...), atualizadas e filtradas por <code>alive</code> a cada frame do loop principal — o mesmo padrão de "lista + filter" usado em praticamente toda entidade transitória do jogo, incluindo partículas e textos flutuantes.</p>
+
+  <div class="chapter-nav">
+    <a href="#ch05" class="prev"><span class="dir">← Anterior</span>Entidades e o Jogador</a>
+    <a href="#ch07" class="next"><span class="dir">Próximo →</span>Inimigos e IA</a>
+  </div>
+</section>
+
+<section class="chapter" id="ch07" data-section="Personagens" data-title="Inimigos e IA">
+  <span class="eyebrow">CAPÍTULO 07</span>
+  <h2>Inimigos e IA</h2>
+  <p class="subtitle">Uma base comum, um punhado de padrões de comportamento, e chefes que os combinam.</p>
+
+  <p class="lead">O jogo tem mais de 30 tipos de inimigos e chefes — de um slime simples a um Anjo Caído com três fases de combate. Nenhum deles é escrito do zero: todos estendem <code>Enemy</code> (que por sua vez estende <code>Entity</code>), e a maior parte da variedade percebida vem de <strong>combinar</strong> um pequeno conjunto de padrões de IA reutilizáveis, não de reinventar a lógica de movimento a cada inimigo novo.</p>
+
+  <h3><code>Enemy</code>: estatísticas por tipo, comportamento comum</h3>
+  <p>A base de todo inimigo simples guarda as estatísticas de cada <code>type</code> em uma tabela local, e resolve a instância corrente por chave:</p>
+
+  <pre><code class="language-javascript">class Enemy extends Entity {
+  constructor(type, tx, ty) {
+    super(tx*TILE_SIZE+6, ty*TILE_SIZE+6, 20, 20);
+    this.type = type;
+    const stats = {
+      slime:   {hp:2, speed:50, color:'#40a040', dmg:1, range:200,
+                dropTable:[{w:50,item:'gem'},{w:20,item:'heart'},{w:30,item:null}]},
+      goblin:  {hp:3, speed:70, color:'#c0c0b0', dmg:1, range:400,
+                dropTable:[{w:40,item:'gem'},{w:15,item:'heart'},{w:15,item:'arrow'},{w:30,item:null}]},
+      tower:   {hp:6, speed:0,  color:'#607080', dmg:1, range:220, /* ... */ },
+      // ...
+    };
+    const s = stats[type] ?? stats.slime;
+    this.hp=s.hp; this.maxHp=s.hp; this.speed=s.speed;
+    this.dropTable = s.dropTable;
+  }
+
+  rollDrop() {
+    const total = this.dropTable.reduce((s, e) => s + e.w, 0);
+    let r = Math.random() * total;
+    for (const entry of this.dropTable) { r -= entry.w; if (r <= 0) return entry.item; }
+  }
+}</code></pre>
+  <div class="code-label"><span class="path">class Enemy · linha ~5370</span></div>
+
+  <p><code>rollDrop()</code> é um sorteio por peso relativo clássico: cada entrada da <code>dropTable</code> tem um peso <code>w</code>, soma-se tudo, sorteia-se um número entre 0 e a soma, e subtrai-se cada peso até "estourar" — a entrada que zera o contador é a sorteada. É o mesmo algoritmo usado depois em várias outras tabelas de loot do jogo.</p>
+
+  <p>O <code>update()</code> base de <code>Enemy</code> implementa o comportamento genérico de "perseguidor simples": se a distância ao jogador está dentro de <code>range</code>, persegue em linha reta (com um leve <em>pathfinding</em> A* de fallback quando há obstáculo direto no caminho); fora do alcance, vagueia (<em>idle wander</em>).</p>
+
+  <h3>Padrões que se repetem entre inimigos</h3>
+  <p>Analisando as ~30 subclasses de <code>Enemy</code>, três padrões de IA aparecem repetidamente, cada um encapsulado como um pequeno bloco de estado que qualquer inimigo pode adotar:</p>
+
+  <table>
+    <tr><th>Padrão</th><th>Ideia</th><th>Exemplo</th></tr>
+    <tr><td>Linha de visão (LOS)</td><td>Raycast em grade de tiles até o jogador; some atrás de paredes</td><td><code>Goblin</code>, <code>Owlbear</code>, <code>Watcher</code></td></tr>
+    <tr><td>Distância preferida</td><td>Mantém uma faixa ideal de combate: avança se longe, recua se perto demais</td><td><code>Goblin</code>, <code>Mage</code>, <code>DarkMage</code></td></tr>
+    <tr><td>A* com <code>MinHeap</code></td><td>Busca de caminho em grade quando o perseguimento direto está bloqueado</td><td><code>Owlbear</code>, boa parte dos perseguidores em mapas com obstáculos</td></tr>
+  </table>
+
+  <p>O <code>Goblin</code> ilustra bem a combinação de LOS + distância preferida — e um detalhe fino de robustez, a <strong>histerese de LOS</strong>: em vez de reagir instantaneamente a cada frame em que a visada é ganha/perdida (o que faria o inimigo "vibrar" entre perseguir e recuar perto de quinas), ele só troca de estado depois que o novo valor persistir por alguns frames seguidos:</p>
+
+  <pre><code class="language-javascript">const hasLOSRaw = this._hasLOS(map, player);
+// Histerese: só atualiza o estado "estável" depois que o valor bruto
+// permanecer diferente por _LOS_HYSTERESIS segundos seguidos. Isso evita
+// o Goblin alternar entre "perseguir" e "parar" a cada frame perto de
+// cantos, onde um pequeno passo já é suficiente para ganhar/perder LOS.
+if (hasLOSRaw !== this._losStable) {
+  this._losPendingT += dt;
+  if (this._losPendingT >= this._LOS_HYSTERESIS) {
+    this._losStable = hasLOSRaw; this._losPendingT = 0;
+  }
+} else { this._losPendingT = 0; }</code></pre>
+  <div class="code-label"><span class="path">Goblin.update · linha ~5847</span></div>
+
+  <div class="callout tip">
+    <span class="callout-tag">Reaproveitável</span>
+    Histerese de estado é uma técnica geral para qualquer decisão de IA "binária" calculada a partir de um valor contínuo instável (linha de visão, "está perto o suficiente", "está no alvo"). Vale lembrar dela sempre que um inimigo novo parecer "gaguejar" entre dois comportamentos perto de um limiar.
+  </div>
+
+  <h3>Chefes: <code>Boss</code> como especialização, não reescrita</h3>
+  <p>A classe genérica <code>Boss</code> mostra o padrão que todo chefe do jogo segue: reaproveita o movimento/melee de <code>Enemy.update()</code> via <code>super.update()</code>, e apenas <em>adiciona</em> um ataque à distância orquestrado por fases:</p>
+
+  <pre><code class="language-javascript">class Boss extends Enemy {
+  get isPhase2() { return this.hp <= this.maxHp * 0.5; }
+
+  update(dt, player, map) {
+    if (this.isPhase2 && !this._phase2) {
+      this._phase2 = true; this.speed = 85; this._rangedInt = 2.5;
+    }
+    super.update(dt, player, map);         // movimento/melee herdado
+    // ... telegraph (_isRangedAiming) → dispara _fireLeque() em leque de projéteis
+  }
+}</code></pre>
+  <div class="code-label"><span class="path">class Boss · linha ~5636</span></div>
+
+  <p>O <code>AngelBoss</code> — o chefe final da catedral, citado na sua última sessão de desenvolvimento — leva essa ideia adiante com <strong>três fases</strong> determinadas puramente por percentual de vida, cada uma habilitando um ataque a mais sem desabilitar os anteriores:</p>
+
+  <pre><code class="language-javascript">// Fase atual com base no HP (independe de this._phase, que só guarda a última vista)
+get phase() {
+  if (this.hp <= this.maxHp * 0.3) return 3;
+  if (this.hp <= this.maxHp * 0.6) return 2;
+  return 1;
+}</code></pre>
+  <div class="code-label"><span class="path">AngelBoss.get phase · linha ~7914</span></div>
+
+  <table>
+    <tr><th>Fase</th><th>Gatilho de HP</th><th>Ataques ativos</th></tr>
+    <tr><td>1</td><td>&gt; 60%</td><td>Raio Sagrado (projétil mirado)</td></tr>
+    <tr><td>2</td><td>30%–60%</td><td>+ Rajada de Penas em leque, + investida voadora (<em>dive bomb</em>)</td></tr>
+    <tr><td>3</td><td>&lt; 30%</td><td>+ Colunas de Luz telegrafadas no chão</td></tr>
+  </table>
+
+  <p>Cada ataque é um pequeno estado próprio (ex.: <code>_diveState: 'idle' | 'telegraph' | 'dashing' | 'recover'</code>) com seus próprios cooldowns e durações — chefes maiores no jogo não são "mais complexos" no sentido de código novo, são apenas mais desses blocos de ataque somados ao mesmo <code>Enemy</code>/<code>Boss</code> base.</p>
+
+  <div class="chapter-nav">
+    <a href="#ch06" class="prev"><span class="dir">← Anterior</span>Armas e Combate</a>
+    <a href="#ch08" class="next"><span class="dir">Próximo →</span>NPCs, Missões e Diálogo</a>
+  </div>
+</section>
+
+<section class="chapter" id="ch08" data-section="Sistemas de Jogo" data-title="NPCs, Missões e Diálogo">
+  <span class="eyebrow">CAPÍTULO 08</span>
+  <h2>NPCs, Missões e Diálogo</h2>
+  <p class="subtitle">Três classes de status por missão, e um roteador que decide o que dizer.</p>
+
+  <h3>Estados de uma missão: três, sem mais</h3>
+  <p>Toda a lógica de missões gira em torno de uma máquina de três estados guardada em <code>QuestSystem.progress[questId]</code>: <code>active</code> (aceita, em progresso), <code>ready</code> (concluída, aguardando entrega) e <code>done</code> (entregue). Não existe um quarto estado "disponível" — isso é derivado, não armazenado: uma missão sem entrada em <code>progress</code> ainda não foi oferecida.</p>
+
+  <pre><code class="language-javascript">// progress[questId] = { status: 'active'|'ready'|'done', count: N }
+
+interact(giverDef) {
+  const ready   = giverDef.quests.filter(qid => this.progress[qid]?.status === 'ready');
+  const pending = giverDef.quests.filter(qid => !this.progress[qid]);
+  const active  = giverDef.quests.filter(qid => this.progress[qid]?.status === 'active');
+
+  if (ready.length   > 0) return { action: 'deliver',  questId: ready[0]   };
+  if (pending.length > 0) return { action: 'offer',    questId: pending[0] };
+  if (active.length  > 0) return { action: 'progress', questId: active[0] };
+  return { action: 'none' };
+}</code></pre>
+  <div class="code-label"><span class="path">QuestSystem.interact · linha ~15845</span></div>
+
+  <p>Repare na ordem de prioridade: entregar sempre vem antes de oferecer, que vem antes de mostrar progresso. Isso significa que um <code>QuestGiver</code> nunca precisa de lógica própria para decidir o que dizer ao jogador — ele simplesmente chama <code>interact()</code> e recebe de volta uma <em>ação</em> já resolvida.</p>
+
+  <h3>Progresso de missão é orientado a eventos</h3>
+  <p>O sistema não faz polling do estado do mundo — ele expõe métodos de evento (<code>onKill</code>, <code>onCollect</code>, <code>onExplore</code>) que o resto do jogo chama no momento exato em que algo acontece (um inimigo morre, um item é coletado, um mapa novo é visitado). Cada método varre <code>QUEST_DEFS</code> procurando missões ativas cujo <code>type</code>/<code>target</code> combinem com o evento:</p>
+
+  <pre><code class="language-javascript">onKill(enemyType) {
+  for (const [qid, def] of Object.entries(QUEST_DEFS)) {
+    if (def.type !== 'kill' || def.target !== enemyType) continue;
+    const prog = this.progress[qid];
+    if (!prog || prog.status !== 'active') continue;
+    prog.count = Math.min(def.required, prog.count + 1);
+    if (prog.count >= def.required) prog.status = 'ready';
+  }
+}</code></pre>
+  <div class="code-label"><span class="path">QuestSystem.onKill · linha ~15874</span></div>
+
+  <p>Isso é o que a sua memória de projeto chama de "bug de boomerang não contando para missões" — se um tipo de kill não dispara <code>onKill()</code> em todos os caminhos possíveis de morte (por espada, por flecha, <em>e</em> por bumerangue), aquele tipo de missão simplesmente nunca fecha para aquela arma específica. O padrão de correção é sempre o mesmo: garantir que todo ponto do código que mata um inimigo — nenhum ponto a menos — chame o mesmo evento central.</p>
+
+  <table>
+    <tr><th>Tipo de missão</th><th>Disparado por</th></tr>
+    <tr><td><code>kill</code></td><td><code>onKill(enemyType)</code> — chamado onde quer que um inimigo morra</td></tr>
+    <tr><td><code>collect</code></td><td><code>onCollect(itemType, amount)</code> — coleta de item no mundo</td></tr>
+    <tr><td><code>explore</code></td><td><code>onExplore(mapId)</code> — chamado pelo <code>MapManager</code> a cada troca de mapa</td></tr>
+  </table>
+
+  <h3>NPC vs. QuestGiver vs. Merchant</h3>
+  <p>Todos os personagens não-jogáveis compartilham a base <code>NPC</code>, mas se especializam por composição de responsabilidade, não por herança profunda: um <code>QuestGiver</code> é essencialmente um NPC com uma lista de <code>quests</code> e um ícone de estado sobre a cabeça (interrogação, exclamação...) resolvido perguntando ao <code>QuestSystem</code> qual seria a ação de <code>interact()</code> agora — o mesmo roteador de três estados do QuestSystem decide também o ícone visual.</p>
+
+  <h3><code>DialogSystem</code> e <code>ArtifactReader</code></h3>
+  <p>Conversas com NPCs comuns passam por <code>DialogSystem</code> — uma caixa de texto modal simples com fila de linhas. Livros e pergaminhos espalhados pelo mundo (<code>Artifact</code>) usam um sistema separado, <code>ArtifactReader</code>, porque têm uma necessidade diferente: múltiplas páginas navegáveis com <kbd>←</kbd>/<kbd>→</kbd>, em vez de uma sequência linear de falas. Separar os dois evitou sobrecarregar o <code>DialogSystem</code> com um modo de paginação que só um tipo de conteúdo precisa.</p>
+
+  <div class="chapter-nav">
+    <a href="#ch07" class="prev"><span class="dir">← Anterior</span>Inimigos e IA</a>
+    <a href="#ch09" class="next"><span class="dir">Próximo →</span>Economia e Inventário</a>
+  </div>
+</section>
+
+<section class="chapter" id="ch09" data-section="Sistemas de Jogo" data-title="Economia e Inventário">
+  <span class="eyebrow">CAPÍTULO 09</span>
+  <h2>Economia e Inventário</h2>
+  <p class="subtitle">Um mercador independente da classe NPC, uma loja com um item comum, e itens que carregam sua própria função de uso.</p>
+
+  <p class="lead">Diferente do resto do elenco de personagens, <code>Merchant</code> foi construída como uma classe totalmente independente de <code>NPC</code> — sua própria memória de projeto registra isso como uma decisão explícita. A razão fica clara olhando o código: um mercador não precisa de diálogo linear, IA de patrulha ou qualquer coisa que <code>NPC</code> ofereça; ele só precisa saber sua posição, se o jogador está perto o bastante, e desenhar sua própria animação de flutuação/brilho.</p>
+
+  <pre><code class="language-javascript">class Merchant {
+  constructor(def, tx, ty) {
+    this.def = def;
+    this.x = tx * TILE_SIZE + TILE_SIZE / 2;
+    this.y = ty * TILE_SIZE + TILE_SIZE / 2;
+    this._idleDir   = 'south';
+    this._idleTimer = 3 + Math.random() * 3;
+  }
+
+  isNearPlayer(player) {
+    return Math.abs(player.cx - this.cx) < TILE_SIZE * 1.3 &&
+           Math.abs(player.cy - this.cy) < TILE_SIZE * 1.3;
+  }
+}</code></pre>
+  <div class="code-label"><span class="path">class Merchant · linha ~16156</span></div>
+
+  <h3><code>ShopSystem</code>: um catálogo, uma regra de preço</h3>
+  <p>A loja não tem inventário próprio por mercador — todos os mercadores do jogo (Zelara incluída) compartilham a mesma lista global <code>SHOP_ITEMS</code>. Comprar é uma transação de três passos: checar se já possui (para equipáveis), checar se há gemas suficientes, debitar e inserir:</p>
+
+  <pre><code class="language-javascript">_tryBuy(player) {
+  const item = SHOP_ITEMS[this._sel];
+  if (item.equipSlot && player.inventory.some(it => it.id === item.id)) {
+    this._setMsg('Você já possui este item!', '#e0a040'); return;
+  }
+  if (player.gems < item.price) {
+    this._setMsg('Cristais insuficientes!', '#e04040'); return;
+  }
+  player.gems -= item.price;
+  // Itens usáveis empilham; equipáveis sempre ocupam um slot próprio
+  const existing = !item.equipSlot && player.inventory.find(e => e.id === item.id);
+  if (existing) existing.qty = (existing.qty || 1) + 1;
+  else player.inventory.push({ ...item, qty: 1 });
+}</code></pre>
+  <div class="code-label"><span class="path">ShopSystem._tryBuy · linha ~16767</span></div>
+
+  <p>Note a distinção entre <strong>itens usáveis</strong> (empilham em quantidade — poções, por exemplo) e <strong>itens equipáveis</strong> (sempre um objeto próprio no array, nunca empilhados, porque cada um pode em teoria ter atributos diferentes no futuro). Essa mesma distinção reaparece em <code>InventorySystem</code>.</p>
+
+  <h3><code>InventorySystem</code>: cada item sabe se usar</h3>
+  <p>O inventário [<kbd>I</kbd>] só mostra itens consumíveis — equipáveis vivem exclusivamente na tela de Equipamento [<kbd>E</kbd>], filtrados por uma flag:</p>
+
+  <pre><code class="language-javascript">// Itens equipáveis (armadura/anel/capacete) não aparecem mais no
+// inventário comum — eles só são mostrados na tela de Equipamento.
+_visibleItems(player) {
+  return player.inventory.filter(it => !it.equipSlot);
+}
+
+_tryUse(player) {
+  const item = this._visibleItems(player)[this._sel];
+  if (!item.usable) { this._setMsg('Este item não é usável.', '#e0a040'); return; }
+  const result = item.onUse(player);          // cada item carrega sua própria lógica
+  if (result === true) {
+    item.qty = (item.qty || 1) - 1;
+    if (item.qty <= 0) player.inventory.splice(player.inventory.indexOf(item), 1);
+  }
+}</code></pre>
+  <div class="code-label"><span class="path">InventorySystem · linha ~16996</span></div>
+
+  <div class="callout">
+    <span class="callout-tag">Padrão: comportamento embutido no dado</span>
+    Repare que <code>InventorySystem</code> não sabe o que cada item faz — ele apenas chama <code>item.onUse(player)</code> e reage ao retorno booleano. A lógica de "o que a poção de vida faz" mora na própria definição do item, não em um <code>switch</code> central de tipos. É o mesmo espírito de <code>TILE_COLORS</code> (capítulo 2) e <code>WEAPON_DEFS</code> (capítulo 6): comportamento como dado anexado ao objeto, não como ramificação condicional em um único lugar gigante.
+  </div>
+
+  <p>Essa arquitetura também explica um bug histórico do projeto — recompensas de missão indo parar no chão em vez do inventário. Se o código que entrega uma recompensa cria um <code>WorldItem</code> (item solto no mapa) em vez de empurrar diretamente para <code>player.inventory</code>, o item se comporta como loot normal em vez de como entrega direta. A correção segue o mesmo princípio de sempre: usar o caminho de dados correto (array de inventário) para o efeito pretendido (posse imediata), em vez do caminho usado por engano (spawn no mundo).</p>
+
+  <div class="chapter-nav">
+    <a href="#ch08" class="prev"><span class="dir">← Anterior</span>NPCs, Missões e Diálogo</a>
+    <a href="#ch10" class="next"><span class="dir">Próximo →</span>Interface (HUD e Telas)</a>
+  </div>
+</section>
+
+<section class="chapter" id="ch10" data-section="Sistemas de Jogo" data-title="Interface (HUD e Telas)">
+  <span class="eyebrow">CAPÍTULO 10</span>
+  <h2>Interface: HUD e Telas</h2>
+  <p class="subtitle">Um HUD que é DOM de verdade, e telas modais que são canvas de verdade.</p>
+
+  <h3>Duas tecnologias de UI, uma decisão consciente</h3>
+  <p>O jogo usa <strong>duas</strong> abordagens de interface lado a lado, e a escolha entre elas não é acidental:</p>
+  <ul>
+    <li><strong>HUD permanente</strong> (corações, gemas, chaves, contadores de munição) é HTML/CSS real — os elementos <code>#hud-panel</code>, <code>#hud-hp-row</code> etc. definidos no <code>&lt;style&gt;</code> do topo do arquivo. A classe <code>HUD</code> apenas escreve/atualiza esse DOM a cada frame relevante.</li>
+    <li><strong>Telas modais</strong> (personagem, equipamento, armas, bestiário, tela de título, game over) são desenhadas <strong>dentro do canvas</strong>, com <code>ctx.fillRect</code>/<code>fillText</code> manuais.</li>
+  </ul>
+  <p>A lógica por trás da divisão: o HUD precisa ficar sempre legível e nunca "por cima" da ação, então layout CSS real (flexbox, responsivo) resolve melhor. Já as telas modais fazem parte da <em>cena</em> do jogo — precisam se misturar visualmente com o mundo (fundo semitransparente sobre o gameplay pausado) e são mais simples de manter consistentes com a estética pixelada desenhando-as com os mesmos primitivos do resto do jogo.</p>
+
+  <h3>O padrão comum de toda tela modal</h3>
+  <p>Apesar de conteúdos muito diferentes, <code>CharacterScreen</code>, <code>EquipmentScreen</code>, <code>WeaponScreen</code> e <code>CodexScreen</code> compartilham a mesma forma:</p>
+  <ul>
+    <li>Uma flag <code>active</code> que o roteador de <code>Game._update()</code> checa em cascata (capítulo 1).</li>
+    <li>Um <code>_alpha</code> que anima de 0 a 1 na abertura, para um fade suave em vez de um "pop" abrupto.</li>
+    <li><code>update(dt, input)</code> lê teclado (setas para navegar, <kbd>Esc</kbd>/tecla própria para fechar) e <code>draw(ctx)</code> desenha o painel por cima de tudo.</li>
+  </ul>
+  <p>Esse padrão é o que torna o roteador do capítulo 1 tão simples de estender: uma tela nova só precisa seguir o mesmo contrato (<code>active</code>/<code>update</code>/<code>draw</code>) para se encaixar na cascata de <code>_update()</code> sem tocar em nenhuma outra tela existente.</p>
+
+  <h3><code>FloatingEventMessage</code>: o anúncio cinemático</h3>
+  <p>Adicionada na sua sessão mais recente, essa classe cobre um caso que <code>FloatingText</code> (números de dano) não resolve bem: uma mensagem grande, centralizada, de vida curta, para eventos importantes — "MAGO DAS TREVAS DERROTADO!", ou avisos como "Falta derrotar 2 chefes!". A curva de opacidade é desenhada à mão em três trechos (entra rápido, segura, sai devagar):</p>
+
+  <pre><code class="language-javascript">update(dt) { this.life -= dt; return this.life > 0; }
+
+draw(ctx) {
+  const t = this.life / this.maxLife;
+  let alpha;
+  if (t > 0.88)      alpha = (1 - t) / 0.12;  // fade-in rápido
+  else if (t < 0.25) alpha = t / 0.25;        // fade-out no final
+  else                alpha = 1;              // segura no meio
+  ctx.globalAlpha = alpha;
+  ctx.font = '22px "Press Start 2P"';
+  ctx.fillStyle = '#000'; ctx.fillText(this.text, CANVAS_W/2+2, CANVAS_H/2+2+this.offSetY); // sombra
+  ctx.fillStyle = this.color; ctx.fillText(this.text, CANVAS_W/2, CANVAS_H/2+this.offSetY);
+}</code></pre>
+  <div class="code-label"><span class="path">class FloatingEventMessage · linha ~17819</span></div>
+
+  <p>O texto em sombra (preto, deslocado 2px) desenhado antes da cor real é a técnica mais simples de contorno legível em canvas — usada em quase todo texto de HUD do jogo, não só aqui.</p>
+
+  <h3>Onde cada mensagem de evento é disparada</h3>
+  <table>
+    <tr><th>Evento</th><th>Método em <code>Game</code></th></tr>
+    <tr><td>Demônio derrotado</td><td><code>_onBossDefeated(e)</code></td></tr>
+    <tr><td>Mago das Trevas derrotado</td><td><code>_onDarkMageDefeated(e, map)</code></td></tr>
+    <tr><td>Anjo Caído derrotado</td><td><code>_onAngelBossDefeated(e, map)</code></td></tr>
+    <tr><td>"Falta derrotar N chefes"</td><td><code>_checkVictory()</code>, quando ainda não venceu</td></tr>
+  </table>
+
+  <div class="chapter-nav">
+    <a href="#ch09" class="prev"><span class="dir">← Anterior</span>Economia e Inventário</a>
+    <a href="#ch11" class="next"><span class="dir">Próximo →</span>Persistência e Vitória</a>
+  </div>
+</section>
+
+<section class="chapter" id="ch11" data-section="Sistemas de Jogo" data-title="Persistência e Vitória">
+  <span class="eyebrow">CAPÍTULO 11</span>
+  <h2>Persistência e Condição de Vitória</h2>
+  <p class="subtitle">Como um objeto cheio de instâncias de classe vira JSON — e volta.</p>
+
+  <h3>O problema central de qualquer save system</h3>
+  <p><code>player.inventory</code> guarda objetos com uma função <code>onUse</code> anexada (capítulo 9); <code>player.activeWeapon</code> aponta para um objeto de <code>WEAPON_DEFS</code> com uma função <code>draw</code>. Funções não sobrevivem a <code>JSON.stringify</code>. A solução do <code>SaveSystem</code> é nunca serializar o objeto inteiro — apenas o <strong>id</strong> de cada coisa, e reconstruir a referência completa na hora de carregar, buscando de volta na tabela de definições original:</p>
+
+  <pre><code class="language-javascript">// Serializar: guarda só o id
+const inventorySerial = p.inventory.map(it => ({ id: it.id, qty: it.qty ?? 1 }));
+const equipmentSerial = {};
+for (const [slot, item] of Object.entries(p.equipment)) {
+  equipmentSerial[slot] = item ? item.id : null;
+}
+
+// Desserializar: reconstrói o objeto completo a partir do id
+p.inventory = (data.inventory ?? []).map(saved => {
+  const def = SHOP_ITEMS.find(s => s.id === saved.id) ??
+              EQUIPMENT_ITEMS?.find?.(e => e.id === saved.id);
+  return def ? { ...def, qty: saved.qty ?? 1 } : null;
+}).filter(Boolean);</code></pre>
+  <div class="code-label"><span class="path">SaveSystem.serialize / .deserialize · linhas ~22213 e ~22283</span></div>
+
+  <div class="callout tip">
+    <span class="callout-tag">Princípio geral</span>
+    Sempre que um objeto de jogo carrega comportamento (funções, referências a outros objetos vivos), o save não deve tentar serializar o objeto — deve serializar apenas o identificador estável (<code>id</code>) que aponta de volta para a definição de dados original. É o mesmo espírito de <code>TILE_COLORS</code>/<code>WEAPON_DEFS</code>: a "fonte da verdade" sobre o que um item <em>faz</em> nunca sai do código-fonte; o save guarda só "qual item" e "quanto".
+  </div>
+
+  <h3>Coleções também precisam de conversão explícita</h3>
+  <p>Tiles quebráveis, interruptores e progresso de puzzles sequenciais são guardados em <code>Map</code>/<code>Set</code> do JavaScript — estruturas que <code>JSON.stringify</code> também não entende nativamente. O serializador converte cada uma para array de pares antes de salvar:</p>
+
+  <pre><code class="language-javascript">mapStatesSerial[mapId] = {
+  collected:    [...(state.collected  ?? [])],
+  breakables:   [...(state.breakables ?? new Map())].map(([k, v]) => [k, v]),
+  switches:     [...(state.switches   ?? new Map())].map(([k, v]) => [k, v]),
+};</code></pre>
+  <div class="code-label"><span class="path">SaveSystem.serialize · linha ~22200</span></div>
+
+  <h3>Três slots, auto-save em pontos de transição</h3>
+  <p><code>SaveSystem.NUM_SLOTS = 3</code> — o jogo guarda até três jogos independentes em <code>localStorage</code> sob uma única chave (<code>dg_rpg_saves_v1</code>), cada slot com seu snapshot completo. O auto-save é disparado em dois momentos naturais de "estado estável": ao subir de nível e ao trocar de mapa — nunca no meio de combate, o que evitaria salvar um estado transitório inconsistente (por exemplo, no meio de uma animação de knockback).</p>
+
+  <h3>A condição de vitória: três flags, uma checagem centralizada</h3>
+  <p>O jogo tem três chefes principais espalhados pelo mundo — o Demônio, o Mago das Trevas e o Anjo Caído (este último adicionado com o mapa <code>cathedral</code> na sua sessão mais recente). Cada derrota liga uma flag booleana independente em <code>Game</code>, e toda vez que uma delas muda, o mesmo método central reavalia se as três já estão ligadas:</p>
+
+  <pre><code class="language-javascript">_checkVictory(){
+  if (this._bossDefeated && this._darkMageDefeated && this._angelBossDefeated) {
+    setTimeout(() => this.goScreen.show(true, () => this.restart()), 1200);
+  } else {
+    const remaining = [
+      !this._bossDefeated      && 'o Demônio',
+      !this._darkMageDefeated  && 'o Mago das Trevas',
+      !this._angelBossDefeated && 'o Anjo Caído'
+    ].filter(Boolean);
+    const msg = remaining.length === 1
+      ? `Falta derrotar ${remaining[0]}!`
+      : `Falta derrotar ${remaining.length} chefes!`;
+    this.eventMessages.push(new FloatingEventMessage(msg, '#f0c040', 6, 30));
+  }
+}</code></pre>
+  <div class="code-label"><span class="path">Game._checkVictory · linha ~23206</span></div>
+
+  <p>As três flags são persistidas no save (<code>bossDefeated</code>, <code>darkMageDefeated</code>, <code>angelBossDefeated</code>), então derrotar um chefe, salvar, fechar o navegador e voltar depois mantém o progresso de vitória intacto — a checagem roda de novo automaticamente na próxima vez que qualquer uma das três flags for tocada.</p>
+
+  <div class="callout">
+    <span class="callout-tag">Por que centralizar em vez de checar em cada handler de morte</span>
+    Se cada <code>_onXDefeated()</code> checasse a vitória com sua própria cópia da condição, adicionar um quarto chefe exigiria editar três lugares e lembrar de manter todos sincronizados. Com <code>_checkVictory()</code> como único ponto de verdade, um quarto chefe precisa apenas de uma flag nova e uma linha a mais na condição — o padrão de extensão fica óbvio.
+  </div>
+
+  <div class="chapter-nav">
+    <a href="#ch10" class="prev"><span class="dir">← Anterior</span>Interface (HUD e Telas)</a>
+    <a href="#ch12" class="next"><span class="dir">Próximo →</span>Efeitos Visuais</a>
+  </div>
+</section>
+
+<section class="chapter" id="ch12" data-section="Sistemas de Jogo" data-title="Efeitos Visuais">
+  <span class="eyebrow">CAPÍTULO 12</span>
+  <h2>Efeitos Visuais</h2>
+  <p class="subtitle">Partículas simples, e dois sistemas maiores que precisaram de retrabalho para acertar a câmera.</p>
+
+  <h3>A base: <code>Particle</code> e <code>FloatingText</code></h3>
+  <p>O efeito visual mais comum do jogo — uma explosão de partículas coloridas ao quebrar um bloco, matar um inimigo ou abrir um baú — é uma classe minúscula: posição, velocidade, gravidade leve e um timer de vida. <code>Game._spawnParticles(x, y, color, n)</code> é o método central que qualquer sistema chama para "comemorar" um evento com uma explosão de pontos coloridos, reaproveitado por dezenas de eventos diferentes no arquivo (missão completa, chefe derrotado, item coletado).</p>
+
+  <h3><code>DarknessSystem</code>: uma camada de sombra sobre um canvas próprio</h3>
+  <p>Mapas escuros (cavernas, o santuário sombrio) não escurecem tile por tile — o sistema desenha uma camada preta sólida em um <code>&lt;canvas&gt;</code> off-screen próprio, depois "perfura" um círculo de luz suave ao redor do jogador (e de outras fontes de luz, quando existem) usando composição de canvas, e finalmente cola esse canvas por cima da cena principal:</p>
+
+  <pre><code class="language-javascript">class DarknessSystem {
+  constructor() {
+    this._canvas = document.createElement('canvas');   // camada off-screen
+    this._ctx    = this._canvas.getContext('2d');
+    this._flicker = 0; this._flickerTarget = 0; this._flickerT = 0;
+  }
+
+  update(dt, params) {
+    if (!params?.flicker) return;
+    // Flicker suave: interpola para um alvo aleatório periodicamente
+    this._flickerT -= dt;
+    if (this._flickerT <= 0) {
+      this._flickerTarget = (Math.random()*2-1) * params.flicker;
+      this._flickerT = 0.05 + Math.random()*0.1;
+    }
+    this._flicker += (this._flickerTarget - this._flicker) * Math.min(1, dt*12);
+  }
+}</code></pre>
+  <div class="code-label"><span class="path">class DarknessSystem · linha ~21646</span></div>
+
+  <p>O <em>flicker</em> (tremulação de tocha) não é ruído aleatório puro por frame — é uma interpolação em direção a um alvo aleatório que só muda a cada ~50–150ms. Ruído puro por frame pareceria um chiado nervoso; interpolar até um alvo que muda devagar produz uma tremulação orgânica, mais parecida com fogo de verdade.</p>
+
+  <h3><code>RainSystem</code>: a lição de câmera aprendida em produção</h3>
+  <p>A sua memória de projeto registra um ciclo de depuração longo nesse sistema — colisão em world-space, alvos de queda aleatórios, compensação de deriva, artefatos de sincronização entre faixas de chuva. O código atual reflete o ponto de chegada dessa iteração: as gotas <strong>simulam</strong> em coordenadas de mundo (para se comportarem de forma consistente independente de para onde a câmera olha), mas são <strong>projetadas para a tela a cada frame, no momento do desenho</strong>, com descarte (culling) de qualquer gota fora da área visível:</p>
+
+  <pre><code class="language-javascript">// camera: instância de Camera para projetar world → screen
+draw(mainCtx, params, camera) {
+  ...
+  for (const d of this._drops) {
+    const { sx, sy } = camera.worldToScreen(d.wx, d.wy);
+    const ssx = sx * GAME_SCALE, ssy = sy * GAME_SCALE;
+    // Culling: só desenha gotas visíveis na tela
+    if (ssx < -length-2 || ssx > this._w+length+2) continue;
+    if (ssy < -length-2 || ssy > this._h+length+2) continue;
+    off.moveTo(ssx, ssy); off.lineTo(ssx + ddx, ssy + ddy);
+  }
+  ...
+  mainCtx.drawImage(this._canvas, 0, 0);
+}</code></pre>
+  <div class="code-label"><span class="path">RainSystem.draw · linha ~21874</span></div>
+
+  <p>Os <strong>respingos</strong> (splashes), por outro lado, já nascem congelados em coordenadas de tela no momento do impacto — eles não precisam ser reprojetados quadro a quadro porque sua vida é curta e local. Essa divisão — simulação em world-space para consistência física, projeção para screen-space só na hora de desenhar, com culling agressivo — é o padrão que resolveu os bugs de "chuva grudada na câmera errada" mencionados na sua última sessão de trabalho no sistema.</p>
+
+  <div class="callout">
+    <span class="callout-tag">Lição de arquitetura</span>
+    Para qualquer efeito ambiente que precisa parecer fixo <em>no mundo</em> (chuva, névoa, folhas caindo) mas é desenhado sobre uma câmera que se move: simule em coordenadas de mundo, projete para tela só no desenho, e sempre faça o culling depois da projeção — nunca antes, ou você descarta coisas que a câmera ainda vai revelar.
+  </div>
+
+  <h3>A abertura em dissolução de tiles</h3>
+  <p>A animação de abertura do jogo — revelar o mundo a partir do centro da tela para fora, tile por tile, ao escolher um slot de save — usa a mesma ideia central de qualquer efeito de "dissolve" por grade: cada tile recebe um atraso de revelação calculado a partir da sua <strong>distância até o centro</strong>, mais um pequeno valor de aleatoriedade (<em>jitter</em>) por célula, para que a borda de revelação não seja um círculo perfeitamente liso.</p>
+
+  <div class="chapter-nav">
+    <a href="#ch11" class="prev"><span class="dir">← Anterior</span>Persistência e Vitória</a>
+    <a href="#ch13" class="next"><span class="dir">Próximo →</span>Estendendo o Jogo</a>
+  </div>
+</section>
+
+<section class="chapter" id="ch13" data-section="Praticando" data-title="Estendendo o Jogo">
+  <span class="eyebrow">CAPÍTULO 13</span>
+  <h2>Estendendo o Jogo</h2>
+  <p class="subtitle">Três receitas práticas, seguindo exatamente os padrões dos capítulos anteriores.</p>
+
+  <p class="lead">Com a arquitetura mapeada, adicionar conteúdo novo deixa de ser "escrever um sistema" e passa a ser "preencher os mesmos moldes que já existem". Estas três receitas cobrem os casos mais comuns de expansão do jogo.</p>
+
+  <h3>Receita 1 — Adicionar um novo mapa</h3>
+  <ol>
+    <li>Escolha um <code>id</code> único e desenhe a matriz <code>tiles</code> (linhas de valores de <code>T</code>, capítulo 2). Lembre-se: as bordas por onde o jogador deve poder sair <strong>precisam</strong> ser tiles não-sólidos.</li>
+    <li>Adicione a entrada em <code>MAP_DEFS</code> com <code>tileW</code>/<code>tileH</code> corretos e <code>spawnDefault</code>.</li>
+    <li>Ligue o mapa novo aos vizinhos: adicione <code>connections</code> nele <strong>e</strong> na direção oposta do mapa vizinho (as conexões não são inferidas automaticamente — são declaradas nos dois lados).</li>
+    <li>Povoe com <code>enemies</code>, <code>items</code>, <code>npcs</code> etc. usando coordenadas de tile (<code>tx</code>/<code>ty</code>), seguindo a mesma estrutura do exemplo de <code>'village'</code> no capítulo 2.</li>
+    <li>Se o mapa deve aparecer no mapa-múndi [<kbd>M</kbd>], adicione sua entrada em <code>WORLD_LAYOUT</code> com <code>{gx, gy}</code> relativo aos vizinhos, e uma aresta em <code>WORLD_CONNECTIONS</code>. Coordenadas negativas são seguras — o cálculo de offset do capítulo 3 já lida com isso.</li>
+  </ol>
+
+  <h3>Receita 2 — Adicionar um novo tipo de inimigo simples</h3>
+  <p>Para um inimigo que só precisa de estatísticas diferentes (mais vida, mais velocidade, tabela de drop própria), <strong>nenhuma classe nova é necessária</strong> — basta uma entrada na tabela <code>stats</code> dentro do construtor de <code>Enemy</code> (capítulo 7):</p>
+  <pre><code class="language-javascript">const stats = {
+  // ... existentes
+  wolf: { hp:4, speed:95, color:'#a09070', dmg:1, range:260,
+          dropTable:[{w:40,item:'gem'},{w:20,item:'heart'},{w:40,item:null}] },
+};</code></pre>
+  <p>Para um inimigo com <strong>comportamento</strong> novo (ataque à distância, fases, padrão de movimento especial), crie uma classe que estende <code>Enemy</code> (ou <code>Boss</code>, se tiver múltiplas fases), chame <code>super.update(dt, player, map)</code> para herdar movimento/melee, e adicione só a lógica extra — exatamente como <code>Goblin</code> e <code>AngelBoss</code> fazem no capítulo 7. Depois:</p>
+  <ol>
+    <li>Referencie o <code>type</code> novo em <code>enemies: [...]</code> de qualquer <code>MAP_DEFS</code>.</li>
+    <li>Se o inimigo precisar ser instanciado como a classe especial (não a genérica <code>Enemy</code>), garanta que o código que lê <code>def.enemies</code> no carregamento do mapa saiba mapear aquele <code>type</code> para a nova classe.</li>
+  </ol>
+
+  <h3>Receita 3 — Adicionar uma nova arma corpo-a-corpo</h3>
+  <p>Siga o molde de <code>WEAPON_DEFS</code> (capítulo 6): um novo objeto com <code>id</code>, <code>name</code>, <code>unlockLevel</code>, os três números de trade-off (<code>attackDur</code>, <code>attackRange</code>/<code>spread</code>, <code>dmgMult</code>) e uma função <code>draw(ctx)</code> desenhando a arma em pixel art simples (retângulos coloridos, o mesmo estilo de todas as armas existentes). Nenhum outro código precisa mudar — <code>Player.attack()</code> já lê os números da arma ativa dinamicamente, e a tela de armas [<kbd>T</kbd>] já itera <code>WEAPON_DEFS</code> automaticamente.</p>
+
+  <div class="callout tip">
+    <span class="callout-tag">O fio condutor de todo o guia</span>
+    Em cada um dos treze capítulos, o mesmo princípio se repete sob nomes diferentes: <strong>comportamento como dado, orquestrado por um pequeno número de classes centrais</strong> — tiles em <code>TILE_COLORS</code>, armas em <code>WEAPON_DEFS</code>, itens com <code>onUse</code>, missões guiadas por <code>QUEST_DEFS</code>, mapas inteiros em <code>MAP_DEFS</code>. É esse padrão, mais do que qualquer classe específica, que faz um arquivo de 24 mil linhas continuar extensível sem virar um emaranhado. Ao adicionar algo novo, a primeira pergunta vale sempre a pena: "isso é uma classe nova, ou só uma linha nova numa tabela que já existe?"
+  </div>
+
+  <div class="chapter-nav">
+    <a href="#ch12" class="prev"><span class="dir">← Anterior</span>Efeitos Visuais</a>
+    <a href="#ch14" class="next"><span class="dir">Próximo →</span>Modo Matemática</a>
+  </div>
+</section>
+
+<section class="chapter" id="ch14" data-section="Ferramentas" data-title="Modo Matemática">
+  <span class="eyebrow">CAPÍTULO 14</span>
+  <h2>Modo Matemática</h2>
+  <p class="subtitle">Um raio-X didático sobre o próprio jogo: a mesma cena, redesenhada como diagrama — vetores, AABBs, distâncias e o caminho que a IA calculou pra te alcançar.</p>
+
+  <p class="lead">O Modo Matemática não é um sistema de jogo — é uma <strong>segunda função de desenho</strong> para a mesma cena. Em vez de sprites, ele desenha a matemática que já estava rodando por baixo dos panos o tempo todo: vetores de velocidade, caixas de colisão, coordenadas de tile, ângulos de ataque, distâncias euclidianas e — mais recentemente — o caminho de menor custo que cada inimigo perseguidor calculou. É a versão game-dev de tirar a capa do motor pra ver as engrenagens.</p>
+
+  <h3>Ligando o modo: um <em>fade</em>, não um corte seco</h3>
+  <p>O botão <strong>MATEMÁTICA [F3]</strong> no HUD, e a tecla <kbd>F3</kbd>, chamam <code>_toggleMathMode()</code>, que só inverte uma flag booleana:</p>
+  <pre><code class="language-javascript">_toggleMathMode() {
+  if (this._saveScreenActive) return;
+  this.mathMode = !this.mathMode;
+  const pathsBtn = document.getElementById('paths-btn');
+  if (pathsBtn) pathsBtn.style.display = this.mathMode ? 'flex' : 'none';
+  if (!this.mathMode) this.showPaths = false;
+}</code></pre>
+  <div class="code-label"><span class="path">Game._toggleMathMode · linha ~23507</span></div>
+  <p>A troca de visual, porém, não é instantânea — <code>this._mathFadeT</code> persegue a flag com a <strong>mesma técnica de interpolação exponencial da câmera lerp</strong> (capítulo 4):</p>
+  <pre><code class="language-javascript">const mathTarget = this.mathMode ? 1 : 0;
+this._mathFadeT += (mathTarget - this._mathFadeT) * Math.min(1, dt * 10);
+if (Math.abs(this._mathFadeT - mathTarget) < 0.01) this._mathFadeT = mathTarget;</code></pre>
+  <div class="code-label"><span class="path">Game._update · linha ~23988</span></div>
+  <p>O resultado é usado depois como <code>ctx.globalAlpha</code> no HUD (<code>_drawMathHUD</code>), então ligar/desligar o modo produz um <em>fade</em> suave de 0 a 1, em vez de um HUD que aparece ou some com um corte brusco. É o mesmo princípio do capítulo 4 aplicado a uma transição de UI em vez de a uma câmera.</p>
+
+  <h3>Duas camadas de desenho: mundo e HUD</h3>
+  <p>Quando <code>mathMode</code> está ativo, <code>_draw()</code> troca inteiramente o caminho de renderização do mundo — em vez de <code>tileRend.drawMap()</code> + o desenho normal de cada entidade, ele chama <code>_drawMathWorld(map)</code>, que redesenha a cena inteira como diagrama (em coordenadas de mundo, sujeito à câmera). Por cima disso, <code>_drawMathHUD(map)</code> desenha uma segunda camada em <strong>coordenadas de tela fixas</strong> — título, painel de coordenadas da câmera/jogador e a legenda de cores, que não se move com a câmera:</p>
+  <pre><code class="language-javascript">if (this.mathMode) {
+  this._drawMathWorld(map);
+} else {
+  this.tileRend.drawMap(map, this.camera);
+  for (const o of map.objects) o.draw(ctx, this.camera);
+  // ...desenho normal de cada sistema
+}
+// ...
+if (this._mathFadeT > 0.01) this._drawMathHUD(map);</code></pre>
+  <div class="code-label"><span class="path">Game._draw · linha ~24693</span></div>
+  <p>Separar as duas chamadas assim significa que o painel de coordenadas nunca precisa saber nada sobre câmera ou zoom — ele só imprime números já calculados, enquanto <code>_drawMathWorld</code> é quem lida com <code>camera.worldToScreen()</code> pra cada elemento do mundo.</p>
+
+  <h3>Os quatro helpers que sustentam o overlay inteiro</h3>
+  <p>Dentro de <code>_drawMathWorld</code>, quatro funções pequenas, declaradas uma vez, são reutilizadas para <em>todo</em> elemento do mapa — o mesmo espírito de "comportamento como dado" dos capítulos anteriores, aqui aplicado à própria ferramenta de depuração:</p>
+  <ul>
+    <li><code>markPoint(wx, wy, color, label)</code> — um ponto colorido com rótulo de texto. Usado para itens, escadas, waypoints, NPCs.</li>
+    <li><code>markBox(ent, color)</code> — contorno tracejado da AABB (<code>ent.x/y/w/h</code>) de qualquer entidade. Usado para o jogador, inimigos, projéteis com corpo.</li>
+    <li><code>hpBar(wx, wy, hp, maxHp, width)</code> — a mesma regra de três da barra de vida normal, redesenhada como retângulo proporcional simples.</li>
+    <li><code>markProjectile(obj, color)</code> — ponto + vetor de velocidade (escalado por <code>obj.speed</code> quando o objeto só guarda direção <code>dx/dy</code>, não <code>vx/vy</code>) + círculo tracejado de raio de área, se houver.</li>
+  </ul>
+  <pre><code class="language-javascript">const markProjectile = (obj, color) => {
+  if (!obj || obj.alive === false) return;
+  const wx = obj.cx ?? obj.x ?? obj.hx;
+  const wy = obj.cy ?? obj.y ?? obj.hy;
+  if (wx == null || wy == null) return;
+  let vx = obj.vx, vy = obj.vy;
+  if (vx == null && obj.dx != null) {
+    const spd = obj.speed ?? 140;
+    vx = obj.dx * spd; vy = obj.dy * spd;
+  }
+  // ...desenha ponto, vetor e (se obj.radius existir) o raio de área
+};</code></pre>
+  <div class="code-label"><span class="path">Game._drawMathWorld · linha ~25061</span></div>
+  <p>Por causa desse desenho em torno de <code>obj.cx ?? obj.x</code> e <code>obj.dx</code>/<code>obj.speed</code> como <em>fallback</em> genérico, qualquer classe de projétil nova do jogo já "simplesmente funciona" com <code>markProjectile</code> — não é preciso ensinar o helper a reconhecer cada tipo de projétil individualmente, só chamá-lo.</p>
+
+  <div class="callout tip">
+    <span class="callout-tag">Extensão recente</span>
+    Isso ficou explícito quando três inimigos com projéteis próprios — o Drake (<code>_fireballs</code>), a SpiderQueen (<code>_webs</code>) e o Escudeiro (<code>_spearProjectiles</code>) — não apareciam no modo matemática. A causa não era um bug de desenho; era que o loop de projéteis de inimigo só verificava os nomes de array <code>_projectiles</code> e <code>_bolts</code>. A correção não precisou de nenhum código novo por inimigo — só de mais três linhas reaproveitando o <code>markProjectile</code> já existente:
+    <pre><code class="language-javascript">if (Array.isArray(e._fireballs))        for (const fb of e._fireballs)        markProjectile(fb, '#ff8030');
+if (Array.isArray(e._webs))             for (const wb of e._webs)             markProjectile(wb, '#c0a0ff');
+if (Array.isArray(e._spearProjectiles)) for (const sp of e._spearProjectiles) markProjectile(sp, '#d0d0e0');</code></pre>
+  </div>
+
+  <h3>Objetos com posição própria: blocos empurráveis e a armadilha de dardo</h3>
+  <p><code>PushableBlock</code> e <code>DartTrap</code> tinham o mesmo problema por um motivo um pouco diferente: eles não passavam pelo loop genérico de entidades — cada um desenha a si mesmo com seu próprio método <code>draw(ctx, camera)</code> no caminho de renderização normal, e simplesmente não existia nenhuma chamada equivalente dentro de <code>_drawMathWorld</code>.</p>
+  <p>Para o bloco empurrável, o desenho no modo matemática usa <code>block.x</code>/<code>block.y</code> — não <code>block.tx</code>/<code>block.ty</code> — de propósito: <code>x/y</code> refletem a posição real durante o deslizar suave entre tiles, enquanto <code>tx/ty</code> só descreveriam a casa de "repouso" final, escondendo a animação:</p>
+  <pre><code class="language-javascript">for (const block of map.pushableBlocks) {
+  const { sx: bsx, sy: bsy } = camera.worldToScreen(block.x, block.y);
+  const color = block.onPlate ? 'rgba(255,214,120,0.9)' : 'rgba(190,180,150,0.85)';
+  ctx.strokeRect(bsx + 1, bsy + 1, block.w - 2, block.h - 2);
+  const state = block.onPlate ? ':placa' : (block.moving ? ':desliza' : '');
+  ctx.fillText(`bloco${state}`, bsx + 1, bsy + block.h - 2);
+}</code></pre>
+  <div class="code-label"><span class="path">Game._drawMathWorld · linha ~25580</span></div>
+  <p>Já a <code>DartTrap</code> tinha metade do problema resolvido: o marcador da armadilha (posição + alcance) já era desenhado. Faltava só o dardo em voo — que a armadilha guarda em <code>trap._projectiles</code>, exatamente no mesmo formato que <code>markProjectile</code> já sabe ler:</p>
+  <pre><code class="language-javascript">for (const pr of trap._projectiles) markProjectile(pr, '#e8d090');</code></pre>
+  <div class="code-label"><span class="path">Game._drawMathWorld · linha ~25152</span></div>
+
+  <h3>Camada extra: visualizando o caminho do A*</h3>
+  <p>O botão <strong>CAMINHOS [F4]</strong> — que só aparece no HUD quando o modo matemática já está ativo — liga <code>this.showPaths</code>, uma segunda flag independente de <code>mathMode</code>, mas sem efeito nenhum sozinha:</p>
+  <pre><code class="language-javascript">_togglePathsMode() {
+  if (this._saveScreenActive || !this.mathMode) return;
+  this.showPaths = !this.showPaths;
+}</code></pre>
+  <div class="code-label"><span class="path">Game._togglePathsMode · linha ~23520</span></div>
+  <p>O ponto interessante aqui é o que <em>não</em> foi construído: nenhum algoritmo novo. O <code>aStar()</code> do capítulo 7 já roda continuamente pra qualquer inimigo perseguidor, e o resultado de cada busca já fica guardado em <code>this.path</code> (ou <code>this._path</code>, dependendo da classe do inimigo) pra uso da própria IA. A visualização só <strong>lê esse estado que já existia</strong> e desenha uma polilinha tracejada ligando o inimigo a cada waypoint do caminho, com um rótulo indicando o custo (número de passos):</p>
+  <pre><code class="language-javascript">if (this.showPaths) {
+  for (const e of map.enemies) {
+    const path = e.path || e._path;
+    if (!path || path.length === 0) continue;
+    // ...desenha linha tracejada do inimigo até cada waypoint,
+    // um ponto por waypoint, e o rótulo `A*(${path.length})`
+  }
+}</code></pre>
+  <div class="code-label"><span class="path">Game._drawMathWorld · linha ~25285</span></div>
+
+  <div class="callout">
+    <span class="callout-tag">Por que isso importa</span>
+    Sempre que uma visualização didática parecer que vai exigir "duplicar" um sistema pra poder desenhá-lo, vale perguntar primeiro se o sistema já não guarda o estado necessário em algum lugar — como aqui, onde o caminho do A* já vivia dentro de cada inimigo. A visualização nova custou uma leitura de array e um <code>ctx.lineTo()</code> por waypoint, não uma segunda implementação de busca de caminho.
+  </div>
+
+  <div class="chapter-nav">
+    <a href="#ch13" class="prev"><span class="dir">← Anterior</span>Estendendo o Jogo</a>
+    <a href="#cover" class="next"><span class="dir">Voltar ao início →</span>Capa</a>
+  </div>
+</section>
+
+    </div>
+  </main>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/javascript.min.js"></script>
+<script src="code/guide.js"></script>
+</body>
+</html>

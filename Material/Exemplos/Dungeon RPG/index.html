@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dungeon Quest</title>
+<link rel="stylesheet" type="text/css" href="styles/game.css">
+</head>
+<body>
+<div id="game-wrapper">
+  <div id="game-title">DUNGEON QUEST</div>
+
+  <div id="game-layout">
+    <!-- HUD lateral esquerdo -->
+    <div id="hud-panel">
+      <div>
+        <div class="hud-section-title">VIDA</div>
+        <div id="hud-hp-row"></div>
+      </div>
+      <hr class="hud-divider">
+      <div>
+        <div class="hud-section-title">CRISTAIS</div>
+        <div id="hud-gems-row">
+          <canvas id="hud-gem-icon" width="16" height="16"></canvas>
+          <span id="hud-gems-count">×0</span>
+        </div>
+      </div>
+      <hr class="hud-divider">
+      <div id="hud-keys-section">
+        <div class="hud-section-title">CHAVES</div>
+        <div id="hud-keys-row">
+          <canvas id="hud-key-icon" width="22" height="16"></canvas>
+          <span id="hud-keys-count">×0</span>
+        </div>
+      </div>
+      <hr class="hud-divider">
+      <div>
+        <div class="hud-section-title">FLECHAS</div>
+        <div id="hud-arrows-row">
+          <canvas id="hud-arrow-icon" width="20" height="16"></canvas>
+          <span id="hud-arrows-count">×10</span>
+        </div>
+      </div>
+      <hr class="hud-divider">
+      <div>
+        <div class="hud-section-title">BOMBAS</div>
+        <div id="hud-bombs-row">
+          <canvas id="hud-bomb-icon" width="16" height="16"></canvas>
+          <span id="hud-bombs-count">×3</span>
+        </div>
+      </div>
+      <hr class="hud-divider">
+      <div>
+        <div class="hud-section-title">NAPALM</div>
+        <div id="hud-napalm-row">
+          <canvas id="hud-napalm-icon" width="18" height="16"></canvas>
+          <span id="hud-napalm-count">×1</span>
+        </div>
+      </div>
+      <hr class="hud-divider">
+      <div>
+        <div class="hud-section-title">CHOQUE</div>
+        <div id="hud-shockbomb-row">
+          <canvas id="hud-shockbomb-icon" width="16" height="16"></canvas>
+          <span id="hud-shockbomb-count">×1</span>
+        </div>
+      </div>
+      <hr class="hud-divider">
+      <div>
+        <button id="controls-btn" onclick="window.open('controls.html', '_blank')">
+          <span>?</span> AJUDA
+        </button>
+      </div>
+      <hr class="hud-divider">
+      <div>
+        <button id="controls-btn" onclick="window.open('guide.html', '_blank')">
+          <span>!</span> MANUAL
+        </button>
+      </div>
+      <hr class="hud-divider">
+      <div id="zoom-control">
+        <div id="zoom-label">ZOOM</div>
+        <select id="zoom-select">
+          <option value="1.0">1.0×</option>
+          <option value="1.5" selected>1.5×</option>
+          <option value="2.0">2.0×</option>
+          <option value="2.5">2.5×</option>
+          <option value="3.0">3.0×</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Canvas principal -->
+    <div id="canvas-wrapper">
+      <canvas id="gameCanvas"></canvas>
+      <div id="crt-overlay"></div>
+    </div>
+  </div>
+</div>
+
+<div class="status-panel">
+  <div>
+    <div class="hud-section-title">EXP</div>
+    <div id="hud-xp-row">
+      <div style="display:flex;align-items:center;gap:4px;margin-top:4px;">
+        <span id="hud-level-badge" style="color:#f0c040;font-size:9px;">Lv.1</span>
+        <span id="hud-statpts" style="color:#c080ff;font-size:9px;display:none;"></span>
+      </div>
+      <div style="background:#0e0820;border:1px solid #3a1a60;width:100%;height:8px;border-radius:2px;overflow:hidden;margin-top:7px;">
+        <div id="hud-xp-bar" style="background:#c080ff;height:100%;width:0%;transition:width 0.2s;border-radius:2px;"></div>
+      </div>
+      <div id="hud-xp-label" style="color:#c080ff;font-size:9px;margin-top:7px;text-align:center;">0 / 20</div>
+    </div>
+  </div>
+  <div>
+    <button id="char-btn" onclick="window._game&&window._game._openCharScreen()">STATUS [P]</button>
+    <button id="inv-btn" onclick="window._game&&window._game._openInventorySafe()">INVENTÓRIO [I]</button>
+    <button id="equip-btn" onclick="window._game&&window._game._openEquipmentScreen()">EQUIPAMENTO [E]</button>
+    <button id="weapon-btn" onclick="window._game&&window._game._openWeaponScreen()">ARMAS [T]</button>
+    <button id="codex-btn" onclick="window._game&&window._game._openCodexScreen()">BESTIÁRIO [B]</button>
+    <button id="quest-btn" onclick="window._game&&window._game._openQuestScreen()">MISSÕES [L]</button>
+    <button id="save-btn" onclick="window._game&&window._game._openSaveScreen()">SAVE [F5]</button>
+    <button id="gfx-btn" onclick="window._game&&window._game._toggleGraphicsPanel()">GRÁFICOS [G]</button>
+    <button id="math-btn" onclick="window._game&&window._game._toggleMathMode()">MATEMÁTICA [F3]</button>
+    <button id="paths-btn" style="display:none" onclick="window._game&&window._game._togglePathsMode()">CAMINHOS [F4]</button>
+    <button id="los-btn" style="display:none" onclick="window._game&&window._game._toggleLOSMode()">LOS [F6]</button>
+    <button id="mathhud-btn" style="display:none" onclick="window._game&&window._game._toggleMathHUD()">LEGENDAS [F7]</button>
+  </div>
+</div>
+
+<div class="cooldown-panel">
+  <div>
+    <div class="hud-section-title">LANÇAS</div>
+    <div id="hud-spear-row">
+      <div class="hud-spear-bar">
+        <div id="hud-spear-bar"></div>
+      </div>
+      <div id="hud-spear-label">PRONTO</div>
+    </div>
+  </div>
+  <hr class="hud-divider">
+  <div>
+    <div class="hud-section-title">DASH</div>
+    <div id="hud-dash-row">
+      <div class="hud-dash-bar">
+        <div id="hud-dash-bar"></div>
+      </div>
+      <div id="hud-dash-label">PRONTO</div>
+    </div>
+  </div>
+  <hr class="hud-divider">
+  <div>
+    <div class="hud-section-title">WISP</div>
+    <div id="hud-wisp-row">
+      <div class="hud-wisp-bar">
+        <div id="hud-wisp-bar"></div>
+      </div>
+      <div id="hud-wisp-label">PRONTO</div>
+    </div>
+  </div>
+  <hr class="hud-divider">
+  <div>
+    <div class="hud-section-title">FALCÃO</div>
+    <div id="hud-falcon-row">
+      <div class="hud-falcon-bar">
+        <div id="hud-falcon-bar"></div>
+      </div>
+      <div id="hud-falcon-label">PRONTO</div>
+    </div>
+  </div>
+  <hr class="hud-divider">
+  <div>
+    <div class="hud-section-title">BUMERANGUE</div>
+    <div id="hud-boomerang-row">
+      <div class="hud-boomerang-bar">
+        <div id="hud-boomerang-bar"></div>
+      </div>
+      <div id="hud-boomerang-label">PRONTO</div>
+    </div>
+  </div>
+  <hr class="hud-divider">
+  <div>
+    <div class="hud-section-title">GANCHO</div>
+    <div id="hud-grapple-row">
+      <div class="hud-grapple-bar">
+        <div id="hud-grapple-bar"></div>
+      </div>
+      <div id="hud-grapple-label">PRONTO</div>
+    </div>
+  </div>
+  <hr class="hud-divider">
+  <div>
+    <div class="hud-section-title">STEALTH</div>
+    <div id="hud-stealth-row">
+      <div class="hud-stealth-bar">
+        <div id="hud-stealth-bar"></div>
+      </div>
+      <div id="hud-stealth-label">PRONTO</div>
+    </div>
+  </div>
+  <hr class="hud-divider">
+  <div>
+    <div class="hud-section-title">ESCUDO</div>
+    <div id="hud-shield-row">
+      <div class="hud-shield-bar">
+        <div id="hud-shield-bar"></div>
+      </div>
+      <div id="hud-shield-label">PRONTO</div>
+    </div>
+  </div>
+</div>
+
+<!-- Mapa Mundial -->
+<div id="world-map-overlay">
+  <div id="world-map-title">MAPA DO MUNDO</div>
+  <div id="world-map-viewport">
+    <canvas id="world-map-canvas"></canvas>
+    <div id="world-map-hud"></div>
+  </div>
+  <div id="world-map-legend">
+    <div class="wml-item"><div class="wml-swatch" style="background:#3a5a2a;"></div><span style="color:#a0c860;">VISITADO</span></div>
+    <div class="wml-item"><div class="wml-swatch" style="background:#1e1a10;border-color:#3a2a0a;"></div><span style="color:#5a4a2a;">NÃO VISITADO</span></div>
+    <div class="wml-item"><div class="wml-swatch" style="background:#f0c040;border-color:#f0c040;"></div><span style="color:#f0c040;">VOCÊ ESTÁ AQUI</span></div>
+  </div>
+  <div id="world-map-hint">[ SETAS ] NAVEGAR  ·  [ M ] ou [ ESC ] FECHAR</div>
+</div>
+
+<!-- Save/Load Overlay -->
+<div id="save-overlay">
+  <div id="save-overlay-title">SAVE / LOAD</div>
+  <div id="save-slots-container"></div>
+  <div id="save-overlay-hint">CLIQUE EM UM SLOT PARA GERENCIAR   [ ESC ] FECHAR</div>
+</div>
+
+<!-- Painel de Gráficos -->
+<div id="graphics-panel">
+  <div id="graphics-panel-title">
+    <span>GRÁFICOS</span>
+    <button id="graphics-panel-close" onclick="window._game&&window._game._toggleGraphicsPanel()">×</button>
+  </div>
+
+  <div class="gfx-row">
+    <div class="gfx-row-label"><span>BRILHO</span><span class="gfx-val" id="gfx-brightness-val">100%</span></div>
+    <input type="range" id="gfx-brightness" min="50" max="150" value="100">
+  </div>
+  <div class="gfx-row">
+    <div class="gfx-row-label"><span>CONTRASTE</span><span class="gfx-val" id="gfx-contrast-val">100%</span></div>
+    <input type="range" id="gfx-contrast" min="50" max="150" value="100">
+  </div>
+  <div class="gfx-row">
+    <div class="gfx-row-label"><span>SATURAÇÃO</span><span class="gfx-val" id="gfx-saturate-val">100%</span></div>
+    <input type="range" id="gfx-saturate" min="0" max="200" value="100">
+  </div>
+  <div class="gfx-row">
+    <div class="gfx-row-label"><span>HUE</span><span class="gfx-val" id="gfx-hue-val">0°</span></div>
+    <input type="range" id="gfx-hue" min="0" max="360" value="0">
+  </div>
+
+  <hr class="gfx-divider">
+
+  <label class="gfx-checkbox-row">
+    <input type="checkbox" id="gfx-crt">
+    <span>MODO CRT RETRO</span>
+  </label>
+
+  <button id="gfx-reset-btn" onclick="window._game&&window._game._resetGraphicsSettings()">RESTAURAR PADRÃO</button>
+</div>
+
+<!-- Painel direito: minimap + debug -->
+<div id="right-panel">
+  <div id="minimap-label">MAPA</div>
+  <div id="map-name-banner">—</div>
+  <canvas id="minimapCanvas" width="114" height="72"></canvas>
+  <button id="map-btn" onclick="window._game&&window._game._openWorldMap()">
+    MAPA [M]
+  </button>
+</div>
+
+<!-- Overlay: minimapa ampliado (clique no minimapa para abrir) -->
+<div id="minimap-zoom-overlay">
+  <div id="minimap-zoom-header">
+    <div id="minimap-zoom-title">MAPA ATUAL — <span id="minimap-zoom-name">—</span></div>
+    <button id="minimap-zoom-close" aria-label="Fechar">✕</button>
+  </div>
+  <canvas id="minimapZoomCanvas" width="570" height="360"></canvas>
+  <div id="minimap-zoom-hint">CLIQUE FORA DO MAPA OU ESC PARA FECHAR</div>
+</div>
+
+<script src="code/game.js"></script>
+</body>
+</html>
