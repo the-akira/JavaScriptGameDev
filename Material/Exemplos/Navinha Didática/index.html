@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Navinha Didática — Matemática dos Jogos 2D</title>
+<link rel="stylesheet" type="text/css" href="styles.css">
+</head>
+<body>
+<div id="wrap">
+  <canvas id="game"></canvas>
+  <div id="hud"></div>
+  <div id="controls">
+    <div style="color:#7ad0ff; margin-bottom: 3px; font-weight: bold;">Controles</div>
+    <div class="control-item"><kbd>W A S D</kbd> ou <kbd>setas</kbd> — mover</div>
+    <div class="control-item"><kbd>Mouse</kbd> — mirar &nbsp; <kbd>Clique</kbd> — atirar</div>
+    <div class="control-item"><kbd>G</kbd> grid &nbsp; <kbd>H</kbd> hitboxes &nbsp; <kbd>M</kbd> mini-mapa</div>
+    <div class="control-item"><kbd>V</kbd> vetores &nbsp; <kbd>C</kbd> câmera suave &nbsp; </div>
+    <div class="control-item"><kbd>Scroll</kbd> ou <kbd>+ / -</kbd> — zoom da câmera &nbsp;</div>
+    <div class="control-item" style="margin-bottom: 0px"><kbd>R</kbd> — resetar câmera &nbsp;</div>
+  </div>
+  <div id="gameOverScreen">
+    <div style="font-size:44px; color:#ff5a5a; font-weight:bold; letter-spacing:2px;">GAME OVER</div>
+    <div id="finalScore" style="font-size:18px; margin:14px 0 22px;"></div>
+    <button id="restartBtn">Reiniciar (Enter)</button>
+  </div>
+</div>
+<script src="game.js"></script>
+</body>
+</html>
