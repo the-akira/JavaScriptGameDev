@@ -108,6 +108,12 @@ function enemyDestroyed(points) {
 }
 
 function showAttributesPanel() {
+    // Verifica se há pontos disponíveis
+    if (gameState.availablePoints <= 0) {
+        // Mostra uma mensagem temporária (opcional)
+        return;
+    }
+
     // Pausa o jogo
     gameState.gamePaused = true;
 
@@ -8048,6 +8054,12 @@ crtToggle.addEventListener('click', () => {
 // Event listeners
 document.addEventListener('keydown', (e) => {
     keys[e.key] = true;
+
+    if (e.key.toLowerCase() === 'l' && !gameState.isInStartScreen) {
+        if (gameState.availablePoints > 0 && document.getElementById('attributesPanel').style.display !== 'block') {
+            showAttributesPanel();
+        }
+    }
 
     if (e.key === 'Enter' && gameState.isInStartScreen) {
         gameState.isInStartScreen = false; // Sai da tela inicial
