@@ -507,7 +507,7 @@ function drawDoorPrompt(mapData){
   ctx.font = "bold 9px monospace";
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
-  ctx.fillText("E", 0, -2);
+  ctx.fillText("E", 0, -1);
 
   ctx.restore();
 }
