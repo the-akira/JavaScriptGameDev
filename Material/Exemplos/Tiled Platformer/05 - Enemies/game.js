@@ -65,7 +65,19 @@ const ENEMY_PHYS = {
 const ENEMY_SIGHT_RANGE = 100;    // distância horizontal (px) para notar o jogador
 const ENEMY_SIGHT_VERT  = 60;     // tolerância vertical (px): só "vê" se estiver +- nessa altura
 const ENEMY_ALERT_RANGE_BONUS = 100; // histerese: some da vista só além de SIGHT_RANGE + isso
+const ENEMY_MIN_SHOT_DX = ARM_ATTACH.x + MUZZLE_OFFSET.x + ENEMY_W/2 + 8;
+// distância horizontal mínima (px) até o jogador pra valer a pena atirar.
+// O cano nasce a ARM_ATTACH.x + MUZZLE_OFFSET.x px à frente do inimigo;
+// se o jogador estiver mais perto que isso (ex.: "grudado"/em cima dele),
+// a bala já nasce depois do alvo e nunca cruza a hitbox dele — por isso
+// somamos meia largura do personagem + uma margem de segurança.
+const ENEMY_RETREAT_SPEED = 70;   // velocidade ao recuar tentando abrir distância pro tiro
 const ENEMY_SHOOT_COOLDOWN = 0.9; // segundos entre disparos do guarda
+const ENEMY_SHOT_DX_HYSTERESIS = 14; // px de "zona morta" ao redor de ENEMY_MIN_SHOT_DX
+// evita que o inimigo fique alternando entre "para e atira" e "recua" (e,
+// junto disso, entre encarar o jogador e virar de costas) quando o jogador
+// se aproxima devagar e o dx fica raspando bem em cima do limiar — mesma
+// ideia da histerese já usada em ENEMY_ALERT_RANGE_BONUS, mas aplicada aqui.
 
 /* ============================================================
    CARREGAMENTO
@@ -320,7 +332,9 @@ function makeEnemy(spawn){
     animFrame: 0,
     animTimer: 0,
     state: "patrol",         // "patrol" | "alert"
-    shootCooldown: 0
+    shootCooldown: 0,
+    retreatDir: 0,            // 0 = não está recuando; -1/1 = direção comprometida (ver updateEnemy)
+    farEnough: true           // último resultado do teste de distância p/ atirar (histerese, ver updateEnemy)
   };
 }
 
@@ -547,6 +561,17 @@ function hasLineOfSight(enemy, target){
   return true;
 }
 
+// Diz se o inimigo pode andar na direção "dir" (1 = direita, -1 =
+// esquerda) sem esbarrar em parede ou andar pra fora de uma beirada —
+// usado tanto na patrulha quanto ao recuar mirando o jogador.
+function canWalkDir(enemy, dir){
+  const aheadX = dir > 0 ? enemy.x + enemy.w + 1 : enemy.x - 1;
+  const top = enemy.y + 1, bottom = enemy.y + enemy.h - 1;
+  const wallAhead = isSolid(currentMap, aheadX, top) || isSolid(currentMap, aheadX, bottom);
+  const groundAhead = isSolid(currentMap, aheadX, enemy.y + enemy.h + 1);
+  return !wallAhead && groundAhead;
+}
+
 function updateEnemy(enemy, dt){
   const dx = (player.x + player.w/2) - (enemy.x + enemy.w/2);
   const dy = (player.y + player.h/2) - (enemy.y + enemy.h/2);
@@ -554,38 +579,81 @@ function updateEnemy(enemy, dt){
   // histerese: já alerta, só solta o jogador se ele se afastar bem mais
   const range = enemy.state === "alert" ? ENEMY_SIGHT_RANGE + ENEMY_ALERT_RANGE_BONUS : ENEMY_SIGHT_RANGE;
   const canSee = sameLevel && Math.abs(dx) <= range && hasLineOfSight(enemy, player);
-
+ 
   enemy.state = canSee ? "alert" : "patrol";
-
+ 
   if(enemy.state === "alert"){
-    enemy.vx = 0;
-    enemy.facing = dx >= 0 ? 1 : -1;
-    if(enemy.shootCooldown > 0) enemy.shootCooldown -= dt;
-    if(enemy.shootCooldown <= 0){
-      fireBulletFrom(enemy, "enemy");
-      enemy.shootCooldown = ENEMY_SHOOT_COOLDOWN;
+    // Distância horizontal mínima pra valer a pena atirar (senão a
+    // bala nasce depois do alvo — ver ENEMY_MIN_SHOT_DX). Se estiver
+    // muito perto, o inimigo recua tentando abrir espaço em vez de
+    // ficar parado desperdiçando tiro.
+    // limiar diferente dependendo do estado anterior: se já estava
+    // "longe o bastante" (parado atirando), só volta a recuar se dx cair
+    // BEM abaixo do limiar; se já estava recuando, só para de recuar se
+    // dx passar BEM acima. A zona morta no meio impede o flip.
+    const shotThreshold = enemy.farEnough
+      ? ENEMY_MIN_SHOT_DX - ENEMY_SHOT_DX_HYSTERESIS
+      : ENEMY_MIN_SHOT_DX + ENEMY_SHOT_DX_HYSTERESIS;
+    const farEnough = Math.abs(dx) >= shotThreshold;
+    enemy.farEnough = farEnough;
+ 
+    if(farEnough){
+      // alinhado o bastante: para, encara o jogador e atira
+      if(Math.abs(dx) > 2) enemy.facing = dx >= 0 ? 1 : -1;
+      enemy.vx = 0;
+      enemy.retreatDir = 0; // não está mais recuando: solta o compromisso de direção
+      if(enemy.shootCooldown > 0) enemy.shootCooldown -= dt;
+      if(enemy.shootCooldown <= 0){
+        fireBulletFrom(enemy, "enemy");
+        enemy.shootCooldown = ENEMY_SHOOT_COOLDOWN;
+      }
+    } else {
+      enemy.shootCooldown = 0; // sai pronto pra atirar assim que alinhar
+ 
+      // Escolhe a direção de fuga só quando precisa (ainda não está
+      // recuando, ou a direção que estava usando ficou bloqueada) —
+      // e depois MANTÉM essa escolha até conseguir distância. Se
+      // recalculássemos a cada frame pelo sinal de dx, o inimigo
+      // inverteria de direção bem no instante em que cruzasse a
+      // posição x do jogador (dx trocando de sinal no meio do
+      // caminho), ficando preso invertendo pra sempre. Comprometer
+      // com uma direção resolve isso — mesmo que o caminho escolhido
+      // passe perto do jogador (ele não é sólido), o que também
+      // evita o inimigo ficar parado quando só dá pra escapar indo
+      // na direção dele (ex.: encurralado num canto).
+      if(enemy.retreatDir === 0 || !canWalkDir(enemy, enemy.retreatDir)){
+        const preferredDir = dx >= 0 ? -1 : 1; // se afasta do jogador
+        if(canWalkDir(enemy, preferredDir)) enemy.retreatDir = preferredDir;
+        else if(canWalkDir(enemy, -preferredDir)) enemy.retreatDir = -preferredDir;
+        else enemy.retreatDir = 0; // encurralado dos dois lados
+      }
+ 
+      if(enemy.retreatDir !== 0){
+        enemy.vx = enemy.retreatDir * ENEMY_RETREAT_SPEED;
+        // vira de verdade pra direção que está correndo — encarar o
+        // jogador andando de costas ficava com cara de "patinando"
+        // (moonwalk). Volta a encarar assim que parar pra atirar.
+        enemy.facing = enemy.retreatDir;
+      } else {
+        enemy.vx = 0; // preso/encurralado: só espera alinhar
+      }
     }
   } else {
     enemy.shootCooldown = 0; // sai pronto pra atirar assim que reavistar
+    enemy.retreatDir = 0;
     enemy.vx = enemy.facing * ENEMY_PHYS.patrolSpeed;
-
+ 
     // olha um passo à frente, na direção que está andando: se tiver
     // parede ou não tiver chão, vira antes de sair andando pro nada.
-    const dir = enemy.facing;
-    const aheadX = dir > 0 ? enemy.x + enemy.w + 1 : enemy.x - 1;
-    const top = enemy.y + 1, bottom = enemy.y + enemy.h - 1;
-    const wallAhead = isSolid(currentMap, aheadX, top) || isSolid(currentMap, aheadX, bottom);
-    const groundAhead = isSolid(currentMap, aheadX, enemy.y + enemy.h + 1);
-
-    if(wallAhead || !groundAhead){
+    if(!canWalkDir(enemy, enemy.facing)){
       enemy.facing *= -1;
       enemy.vx = 0;
     }
   }
-
+ 
   enemy.vy += ENEMY_PHYS.gravity * dt;
   if(enemy.vy > ENEMY_PHYS.maxFall) enemy.vy = ENEMY_PHYS.maxFall;
-
+ 
   // --- resolve X (mesma lógica de colisão do player) ---
   let newX = enemy.x + enemy.vx * dt;
   if(enemy.vx !== 0){
@@ -601,7 +669,7 @@ function updateEnemy(enemy, dt){
   }
   newX = Math.max(0, Math.min(currentMap.pxWidth - enemy.w, newX));
   enemy.x = newX;
-
+ 
   // --- resolve Y ---
   let newY = enemy.y + enemy.vy * dt;
   enemy.onGround = false;
@@ -622,7 +690,7 @@ function updateEnemy(enemy, dt){
   }
   newY = Math.max(0, Math.min(currentMap.pxHeight - enemy.h, newY));
   enemy.y = newY;
-
+ 
   updateAnimState(enemy, ENEMY_ANIMS, dt);
 }
 
