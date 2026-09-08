@@ -108,7 +108,7 @@ const LOOT_DEFS = {
 const LOOT_BOB_AMPLITUDE = 2; // px de oscilação vertical do item já no chão
 const LOOT_BOB_SPEED = 4;     // rad/s
 
-/* --- plataformas "vai-e-volta" (lidas do objectgroup "Plaforms"/"Platforms",
+/* --- plataformas "vai-e-volta" (lidas do objectgroup "Platforms",
    DIFERENTE da layer de tiles de mesmo nome que é o chão sólido normal) ---
    id relativo (gid - firstgid do tileset "platforms") -> sprite. Só define
    a imagem: tamanho e posição vêm do próprio objeto no .tmx. */
@@ -240,7 +240,7 @@ function parseTMX(xmlText){
     });
   }
 
-  // Plataformas one-way: objectgroup "Plaforms"/"Platforms" — nome
+  // Plataformas one-way: objectgroup "Platforms" — nome
   // igual ao da layer de TILES (o chão sólido normal), mas são coisas
   // diferentes: um é <layer> (chão sólido), outro é <objectgroup>
   // (plataformas atravessáveis por baixo/pelas laterais). O querySelector
@@ -257,8 +257,7 @@ function parseTMX(xmlText){
   const platformSpawns = [];
   const platformStops = [];   // marcadores "floor" — paradas verticais (elevator)
   const platformStopsH = [];  // marcadores "stop" — paradas horizontais (horizontal)
-  const platformsGroup = doc.querySelector('map > objectgroup[name="Plaforms"]')
-                       || doc.querySelector('map > objectgroup[name="Platforms"]');
+  const platformsGroup = doc.querySelector('map > objectgroup[name="Platforms"]');
   if(platformsGroup && platformFirstGid !== null){
     platformsGroup.querySelectorAll("object").forEach(objEl => {
       const w = parseFloat(objEl.getAttribute("width"));
@@ -412,8 +411,7 @@ const PHYS = {
 };
 
 /* ============================================================
-   PREPARAÇÃO DE UM MAPA (localizar camadas por nome, com
-   tolerância ao nome real gravado no .tmx: "Plaforms")
+   PREPARAÇÃO DE UM MAPA
    ============================================================ */
 function getLayer(mapData, ...names){
   for(const n of names){
@@ -424,7 +422,7 @@ function getLayer(mapData, ...names){
 
 function prepareMap(id){
   const raw = MAPS_RAW[id];
-  const platforms = getLayer(raw, "Platforms", "Plaforms");
+  const platforms = getLayer(raw, "Platforms");
   const background = getLayer(raw, "Background");
   const doorsTiles = getLayer(raw, "Doors");
   return {
@@ -794,7 +792,7 @@ function resolveCratesY(entity, newY){
 }
 
 /* ============================================================
-   PLATAFORMAS ONE-WAY (lidas do objectgroup "Plaforms"/"Platforms" —
+   PLATAFORMAS ONE-WAY (lidas do objectgroup "Platforms" —
    estáticas, elevador ou circular)
    ============================================================ */
 function spawnPlatforms(mapData){

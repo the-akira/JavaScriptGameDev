@@ -222,8 +222,7 @@ const PHYS = {
 };
 
 /* ============================================================
-   PREPARAÇÃO DE UM MAPA (localizar camadas por nome, com
-   tolerância ao nome real gravado no .tmx: "Plaforms")
+   PREPARAÇÃO DE UM MAPA
    ============================================================ */
 function getLayer(mapData, ...names){
   for(const n of names){
@@ -234,7 +233,7 @@ function getLayer(mapData, ...names){
 
 function prepareMap(id){
   const raw = MAPS_RAW[id];
-  const platforms = getLayer(raw, "Platforms", "Plaforms");
+  const platforms = getLayer(raw, "Platforms");
   const background = getLayer(raw, "Background");
   const doorsTiles = getLayer(raw, "Doors");
   return {

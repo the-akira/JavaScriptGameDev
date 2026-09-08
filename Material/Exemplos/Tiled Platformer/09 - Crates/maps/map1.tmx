@@ -9,28 +9,28 @@
  <tileset firstgid="258" name="crates" tilewidth="24" tileheight="24" tilecount="8" columns="0">
   <grid orientation="orthogonal" width="1" height="1"/>
   <tile id="0">
-   <image width="24" height="24" source="../../../Documents/Games/Quake2D/assets/crates/blue_crate.png"/>
+   <image width="24" height="24" source="../assets/crates/blue_crate.png"/>
   </tile>
   <tile id="1">
-   <image width="16" height="16" source="../../../Documents/Games/Quake2D/assets/crates/blue_small_crate.png"/>
+   <image width="16" height="16" source="../assets/crates/blue_small_crate.png"/>
   </tile>
   <tile id="2">
-   <image width="24" height="24" source="../../../Documents/Games/Quake2D/assets/crates/green_crate.png"/>
+   <image width="24" height="24" source="../assets/crates/green_crate.png"/>
   </tile>
   <tile id="3">
-   <image width="16" height="16" source="../../../Documents/Games/Quake2D/assets/crates/green_small_crate.png"/>
+   <image width="16" height="16" source="../assets/crates/green_small_crate.png"/>
   </tile>
   <tile id="4">
-   <image width="24" height="24" source="../../../Documents/Games/Quake2D/assets/crates/grey_crate.png"/>
+   <image width="24" height="24" source="../assets/crates/grey_crate.png"/>
   </tile>
   <tile id="5">
-   <image width="16" height="16" source="../../../Documents/Games/Quake2D/assets/crates/grey_small_crate.png"/>
+   <image width="16" height="16" source="../assets/crates/grey_small_crate.png"/>
   </tile>
   <tile id="6">
-   <image width="24" height="24" source="../../../Documents/Games/Quake2D/assets/crates/red_crate.png"/>
+   <image width="24" height="24" source="../assets/crates/red_crate.png"/>
   </tile>
   <tile id="7">
-   <image width="16" height="16" source="../../../Documents/Games/Quake2D/assets/crates/red_small_crate.png"/>
+   <image width="16" height="16" source="../assets/crates/red_small_crate.png"/>
   </tile>
  </tileset>
  <layer id="1" name="Background" width="40" height="20">
@@ -57,7 +57,7 @@
 185,185,185,185,185,185,185,185,185,185,185,185,185,185,185,185,185,185,185,185,185,185,185,185,185,185,185,185,185,185,185,185,185,185,185,185,185,185,185,185
 </data>
  </layer>
- <layer id="2" name="Plaforms" width="40" height="20">
+ <layer id="2" name="Platforms" width="40" height="20">
   <data encoding="csv">
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,

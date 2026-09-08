@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <map version="1.9" tiledversion="1.9.2" orientation="orthogonal" renderorder="right-down" width="40" height="20" tilewidth="16" tileheight="16" infinite="0" nextlayerid="7" nextobjectid="7">
  <tileset firstgid="1" name="tileset" tilewidth="16" tileheight="16" tilecount="256" columns="16">
-  <image source="tileset.png" width="256" height="256"/>
+  <image source="../assets/tileset.png" width="256" height="256"/>
  </tileset>
  <tileset firstgid="257" name="door" tilewidth="48" tileheight="40" tilecount="1" columns="1">
-  <image source="door.png" width="48" height="40"/>
+  <image source="../assets/door.png" width="48" height="40"/>
  </tileset>
  <layer id="1" name="Background" width="40" height="20">
   <data encoding="csv">
@@ -30,7 +30,7 @@
 185,185,185,185,185,185,185,185,185,185,185,185,185,185,185,185,185,185,185,185,185,185,185,185,185,185,185,185,185,185,185,185,185,185,185,185,185,185,185,185
 </data>
  </layer>
- <layer id="2" name="Plaforms" width="40" height="20">
+ <layer id="2" name="Platforms" width="40" height="20">
   <data encoding="csv">
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
