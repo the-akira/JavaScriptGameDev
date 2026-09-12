@@ -58,6 +58,29 @@ const BULLET_SPEED = 320;   // px/s
 const BULLET_LIFETIME = 1.2; // segundos até desaparecer, mesmo sem colidir
 const SHOOT_COOLDOWN = 0.33; // segundos entre disparos (jogador)
 
+/* --- portas-laser e botões (objectgroup "Triggers" no .tmx) ---
+   Cada porta-laser e cada botão têm uma propriedade "door" — o nome
+   liga um ao outro (podem existir vários pares por mapa, cada um com
+   seu próprio nome). Dois tipos de botão, distinguidos pelo gid usado
+   no editor (tileset "buttons": id0 = botão-de-atirar, id1 = switch):
+     - "toggle": liga/desliga com a tecla E, quantas vezes quiser.
+     - "shoot": é atingido por bala; vai apagando a cada tiro (5
+       sprites, 0=ligado .. 4=apagado) até desligar a porta de vez —
+       não reacende sozinho, só quando o mapa é recarregado do zero. */
+const LASER_SRC = ["assets/lasers/0.png", "assets/lasers/1.png", "assets/lasers/2.png", "assets/lasers/3.png"];
+const LASER_ANIM_FRAME_TIME = 0.05; // s por frame da animação de ligar/desligar
+
+// Barreira física: mesmo esquema do laser (objectgroup "Triggers",
+// gid do tileset "barriers"), mas com sprite de barreira em vez de
+// feixe de laser. 0 = fechada (bloqueia) .. 8 = totalmente aberta.
+const BARRIER_SRC = ["assets/barriers/0.png", "assets/barriers/1.png", "assets/barriers/2.png", "assets/barriers/3.png", "assets/barriers/4.png", "assets/barriers/5.png", "assets/barriers/6.png", "assets/barriers/7.png", "assets/barriers/8.png"];
+const BARRIER_ANIM_FRAME_TIME = 0.25; // s por frame da animação de abrir/fechar da barreira
+
+const BUTTON_SHOOT_SRC = ["assets/triggers/button-0.png", "assets/triggers/button-1.png", "assets/triggers/button-2.png", "assets/triggers/button-3.png", "assets/triggers/button-4.png"];
+const BUTTON_TOGGLE_ON_SRC = "assets/triggers/on.png";
+const BUTTON_TOGGLE_OFF_SRC = "assets/triggers/off.png";
+const BUTTON_HITS_TO_DISABLE = BUTTON_SHOOT_SRC.length - 1; // 4 tiros até apagar de vez
+
 /* --- vida / dano --- */
 const PLAYER_MAX_HP = 100;
 const PLAYER_HIT_DAMAGE = 10;   // dano por bala inimiga
@@ -219,9 +242,48 @@ function parseTMX(xmlText){
   // Idem para "platforms" (plataformas one-way), mais abaixo.
   let crateFirstGid = null;
   let platformFirstGid = null;
+  let buttonFirstGid = null;
+  let laserFirstGid = null;
+  let barrierFirstGid = null;
+  // Para "buttons", "lasers" e "barriers" não dá pra confiar num id
+  // local fixo (ex.: "id 0 é sempre o botão-de-atirar") — o Tiled
+  // reindexa os ids sempre que uma imagem é trocada/reimportada no
+  // tileset, então guardamos o nome do arquivo de cada <tile> e
+  // decidimos o tipo por ele (ver classificação mais abaixo, ao ler
+  // o objectgroup "Triggers").
+  const buttonTileImages = {}; // localId -> nome do arquivo de imagem
+  const laserTileImages = {};
+  const barrierTileImages = {};
   doc.querySelectorAll("map > tileset").forEach(tsEl => {
     if(tsEl.getAttribute("name") === "crates") crateFirstGid = parseInt(tsEl.getAttribute("firstgid"), 10);
     if(tsEl.getAttribute("name") === "platforms") platformFirstGid = parseInt(tsEl.getAttribute("firstgid"), 10);
+    if(tsEl.getAttribute("name") === "buttons"){
+      buttonFirstGid = parseInt(tsEl.getAttribute("firstgid"), 10);
+      tsEl.querySelectorAll("tile").forEach(tileEl => {
+        const id = parseInt(tileEl.getAttribute("id"), 10);
+        const imgEl = tileEl.querySelector("image");
+        const src = imgEl ? imgEl.getAttribute("source") : "";
+        buttonTileImages[id] = src.split("/").pop(); // só o nome do arquivo
+      });
+    }
+    if(tsEl.getAttribute("name") === "lasers"){
+      laserFirstGid = parseInt(tsEl.getAttribute("firstgid"), 10);
+      tsEl.querySelectorAll("tile").forEach(tileEl => {
+        const id = parseInt(tileEl.getAttribute("id"), 10);
+        const imgEl = tileEl.querySelector("image");
+        const src = imgEl ? imgEl.getAttribute("source") : "";
+        laserTileImages[id] = src.split("/").pop();
+      });
+    }
+    if(tsEl.getAttribute("name") === "barriers"){
+      barrierFirstGid = parseInt(tsEl.getAttribute("firstgid"), 10);
+      tsEl.querySelectorAll("tile").forEach(tileEl => {
+        const id = parseInt(tileEl.getAttribute("id"), 10);
+        const imgEl = tileEl.querySelector("image");
+        const src = imgEl ? imgEl.getAttribute("source") : "";
+        barrierTileImages[id] = src.split("/").pop();
+      });
+    }
   });
 
   // Caixas: objectgroup "Objects", um tile-object por caixa. O Tiled
@@ -333,7 +395,43 @@ function parseTMX(xmlText){
     }
   });
 
-  return { width, height, layers, door, enemySpawns, crateSpawns, platformSpawns };
+  // Portas-laser e botões: objectgroup "Triggers". Cada object tem um
+  // gid (do tileset "lasers" ou "buttons") e a propriedade "door" que
+  // liga o botão à porta correspondente. Tile-objects são ancorados
+  // no canto INFERIOR-esquerdo pelo Tiled — convertemos pra topo,
+  // igual já fazemos com caixas/plataformas.
+  const laserSpawns = [];
+  const buttonSpawns = [];
+  const triggersGroup = doc.querySelector('map > objectgroup[name="Triggers"]');
+  if(triggersGroup){
+    triggersGroup.querySelectorAll("object").forEach(objEl => {
+      if(!objEl.hasAttribute("gid")) return;
+      const gid = parseInt(objEl.getAttribute("gid"), 10);
+      const props = {};
+      objEl.querySelectorAll("properties > property").forEach(p => {
+        props[p.getAttribute("name")] = p.getAttribute("value");
+      });
+      const door = props["door"] || null;
+      if(!door) return; // sem porta associada — ignora
+      const w = parseFloat(objEl.getAttribute("width"));
+      const h = parseFloat(objEl.getAttribute("height"));
+      const x = parseFloat(objEl.getAttribute("x"));
+      const y = parseFloat(objEl.getAttribute("y")) - h; // base -> topo
+
+      if(laserFirstGid !== null && laserTileImages[gid - laserFirstGid] !== undefined){
+        laserSpawns.push({ x, y, w, h, door, kind: "laser" });
+      } else if(barrierFirstGid !== null && barrierTileImages[gid - barrierFirstGid] !== undefined){
+        laserSpawns.push({ x, y, w, h, door, kind: "barrier" });
+      } else if(buttonFirstGid !== null && buttonTileImages[gid - buttonFirstGid] !== undefined){
+        const img = buttonTileImages[gid - buttonFirstGid];
+        // "button-N.png" é o botão-de-atirar; "on.png"/"off.png" é o switch
+        const kind = /^button-\d/.test(img) ? "shoot" : "toggle";
+        buttonSpawns.push({ x, y, w, h, door, kind });
+      }
+    });
+  }
+
+  return { width, height, layers, door, enemySpawns, crateSpawns, platformSpawns, laserSpawns, buttonSpawns };
 }
 
 async function loadMapFile(id){
@@ -372,6 +470,11 @@ let doorImg = null;
 let gunImg = null;
 let bulletImg = null;
 let ladderImg = null;
+let laserImgs = [];          // frames 0..3 (0=ligado .. 3=desligado)
+let barrierImgs = [];        // frames 0..8 (0=fechada .. 8=totalmente aberta)
+let buttonShootImgs = [];    // frames 0..4 (0=ligado .. 4=apagado de vez)
+let buttonToggleOnImg = null;
+let buttonToggleOffImg = null;
 let MAPS_RAW = null; // { map1: {width,height,layers,door,enemySpawns}, map2: {...} }
 
 let currentMapId = "map1";
@@ -393,6 +496,9 @@ let enemies = [];       // inimigos vivos do mapa atual
 let crates = [];        // caixas vivas do mapa atual
 let loots = [];         // itens dropados, caindo ou já no chão
 let livePlatforms = []; // plataformas one-way vivas do mapa atual (estática/elevador/circular)
+let liveLasers = [];    // portas-laser vivas do mapa atual (objectgroup "Triggers")
+let liveButtons = [];   // botões vivos do mapa atual (objectgroup "Triggers")
+let nearButton = null;  // botão "toggle" perto do jogador agora (indicador visual "E")
 
 const player = {
   x: 0, y: 0,
@@ -455,7 +561,9 @@ function prepareMap(id){
     door: raw.door,
     enemySpawns: raw.enemySpawns || [],
     crateSpawns: raw.crateSpawns || [],
-    platformSpawns: raw.platformSpawns || []
+    platformSpawns: raw.platformSpawns || [],
+    laserSpawns: raw.laserSpawns || [],
+    buttonSpawns: raw.buttonSpawns || []
   };
 }
 
@@ -569,6 +677,7 @@ function goToMap(destinyId){
   spawnEnemies(currentMap);
   spawnCrates(currentMap);
   spawnPlatforms(currentMap);
+  spawnTriggers(currentMap);
   doorCooldown = 0.5;
   nearDoor = false;
   bullets = []; // balas não atravessam a troca de mapa
@@ -686,6 +795,89 @@ function updateCrates(dt){
 }
 
 /* ============================================================
+   PORTAS-LASER E BOTÕES (objectgroup "Triggers")
+   ============================================================ */
+function spawnTriggers(mapData){
+  liveLasers = mapData.laserSpawns.map(spawn => ({
+    x: spawn.x, y: spawn.y, w: spawn.w, h: spawn.h,
+    door: spawn.door,
+    kind: spawn.kind || "laser",  // "laser" | "barrier" — decide o sprite-sheet usado no draw
+    on: true,        // estado lógico desejado: true = ativa: false = desligada
+    blocking: true,  // estado REAL de colisão — só muda quando a animação termina (ver updateTriggers)
+    frame: 0,        // índice em LASER_SRC/BARRIER_SRC — 0 ligado/fechado .. length-1 desligado/aberto
+    targetFrame: 0,
+    animTimer: 0
+  }));
+  liveButtons = mapData.buttonSpawns.map(spawn => ({
+    x: spawn.x, y: spawn.y, w: spawn.w, h: spawn.h,
+    door: spawn.door,
+    kind: spawn.kind,   // "toggle" | "shoot"
+    on: true,           // estado do switch (só "toggle")
+    hits: 0,            // tiros levados até agora (só "shoot")
+    disabled: false,    // true quando "shoot" chega ao fim — não reacende
+    hitFlash: 0
+  }));
+  nearButton = null;
+}
+
+// Liga/desliga (com animação) todas as portas-laser associadas ao
+// nome de porta indicado. Fechar bloqueia na hora; abrir só libera
+// de verdade quando a animação termina (ver updateTriggers).
+function setDoorOn(doorName, on){
+  for(const l of liveLasers){
+    if(l.door !== doorName) continue;
+    l.on = on;
+    const frameCount = (l.kind === "barrier" ? BARRIER_SRC : LASER_SRC).length;
+    l.targetFrame = on ? 0 : frameCount - 1;
+    if(on) l.blocking = true; // fechando: bloqueia já, mesmo durante a animação
+  }
+}
+
+// Botão "toggle" (tecla E): alterna e já aplica o novo estado à porta.
+function toggleButton(b){
+  b.on = !b.on;
+  setDoorOn(b.door, b.on);
+}
+
+// Botão "shoot" (bala do jogador): vai apagando a cada tiro; ao
+// chegar no fim, desliga a porta de vez (não reacende sozinho).
+function hitShootButton(b){
+  if(b.disabled) return;
+  b.hits = Math.min(BUTTON_HITS_TO_DISABLE, b.hits + 1);
+  b.hitFlash = CRATE_HIT_FLASH_TIME;
+  if(b.hits >= BUTTON_HITS_TO_DISABLE){
+    b.disabled = true;
+    setDoorOn(b.door, false);
+  }
+}
+
+// Retorna a porta-laser LIGADA (se houver) que contém o ponto do
+// mundo dado — mesma forma de crateAt(), usada pela colisão de bala.
+function activeLaserAt(worldX, worldY){
+  for(const l of liveLasers){
+    if(!l.blocking) continue;
+    if(worldX >= l.x && worldX < l.x + l.w && worldY >= l.y && worldY < l.y + l.h) return l;
+  }
+  return null;
+}
+
+function updateTriggers(dt){
+  for(const l of liveLasers){
+    if(l.frame === l.targetFrame) continue;
+    const frameTime = l.kind === "barrier" ? BARRIER_ANIM_FRAME_TIME : LASER_ANIM_FRAME_TIME;
+    l.animTimer += dt;
+    while(l.animTimer >= frameTime && l.frame !== l.targetFrame){
+      l.animTimer -= frameTime;
+      l.frame += (l.targetFrame > l.frame) ? 1 : -1;
+    }
+    if(l.frame === l.targetFrame) l.blocking = l.on; // animação concluída: libera (ou confirma bloqueio) só agora
+  }
+  for(const b of liveButtons){
+    if(b.hitFlash > 0) b.hitFlash = Math.max(0, b.hitFlash - dt);
+  }
+}
+
+/* ============================================================
    LOOT (itens dropados por caixas destruídas)
    ============================================================ */
 function spawnLoot(type, centerX, centerY){
@@ -769,6 +961,7 @@ function resetGame(){
   spawnEnemies(currentMap);
   spawnCrates(currentMap);
   spawnPlatforms(currentMap);
+  spawnTriggers(currentMap);
   bullets = [];
   loots = [];
   shootCooldown = 0;
@@ -804,6 +997,18 @@ function resolveCratesX(entity, newX){
     else if(entity.vx < 0) newX = c.x + c.w;
     entity.vx = 0;
   }
+  // Portas-laser (Triggers) bloqueiam do mesmo jeito que uma caixa —
+  // só enquanto "blocking" (liberam de verdade só quando a animação
+  // de abertura termina, ver updateTriggers).
+  for(const l of liveLasers){
+    if(!l.blocking) continue;
+    if(bottom <= l.y || top >= l.y + l.h) continue;
+    const left = newX, right = newX + entity.w;
+    if(right <= l.x || left >= l.x + l.w) continue;
+    if(entity.vx > 0) newX = l.x - entity.w;
+    else if(entity.vx < 0) newX = l.x + l.w;
+    entity.vx = 0;
+  }
   return newX;
 }
 
@@ -818,6 +1023,19 @@ function resolveCratesY(entity, newY){
       entity.onGround = true; // pode ficar em pé sobre a caixa
     } else if(entity.vy < 0){
       newY = c.y + c.h;
+    }
+    entity.vy = 0;
+  }
+  for(const l of liveLasers){
+    if(!l.blocking) continue;
+    if(right <= l.x || left >= l.x + l.w) continue;
+    const top = newY, bottom = newY + entity.h;
+    if(bottom <= l.y || top >= l.y + l.h) continue;
+    if(entity.vy > 0){
+      newY = l.y - entity.h;
+      entity.onGround = true;
+    } else if(entity.vy < 0){
+      newY = l.y + l.h;
     }
     entity.vy = 0;
   }
@@ -1402,6 +1620,21 @@ function updatePlayer(dt){
       startMapTransition(d.destiny);
     }
   }
+
+  // --- botão "toggle" (Triggers): liga/desliga a porta-laser
+  //     associada com a mesma tecla E. O botão "shoot" não entra
+  //     aqui — ele é acionado por bala, ver updateBullets. ---
+  nearButton = null;
+  for(const b of liveButtons){
+    if(b.kind !== "toggle") continue;
+    if(rectsOverlap(player, b)){
+      nearButton = b;
+      break;
+    }
+  }
+  if(nearButton && interactRequested && doorCooldown <= 0){
+    toggleButton(nearButton);
+  }
   interactRequested = false; // consumido a cada frame (one-shot)
 
   // --- tiro ---
@@ -1468,6 +1701,14 @@ function updateBullets(dt){
         if(b.owner === "player") damageCrate(crate); // bala inimiga só é bloqueada, não quebra caixa
       } else if(isSolidTile(currentMap, b.x, b.y)){
         dead = true;
+      } else if(activeLaserAt(b.x, b.y)){
+        dead = true; // porta-laser ligada bloqueia bala, igual parede — não tem "dano" nela
+      } else {
+        const btn = liveButtons.find(bb => bb.kind === "shoot" && !bb.disabled && hitsEntity(bb, b.x, b.y));
+        if(btn){
+          dead = true;
+          if(b.owner === "player") hitShootButton(btn); // bala inimiga só é bloqueada, não acerta o botão
+        }
       }
     }
 
@@ -1887,6 +2128,42 @@ function drawCrates(){
   }
 }
 
+function drawLasers(){
+  for(const l of liveLasers){
+    const imgs = l.kind === "barrier" ? barrierImgs : laserImgs;
+    const img = imgs[l.frame];
+    if(img){
+      ctx.drawImage(img, l.x, l.y, l.w, l.h);
+    } else {
+      // fallback simples caso a imagem ainda não tenha carregado
+      ctx.fillStyle = l.blocking ? "#c0392b" : "#3a3a3a";
+      ctx.fillRect(l.x, l.y, l.w, l.h);
+    }
+  }
+}
+
+function drawButtons(){
+  for(const b of liveButtons){
+    let img;
+    if(b.kind === "toggle") img = b.on ? buttonToggleOnImg : buttonToggleOffImg;
+    else img = buttonShootImgs[b.hits];
+
+    if(img){
+      ctx.drawImage(img, b.x, b.y, b.w, b.h);
+    } else {
+      ctx.fillStyle = "#888888";
+      ctx.fillRect(b.x, b.y, b.w, b.h);
+    }
+    if(b.hitFlash > 0){
+      ctx.save();
+      ctx.globalAlpha = (b.hitFlash / CRATE_HIT_FLASH_TIME) * 0.65;
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(b.x, b.y, b.w, b.h);
+      ctx.restore();
+    }
+  }
+}
+
 function drawLoots(){
   for(const l of loots){
     const bob = Math.sin(l.bobT) * LOOT_BOB_AMPLITUDE;
@@ -1899,12 +2176,13 @@ function drawLoots(){
   }
 }
 
-function drawDoorPrompt(mapData){
-  if(!nearDoor || !mapData.door) return;
-  const d = mapData.door;
+// Balãozinho "E" flutuante, usado tanto pela porta de transição de
+// mapa quanto pelo botão "toggle" — (centerX, topY) é o topo/centro
+// do objeto sobre o qual o balão deve flutuar.
+function drawInteractPrompt(centerX, topY){
   const bounce = Math.sin(promptT * 6) * 1.6;
-  const cx = d.x + d.width/2;
-  const cy = d.y - 8 + bounce;
+  const cx = centerX;
+  const cy = topY - 8 + bounce;
 
   ctx.save();
   ctx.translate(cx, cy);
@@ -1934,6 +2212,17 @@ function drawDoorPrompt(mapData){
   ctx.fillText("E", 0, -1);
 
   ctx.restore();
+}
+
+function drawDoorPrompt(mapData){
+  if(!nearDoor || !mapData.door) return;
+  const d = mapData.door;
+  drawInteractPrompt(d.x + d.width/2, d.y);
+}
+
+function drawButtonPrompt(){
+  if(!nearButton) return;
+  drawInteractPrompt(nearButton.x + nearButton.w/2, nearButton.y);
 }
 
 function isBlinkHidden(entity){
@@ -2100,8 +2389,11 @@ function render(){
   drawLadderTiles(currentMap.ladder, currentMap);
   drawPlatforms();
   drawCrates();
+  drawLasers();
+  drawButtons();
   drawDoorTiles(currentMap.doorsTiles, currentMap);
   drawDoorPrompt(currentMap);
+  drawButtonPrompt();
   drawLoots();
 
   for(const enemy of enemies){
@@ -2161,6 +2453,7 @@ function loop(t){
       updateEnemies(dt);
       updateBullets(dt);
       updateCrates(dt);
+      updateTriggers(dt);
       updateLoots(dt);
     }
   }
@@ -2179,14 +2472,18 @@ async function init(){
     const crateKeys = Object.keys(CRATE_DEFS);
     const lootKeys = Object.keys(LOOT_DEFS);
     const platformKeys = Object.keys(PLATFORM_DEFS);
-    const [[tileset, door, gun, bullet, ladder], , , , , , mapsRaw] = await Promise.all([
+    const [[tileset, door, gun, bullet, ladder], , , , , , mapsRaw, laserFrames, barrierFrames, buttonShootFrames, [toggleOn, toggleOff]] = await Promise.all([
       Promise.all([loadImage(TILESET_SRC), loadImage(DOOR_SRC), loadImage(GUN_SRC), loadImage(BULLET_SRC), loadImage(LADDER_SRC)]),
       Promise.all(animKeys.map(async key => { ANIMS[key].img = await loadImage(ANIMS[key].src); })),
       Promise.all(enemyAnimKeys.map(async key => { ENEMY_ANIMS[key].img = await loadImage(ENEMY_ANIMS[key].src); })),
       Promise.all(crateKeys.map(async key => { CRATE_DEFS[key].img = await loadImage(CRATE_DEFS[key].src); })),
       Promise.all(lootKeys.map(async key => { LOOT_DEFS[key].img = await loadImage(LOOT_DEFS[key].src); })),
       Promise.all(platformKeys.map(async key => { PLATFORM_DEFS[key].img = await loadImage(PLATFORM_DEFS[key].src); })),
-      loadAllMaps()
+      loadAllMaps(),
+      Promise.all(LASER_SRC.map(src => loadImage(src))),
+      Promise.all(BARRIER_SRC.map(src => loadImage(src))),
+      Promise.all(BUTTON_SHOOT_SRC.map(src => loadImage(src))),
+      Promise.all([loadImage(BUTTON_TOGGLE_ON_SRC), loadImage(BUTTON_TOGGLE_OFF_SRC)])
     ]);
     tilesetImg = tileset;
     doorImg = door;
@@ -2194,17 +2491,23 @@ async function init(){
     bulletImg = bullet;
     ladderImg = ladder;
     MAPS_RAW = mapsRaw;
+    laserImgs = laserFrames;
+    barrierImgs = barrierFrames;
+    buttonShootImgs = buttonShootFrames;
+    buttonToggleOnImg = toggleOn;
+    buttonToggleOffImg = toggleOff;
   } catch(err){
     showLoadError(err);
     return;
   }
   currentMap = prepareMap(currentMapId);
   mapLabelEl.textContent = currentMapId;
-  player.x = 40;
+  player.x = 10;
   player.y = 40;
   spawnEnemies(currentMap);
   spawnCrates(currentMap);
   spawnPlatforms(currentMap);
+  spawnTriggers(currentMap);
   requestAnimationFrame(loop);
 }
 

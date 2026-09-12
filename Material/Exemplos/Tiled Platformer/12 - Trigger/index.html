@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tiled Platformer</title>
+  <link rel="stylesheet" type="text/css" href="styles.css">
+</head>
+
+<body>
+  <div id="wrap">
+    <div id="title">Tiled Platformer</div>
+    <div id="frame">
+      <canvas id="game" width="960" height="540"></canvas>
+      <div id="hud">Mapa: <b id="mapLabel">map1</b></div>
+      <div id="fade"></div>
+    </div>
+    <div id="controls">
+      <b>&larr; &rarr; / A D</b> mover &nbsp;&middot;&nbsp;
+      <b>W / ESPAÇO</b> pular &nbsp;&middot;&nbsp;
+      <b>E</b> interagir com a porta &nbsp;&middot;&nbsp;
+      <b>X</b> atirar
+    </div>
+  </div>
+
+  <script src="game.js"></script>
+</body>
+</html>
