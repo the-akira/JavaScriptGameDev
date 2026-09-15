@@ -79,11 +79,12 @@
 </data>
  </layer>
  <objectgroup id="5" name="Doors">
-  <properties>
-   <property name="Destiny" value="map1"/>
-   <property name="Origin" value="map2"/>
-  </properties>
-  <object id="4" x="63.2114" y="248.25" width="49.25" height="39.75"/>
+  <object id="4" x="63.2114" y="248.25" width="49.25" height="39.75">
+   <properties>
+    <property name="Destiny" value="map1"/>
+    <property name="Origin" value="map2"/>
+   </properties>
+  </object>
  </objectgroup>
  <objectgroup id="6" name="Enemies">
   <object id="5" x="566.636" y="268.939">
