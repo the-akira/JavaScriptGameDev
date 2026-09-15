@@ -302,26 +302,25 @@ function parseTMX(xmlText){
     layers[name] = parseCSVData(dataEl.textContent);
   });
 
-  // A porta fica num objectgroup próprio chamado "Doors" — as
-  // propriedades Origin/Destiny estão no grupo, não no objeto.
-  let door = null;
+  // Pode haver uma ou mais portas no objectgroup "Doors" — cada uma
+  // com suas próprias propriedades Origin/Destiny no objeto (retângulo).
+  const doors = [];
   const doorGroup = doc.querySelector('map > objectgroup[name="Doors"]');
   if(doorGroup){
-    const objEl = doorGroup.querySelector("object");
-    if(objEl){
+    doorGroup.querySelectorAll("object").forEach(objEl => {
       const objProps = {};
       objEl.querySelectorAll("properties > property").forEach(p => {
         objProps[p.getAttribute("name")] = p.getAttribute("value");
       });
-      door = {
+      doors.push({
         origin: objProps["Origin"],
         destiny: objProps["Destiny"],
         x: parseFloat(objEl.getAttribute("x")),
         y: parseFloat(objEl.getAttribute("y")),
         width: parseFloat(objEl.getAttribute("width")),
         height: parseFloat(objEl.getAttribute("height")),
-      };
-    }
+      });
+    });
   }
 
   // Inimigos: objectgroup "Enemies", um object (point) por inimigo,
@@ -600,7 +599,7 @@ function parseTMX(xmlText){
     });
   }
 
-  return { width, height, layers, door, enemySpawns, crateSpawns, barrelSpawns, platformSpawns, laserSpawns, buttonSpawns, liquidSpawns };
+  return { width, height, layers, doors, enemySpawns, crateSpawns, barrelSpawns, platformSpawns, laserSpawns, buttonSpawns, liquidSpawns };
 }
 
 async function loadMapFile(id){
@@ -670,7 +669,7 @@ let MAPS_RAW = null; // { map1: {width,height,layers,door,enemySpawns}, map2: {.
 let currentMapId = "map1";
 let currentMap = null;
 let doorCooldown = 0;   // evita re-trigger imediato ao trocar de mapa
-let nearDoor = false;   // usado pelo indicador visual
+let nearDoor = null;    // porta (objeto) perto do jogador agora, ou null — usado pelo indicador visual
 
 // --- transição de mapa (fade in/out) ---
 const MAP_FADE_TIME = 0.28; // segundos de cada metade (ida/volta)
@@ -763,7 +762,7 @@ function prepareMap(id){
     platforms,
     doorsTiles,
     ladder,
-    door: raw.door,
+    doors: raw.doors || [],
     enemySpawns: raw.enemySpawns || [],
     crateSpawns: raw.crateSpawns || [],
     barrelSpawns: raw.barrelSpawns || [],
@@ -882,8 +881,12 @@ function findGroundY(mapData, centerX, startY){
   return best;
 }
 
-function spawnAtDoor(mapData){
-  const d = mapData.door;
+function spawnAtDoor(mapData, fromMapId){
+  // Com várias portas por mapa, usa a que tem Origin == mapa de onde o
+  // jogador veio (a porta "de volta"); se não achar (ex.: primeiro
+  // spawn do jogo), cai pra primeira porta do mapa.
+  const doors = mapData.doors || [];
+  const d = doors.find(door => door.origin === fromMapId) || doors[0] || null;
   if(!d){
     player.x = 20; player.y = 20;
     player.vx = 0; player.vy = 0;
@@ -913,10 +916,11 @@ function spawnAtDoor(mapData){
 }
 
 function goToMap(destinyId){
+  const fromMapId = currentMapId; // captura antes de sobrescrever abaixo
   currentMap = prepareMap(destinyId);
   currentMapId = destinyId;
   mapLabelEl.textContent = destinyId;
-  spawnAtDoor(currentMap);
+  spawnAtDoor(currentMap, fromMapId);
   spawnEnemies(currentMap);
   spawnCrates(currentMap);
   spawnBarrels(currentMap);
@@ -924,7 +928,7 @@ function goToMap(destinyId){
   spawnTriggers(currentMap);
   spawnLiquids(currentMap);
   doorCooldown = 0.5;
-  nearDoor = false;
+  nearDoor = null;
   bullets = []; // balas não atravessam a troca de mapa
   loots = [];   // nem itens dropados
   explosions = []; // nem explosões em andamento
@@ -1338,7 +1342,7 @@ function resetGame(){
   shootCooldown = 0;
 
   doorCooldown = 0;
-  nearDoor = false;
+  nearDoor = null;
 
   transitioning = false;
   transitionPhase = null;
@@ -2189,19 +2193,22 @@ function updatePlayer(dt){
     player.canDoubleJump = true;
   }
 
-  // --- checagem da porta: apenas indica proximidade; troca de mapa
-  //     só acontece se o jogador apertar o botão de interação ---
+  // --- checagem das portas (pode haver mais de uma por mapa): apenas
+  //     indica proximidade; troca de mapa só acontece se o jogador
+  //     apertar o botão de interação perto de uma delas ---
   if(doorCooldown > 0) doorCooldown -= dt;
-  const d = currentMap.door;
-  nearDoor = false;
-  if(d){
+  nearDoor = null;
+  for(const d of currentMap.doors){
     const overlap = player.x < d.x + d.width &&
                      player.x + player.w > d.x &&
                      player.y < d.y + d.height &&
                      player.y + player.h > d.y;
-    nearDoor = overlap;
-    if(overlap && interactRequested && doorCooldown <= 0){
-      startMapTransition(d.destiny);
+    if(overlap){
+      nearDoor = d;
+      if(interactRequested && doorCooldown <= 0){
+        startMapTransition(d.destiny);
+      }
+      break; // já achou a porta que o jogador está tocando
     }
   }
 
@@ -2893,10 +2900,9 @@ function drawInteractPrompt(centerX, topY){
   ctx.restore();
 }
 
-function drawDoorPrompt(mapData){
-  if(!nearDoor || !mapData.door) return;
-  const d = mapData.door;
-  drawInteractPrompt(d.x + d.width/2, d.y);
+function drawDoorPrompt(){
+  if(!nearDoor) return;
+  drawInteractPrompt(nearDoor.x + nearDoor.width/2, nearDoor.y);
 }
 
 function drawButtonPrompt(){
@@ -3081,7 +3087,7 @@ function render(){
   drawLasers();
   drawButtons();
   drawDoorTiles(currentMap.doorsTiles, currentMap);
-  drawDoorPrompt(currentMap);
+  drawDoorPrompt();
   drawButtonPrompt();
   drawLoots();
 
