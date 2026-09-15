@@ -56,23 +56,24 @@ function parseTMX(xmlText){
   });
 
   let door = null;
-  doc.querySelectorAll("map > objectgroup").forEach(og => {
-    const props = {};
-    og.querySelectorAll("properties > property").forEach(p => {
-      props[p.getAttribute("name")] = p.getAttribute("value");
-    });
-    const objEl = og.querySelector("object");
+  const doorGroup = doc.querySelector('map > objectgroup[name="Doors"]');
+  if(doorGroup){
+    const objEl = doorGroup.querySelector("object");
     if(objEl){
+      const objProps = {};
+      objEl.querySelectorAll("properties > property").forEach(p => {
+        objProps[p.getAttribute("name")] = p.getAttribute("value");
+      });
       door = {
-        origin: props["Origin"],
-        destiny: props["Destiny"],
+        origin: objProps["Origin"],
+        destiny: objProps["Destiny"],
         x: parseFloat(objEl.getAttribute("x")),
         y: parseFloat(objEl.getAttribute("y")),
         width: parseFloat(objEl.getAttribute("width")),
         height: parseFloat(objEl.getAttribute("height")),
       };
     }
-  });
+  }
 
   return { width, height, layers, door };
 }

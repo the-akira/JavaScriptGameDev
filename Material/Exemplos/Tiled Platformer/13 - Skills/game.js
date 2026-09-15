@@ -240,15 +240,15 @@ function parseTMX(xmlText){
   let door = null;
   const doorGroup = doc.querySelector('map > objectgroup[name="Doors"]');
   if(doorGroup){
-    const groupProps = {};
-    doorGroup.querySelectorAll("properties > property").forEach(p => {
-      groupProps[p.getAttribute("name")] = p.getAttribute("value");
-    });
     const objEl = doorGroup.querySelector("object");
     if(objEl){
+      const objProps = {};
+      objEl.querySelectorAll("properties > property").forEach(p => {
+        objProps[p.getAttribute("name")] = p.getAttribute("value");
+      });
       door = {
-        origin: groupProps["Origin"],
-        destiny: groupProps["Destiny"],
+        origin: objProps["Origin"],
+        destiny: objProps["Destiny"],
         x: parseFloat(objEl.getAttribute("x")),
         y: parseFloat(objEl.getAttribute("y")),
         width: parseFloat(objEl.getAttribute("width")),
