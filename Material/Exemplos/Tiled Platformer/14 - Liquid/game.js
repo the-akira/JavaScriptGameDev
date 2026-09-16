@@ -295,8 +295,10 @@ function parseTMX(xmlText){
         objProps[p.getAttribute("name")] = p.getAttribute("value");
       });
       doors.push({
+        id: objProps["Id"],
         origin: objProps["Origin"],
         destiny: objProps["Destiny"],
+        destinyDoor: objProps["DestinyDoor"],
         x: parseFloat(objEl.getAttribute("x")),
         y: parseFloat(objEl.getAttribute("y")),
         width: parseFloat(objEl.getAttribute("width")),
@@ -635,6 +637,7 @@ let transitioning = false;
 let transitionPhase = null; // "out" | "in"
 let transitionTimer = 0;
 let pendingDestiny = null;
+let pendingDestinyDoor = null;
 let promptT = 0;        // tempo acumulado p/ animação do indicador
 
 let shootCooldown = 0;  // tempo restante até poder disparar de novo (jogador)
@@ -836,12 +839,15 @@ function findGroundY(mapData, centerX, startY){
   return best;
 }
 
-function spawnAtDoor(mapData, fromMapId){
+function spawnAtDoor(mapData, fromMapId, destinyDoorId){
   // Com várias portas por mapa, usa a que tem Origin == mapa de onde o
   // jogador veio (a porta "de volta"); se não achar (ex.: primeiro
   // spawn do jogo), cai pra primeira porta do mapa.
   const doors = mapData.doors || [];
-  const d = doors.find(door => door.origin === fromMapId) || doors[0] || null;
+  const d = (destinyDoorId && doors.find(door => door.id === destinyDoorId))
+    || doors.find(door => door.origin === fromMapId)
+    || doors[0]
+    || null;
   if(!d){
     player.x = 20; player.y = 20;
     player.vx = 0; player.vy = 0;
@@ -870,12 +876,12 @@ function spawnAtDoor(mapData, fromMapId){
   player.invulnT = 0;
 }
 
-function goToMap(destinyId){
+function goToMap(destinyId, destinyDoorId){
   const fromMapId = currentMapId; // captura antes de sobrescrever abaixo
   currentMap = prepareMap(destinyId);
   currentMapId = destinyId;
   mapLabelEl.textContent = destinyId;
-  spawnAtDoor(currentMap, fromMapId);
+  spawnAtDoor(currentMap, fromMapId, destinyDoorId);
   spawnEnemies(currentMap);
   spawnCrates(currentMap);
   spawnPlatforms(currentMap);
@@ -891,12 +897,13 @@ function goToMap(destinyId){
 // estiver totalmente preta, e depois clareia de volta. O jogo fica
 // "congelado" (sem update de player/inimigos/balas) durante todo o
 // processo — ver loop().
-function startMapTransition(destinyId){
+function startMapTransition(destinyId, destinyDoorId){
   if(transitioning) return; // já trocando, ignora novo trigger
   transitioning = true;
   transitionPhase = "out";
   transitionTimer = 0;
   pendingDestiny = destinyId;
+  pendingDestinyDoor = destinyDoorId;
 }
 
 function updateMapTransition(dt){
@@ -906,7 +913,7 @@ function updateMapTransition(dt){
   if(transitionPhase === "out"){
     fadeEl.style.opacity = String(t);
     if(t >= 1){
-      goToMap(pendingDestiny);
+      goToMap(pendingDestiny, pendingDestinyDoor);
       transitionPhase = "in";
       transitionTimer = 0;
     }
@@ -917,6 +924,7 @@ function updateMapTransition(dt){
       transitioning = false;
       transitionPhase = null;
       pendingDestiny = null;
+      pendingDestinyDoor = null;
     }
   }
 }
@@ -1204,6 +1212,7 @@ function resetGame(){
   transitionPhase = null;
   transitionTimer = 0;
   pendingDestiny = null;
+  pendingDestinyDoor = null;
   fadeEl.style.opacity = "0";
 
   gameOver = false;
@@ -2062,7 +2071,7 @@ function updatePlayer(dt){
     if(overlap){
       nearDoor = d;
       if(interactRequested && doorCooldown <= 0){
-        startMapTransition(d.destiny);
+        startMapTransition(d.destiny, d.destinyDoor);
       }
       break; // já achou a porta que o jogador está tocando
     }

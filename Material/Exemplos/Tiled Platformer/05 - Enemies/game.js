@@ -120,8 +120,10 @@ function parseTMX(xmlText){
         objProps[p.getAttribute("name")] = p.getAttribute("value");
       });
       doors.push({
+        id: objProps["Id"],
         origin: objProps["Origin"],
         destiny: objProps["Destiny"],
+        destinyDoor: objProps["DestinyDoor"],
         x: parseFloat(objEl.getAttribute("x")),
         y: parseFloat(objEl.getAttribute("y")),
         width: parseFloat(objEl.getAttribute("width")),
@@ -275,12 +277,15 @@ function findGroundY(mapData, centerX, startY){
   return null; // nenhum chão encontrado abaixo da porta
 }
 
-function spawnAtDoor(mapData, fromMapId){
+function spawnAtDoor(mapData, fromMapId, destinyDoorId){
   // Com várias portas por mapa, usa a que tem Origin == mapa de onde o
   // jogador veio (a porta "de volta"); se não achar (ex.: primeiro
   // spawn do jogo), cai pra primeira porta do mapa.
   const doors = mapData.doors || [];
-  const d = doors.find(door => door.origin === fromMapId) || doors[0] || null;
+  const d = (destinyDoorId && doors.find(door => door.id === destinyDoorId))
+    || doors.find(door => door.origin === fromMapId)
+    || doors[0]
+    || null;
   if(!d){
     player.x = 20; player.y = 20;
     player.vx = 0; player.vy = 0;
@@ -308,12 +313,12 @@ function spawnAtDoor(mapData, fromMapId){
   player.coyoteTimer = PHYS.coyoteTime;
 }
 
-function goToMap(destinyId){
+function goToMap(destinyId, destinyDoorId){
   const fromMapId = currentMapId; // captura antes de sobrescrever abaixo
   currentMap = prepareMap(destinyId);
   currentMapId = destinyId;
   mapLabelEl.textContent = destinyId;
-  spawnAtDoor(currentMap, fromMapId);
+  spawnAtDoor(currentMap, fromMapId, destinyDoorId);
   spawnEnemies(currentMap);
   doorCooldown = 0.5;
   nearDoor = null;
@@ -443,7 +448,7 @@ function updatePlayer(dt){
     if(overlap){
       nearDoor = d;
       if(interactRequested && doorCooldown <= 0){
-        goToMap(d.destiny);
+        goToMap(d.destiny, d.destinyDoor);
       }
       break; // já achou a porta que o jogador está tocando
     }
