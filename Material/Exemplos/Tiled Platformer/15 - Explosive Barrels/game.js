@@ -188,7 +188,8 @@ const EXPLOSION_FPS = 20; // 10 frames -> ~0.5s de animação
 // quadro é espaço vazio pra fumaça subir nos frames seguintes. Estimado
 // a partir do sprite; ajuste se a explosão não parecer "grudada" no chão.
 const EXPLOSION_GROUND_OFFSET = 62;
-const BARREL_EXPLOSION_RADIUS = 36;        // px — raio de dano a partir do centro do barril
+const BARREL_EXPLOSION_RADIUS_X = 36;      // px — alcance horizontal do dano, a partir do centro do barril
+const BARREL_EXPLOSION_RADIUS_Y = 56;      // px — alcance vertical, maior que o horizontal: a nuvem do EXPLOSION_SRC sobe bem mais do que se espalha pros lados (ver EXPLOSION_GROUND_OFFSET) — sem isso, um pulo alto em cima do barril parecia visualmente "dentro" da explosão mas não tomava dano
 const BARREL_EXPLOSION_DAMAGE_PLAYER = 40; // dano no jogador se estiver dentro do raio
 const BARREL_EXPLOSION_DAMAGE_ENEMY = 40;  // dano no inimigo se estiver dentro do raio (mata de uma vez, já que ENEMY_MAX_HP é 30)
 const BARREL_CHAIN_RADIUS = 40;    // px — distância (centro a centro) até onde um barril contagia outro, começando a reação em cadeia
@@ -1076,6 +1077,14 @@ function barrelAt(worldX, worldY){
 // área tanto no jogador quanto nos inimigos que estiverem dentro do
 // raio — igual um "tiro amigo" reverso: um inimigo pode se ferir (ou
 // ferir o jogador) atirando num barril perto de qualquer um dos dois.
+// Elipse em vez de círculo: como BARREL_EXPLOSION_RADIUS_Y é maior que
+// BARREL_EXPLOSION_RADIUS_X, o alcance vertical do dano acompanha a
+// nuvem subindo bem mais alto do que se espalhando pros lados.
+function inBarrelBlast(dx, dy){
+  return (dx*dx) / (BARREL_EXPLOSION_RADIUS_X*BARREL_EXPLOSION_RADIUS_X) +
+         (dy*dy) / (BARREL_EXPLOSION_RADIUS_Y*BARREL_EXPLOSION_RADIUS_Y) <= 1;
+}
+
 function explodeBarrel(barrel){
   const idx = barrels.indexOf(barrel);
   if(idx === -1) return; // segurança: já processado neste frame
@@ -1088,7 +1097,7 @@ function explodeBarrel(barrel){
   if(!gameOver && player.invulnT <= 0){
     const dx = (player.x + player.w/2) - centerX;
     const dy = (player.y + player.h/2) - centerY;
-    if(Math.hypot(dx, dy) <= BARREL_EXPLOSION_RADIUS){
+    if(inBarrelBlast(dx, dy)){
       player.hp = Math.max(0, player.hp - BARREL_EXPLOSION_DAMAGE_PLAYER);
       player.invulnT = PLAYER_INVULN_TIME;
       if(player.hp <= 0) gameOver = true;
@@ -1099,7 +1108,7 @@ function explodeBarrel(barrel){
     const enemy = enemies[i];
     const dx = (enemy.x + enemy.w/2) - centerX;
     const dy = (enemy.y + enemy.h/2) - centerY;
-    if(Math.hypot(dx, dy) <= BARREL_EXPLOSION_RADIUS){
+    if(inBarrelBlast(dx, dy)){
       enemy.hp -= BARREL_EXPLOSION_DAMAGE_ENEMY;
       if(enemy.hp <= 0) enemies.splice(i, 1);
     }
