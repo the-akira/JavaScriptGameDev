@@ -914,6 +914,16 @@ function spawnAtDoor(mapData, fromMapId, destinyDoorId){
   const groundY = findGroundY(mapData, feetCenterX, d.y);
   player.y = (groundY !== null) ? groundY - player.h : d.y + d.height - player.h - 1;
 
+  player.ridingPlatform = null;
+  if(groundY !== null){
+    for(const p of livePlatforms){
+      if(feetCenterX >= p.x && feetCenterX <= p.x + p.w && Math.abs(p.y - groundY) < 0.01){
+        player.ridingPlatform = p;
+        break;
+      }
+    }
+  }
+
   player.vx = 0;
   player.vy = 0;
   player.facing = pushDir;
@@ -927,11 +937,11 @@ function goToMap(destinyId, destinyDoorId){
   currentMap = prepareMap(destinyId);
   currentMapId = destinyId;
   mapLabelEl.textContent = destinyId;
+  spawnPlatforms(currentMap);
   spawnAtDoor(currentMap, fromMapId, destinyDoorId);
   spawnEnemies(currentMap);
   spawnCrates(currentMap);
   spawnBarrels(currentMap);
-  spawnPlatforms(currentMap);
   spawnTriggers(currentMap);
   spawnLiquids(currentMap);
   doorCooldown = 0.5;
