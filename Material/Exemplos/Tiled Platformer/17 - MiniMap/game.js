@@ -155,6 +155,7 @@ const ENEMY_PHYS = {
 const ENEMY_SIGHT_RANGE = 100;    // distância horizontal (px) para notar o jogador
 const ENEMY_SIGHT_VERT  = 60;     // tolerância vertical (px): só "vê" se estiver +- nessa altura
 const ENEMY_ALERT_RANGE_BONUS = 100; // histerese: some da vista só além de SIGHT_RANGE + isso
+const CRATE_SIGHT_BLOCK_MIN_H = 20; 
 const ENEMY_MIN_SHOT_DX = ARM_ATTACH.x + MUZZLE_OFFSET.x + ENEMY_W/2 + 8;
 // distância horizontal mínima (px) até o jogador pra valer a pena atirar.
 // O cano nasce a ARM_ATTACH.x + MUZZLE_OFFSET.x px à frente do inimigo;
@@ -2510,7 +2511,7 @@ function updateBullets(dt){
         explodeBarrel(barrel); // bala do jogador OU do inimigo faz o barril explodir
       } else if(crate){
         dead = true;
-        if(b.owner === "player") damageCrate(crate); // bala inimiga só é bloqueada, não quebra caixa
+        /* if(b.owner === "player") */ damageCrate(crate); // bala inimiga só é bloqueada, não quebra caixa
       } else if(secretHit){
         dead = true;
         if(secretHit.trigger === "bulletCollision") openSecretPassage(); // bala do jogador OU do inimigo abre a passagem secreta
@@ -2585,6 +2586,11 @@ function updateAnimState(entity, animsSet, dt){
   }
 }
 
+function crateBlocksSightAt(worldX, worldY){
+  const c = crateAt(worldX, worldY);
+  return (c && c.h >= CRATE_SIGHT_BLOCK_MIN_H) ? c : null;
+}
+
 /* ============================================================
    IA DO INIMIGO "guard": patrulha a plataforma sem cair, e se
    avistar o jogador dentro do alcance, para e atira nele.
@@ -2598,7 +2604,8 @@ function hasLineOfSight(enemy, target){
   const tx = target.x + target.w/2, ty = target.y + target.h/2;
   for(let i = 1; i < steps; i++){
     const t = i / steps;
-    if(isSolid(currentMap, ex + (tx-ex)*t, ey + (ty-ey)*t)) return false;
+    const x = ex + (tx-ex)*t, y = ey + (ty-ey)*t;
+    if(isSolidTile(currentMap, x, y) || crateBlocksSightAt(x, y)) return false;
   }
   return true;
 }
