@@ -102,6 +102,10 @@ const CRATE_DEFS = {
 };
 const CRATE_HIT_FLASH_TIME = 0.08; // segundos de "flash" branco ao levar tiro
 
+/* --- explosão ao destruir uma caixa (assets/explosion/00..09.png) --- */
+const CRATE_EXPLOSION_SRC = ["assets/explosion/00.png","assets/explosion/01.png","assets/explosion/02.png","assets/explosion/03.png","assets/explosion/04.png","assets/explosion/05.png","assets/explosion/06.png","assets/explosion/07.png","assets/explosion/08.png","assets/explosion/09.png"];
+const CRATE_EXPLOSION_FPS = 24; // 10 frames -> ~0.42s de animação
+
 /* --- loot dropado por caixas (propriedade "Loot" do objeto no Tiled) --- */
 const LOOT_DEFS = {
   life: { src: "assets/life.png", w: 12, h: 12, heal: 30, img: null }
@@ -276,6 +280,9 @@ let enemies = [];       // inimigos vivos do mapa atual
 let crates = [];        // caixas vivas do mapa atual
 let loots = [];         // itens dropados, caindo ou já no chão
 
+let crateExplosionImgs = []; // frames 0..9 (ver CRATE_EXPLOSION_SRC)
+let explosions = [];    // efeitos de explosão ativos: {x, y, frame, timer}
+
 const player = {
   x: 0, y: 0,
   w: 12, h: 26,   // hitbox de colisão (menor que o sprite, ajustada ao contorno do personagem)
@@ -425,6 +432,7 @@ function goToMap(destinyId, destinyDoorId){
   nearDoor = null;
   bullets = []; // balas não atravessam a troca de mapa
   loots = [];   // nem itens dropados
+  explosions = []; // nem explosões de caixa em andamento
 }
 
 // Inicia a transição visual: escurece a tela, troca o mapa quando
@@ -526,7 +534,10 @@ function damageCrate(crate){
   crate.hp -= 1;
   crate.hitFlash = CRATE_HIT_FLASH_TIME;
   if(crate.hp <= 0){
-    if(crate.loot) spawnLoot(crate.loot, crate.x + crate.w/2, crate.y + crate.h/2);
+    const centerX = crate.x + crate.w/2;
+    const centerY = crate.y + crate.h/2;
+    if(crate.loot) spawnLoot(crate.loot, centerX, centerY);
+    spawnExplosion(centerX, centerY);
     const idx = crates.indexOf(crate);
     if(idx !== -1) crates.splice(idx, 1);
   }
@@ -536,6 +547,39 @@ function updateCrates(dt){
   for(const c of crates){
     if(c.hitFlash > 0) c.hitFlash = Math.max(0, c.hitFlash - dt);
   }
+}
+
+/* ============================================================
+   EXPLOSÃO DE CAIXA (efeito visual ao destruir uma caixa)
+   ============================================================ */
+// x/y: centro da caixa destruída — sprite simétrico (sem espaço vazio
+// sobrando), então é desenhado centralizado nesse mesmo ponto.
+function spawnExplosion(x, y){
+  explosions.push({ x, y, frame: 0, timer: 0 });
+}
+
+function updateExplosions(dt){
+  const frameTime = 1 / CRATE_EXPLOSION_FPS;
+  for(let i = explosions.length - 1; i >= 0; i--){
+    const e = explosions[i];
+    e.timer += dt;
+    while(e.timer >= frameTime){
+      e.timer -= frameTime;
+      e.frame++;
+    }
+    if(e.frame >= CRATE_EXPLOSION_SRC.length) explosions.splice(i, 1); // 1 ciclo só: acaba e some
+  }
+}
+
+function drawExplosions(){
+  if(explosions.length === 0) return;
+  ctx.save();
+  for(const e of explosions){
+    const img = crateExplosionImgs[e.frame];
+    if(!img) continue;
+    ctx.drawImage(img, e.x - img.width/2, e.y - img.height/2, img.width, img.height);
+  }
+  ctx.restore();
 }
 
 /* ============================================================
@@ -619,6 +663,7 @@ function resetGame(){
   spawnCrates(currentMap);
   bullets = [];
   loots = [];
+  explosions = [];
   shootCooldown = 0;
 
   doorCooldown = 0;
@@ -1325,6 +1370,7 @@ function render(){
   drawCharacter(player, ANIMS);
   if(!isBlinkHidden(player)) drawArm(player);
   drawBullets();
+  drawExplosions();
 
   ctx.restore();
 
@@ -1367,6 +1413,7 @@ function loop(t){
     updateMapTransition(dt);
   } else {
     updatePlayer(dt);
+    updateExplosions(dt); // continua animando mesmo depois do game over
     if(!gameOver){
       // depois que o jogador morre, os inimigos param de agir/atirar
       updateEnemies(dt);
@@ -1389,19 +1436,21 @@ async function init(){
     const enemyAnimKeys = Object.keys(ENEMY_ANIMS);
     const crateKeys = Object.keys(CRATE_DEFS);
     const lootKeys = Object.keys(LOOT_DEFS);
-    const [[tileset, door, gun, bullet], , , , , mapsRaw] = await Promise.all([
+    const [[tileset, door, gun, bullet], , , , , mapsRaw, crateExplosionFrames] = await Promise.all([
       Promise.all([loadImage(TILESET_SRC), loadImage(DOOR_SRC), loadImage(GUN_SRC), loadImage(BULLET_SRC)]),
       Promise.all(animKeys.map(async key => { ANIMS[key].img = await loadImage(ANIMS[key].src); })),
       Promise.all(enemyAnimKeys.map(async key => { ENEMY_ANIMS[key].img = await loadImage(ENEMY_ANIMS[key].src); })),
       Promise.all(crateKeys.map(async key => { CRATE_DEFS[key].img = await loadImage(CRATE_DEFS[key].src); })),
       Promise.all(lootKeys.map(async key => { LOOT_DEFS[key].img = await loadImage(LOOT_DEFS[key].src); })),
-      loadAllMaps()
+      loadAllMaps(),
+      Promise.all(CRATE_EXPLOSION_SRC.map(src => loadImage(src)))
     ]);
     tilesetImg = tileset;
     doorImg = door;
     gunImg = gun;
     bulletImg = bullet;
     MAPS_RAW = mapsRaw;
+    crateExplosionImgs = crateExplosionFrames;
   } catch(err){
     showLoadError(err);
     return;

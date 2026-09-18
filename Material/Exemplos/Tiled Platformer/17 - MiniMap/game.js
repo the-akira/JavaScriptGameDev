@@ -185,6 +185,14 @@ const CRATE_DEFS = {
 };
 const CRATE_HIT_FLASH_TIME = 0.08; // segundos de "flash" branco ao levar tiro
 
+// Efeito de explosão ao destruir uma caixa (assets/explosion/00..09.png).
+// Diferente da nuvem do barril (EXPLOSION_SRC/mushroom): aqui o quadro é
+// um estouro de partículas simétrico (60x60), desenhado centralizado no
+// centro da caixa em vez de ancorado pela base — ver spawnExplosion/
+// drawExplosions, que agora tratam os dois tipos ("barrel"/"crate").
+const CRATE_EXPLOSION_SRC = ["assets/explosion/00.png","assets/explosion/01.png","assets/explosion/02.png","assets/explosion/03.png","assets/explosion/04.png","assets/explosion/05.png","assets/explosion/06.png","assets/explosion/07.png","assets/explosion/08.png","assets/explosion/09.png"];
+const CRATE_EXPLOSION_FPS = 24; // 10 frames -> ~0.42s de animação
+
 /* --- barris explosivos (lidos do objectgroup próprio "Barrels",
    separado de "Objects" de propósito — ver parseTMX). Só existe uma
    variante, então não precisamos de um dicionário por localId como
@@ -735,6 +743,7 @@ let splashImgs = [];         // frames 0..5 (ver SPLASH_SRC) — animação de m
 let barrelImg = null;
 let tilesImg = null;         // assets/tiles.png (tileset "tiles") — tiles da passagem secreta + os novos tiles da layer Platforms
 let explosionImgs = [];      // frames 0..9 (ver EXPLOSION_SRC) — animação de explosão do barril
+let crateExplosionImgs = []; // frames 0..9 (ver CRATE_EXPLOSION_SRC) — animação de explosão da caixa
 let MAPS_RAW = null; // { map1: {width,height,layers,doors,enemySpawns}, map2: {...} }
 
 let currentMapId = "map1";
@@ -1157,7 +1166,10 @@ function damageCrate(crate){
   crate.hp -= 1;
   crate.hitFlash = CRATE_HIT_FLASH_TIME;
   if(crate.hp <= 0){
-    if(crate.loot) spawnLoot(crate.loot, crate.x + crate.w/2, crate.y + crate.h/2);
+    const centerX = crate.x + crate.w/2;
+    const centerY = crate.y + crate.h/2;
+    if(crate.loot) spawnLoot(crate.loot, centerX, centerY);
+    spawnExplosion(centerX, centerY, "crate");
     const idx = crates.indexOf(crate);
     if(idx !== -1) crates.splice(idx, 1);
   }
@@ -1312,22 +1324,30 @@ function updateSecrets(dt){
   }
 }
 
-// centerX/baseY: ponto do mundo onde a explosão nasce (mesmo esquema de
-// spawnSplash) — baseY é a BASE do barril, não o centro.
-function spawnExplosion(centerX, baseY){
-  explosions.push({ x: centerX, y: baseY, frame: 0, timer: 0 });
+// x/y: ponto do mundo onde a explosão nasce (mesmo esquema de spawnSplash).
+// kind escolhe o conjunto de sprites e como o ponto é interpretado:
+// "barrel" (padrão) usa a nuvem do barril, y = BASE dela; "crate" usa o
+// estouro de partículas da caixa, y = CENTRO (sprite simétrico, sem
+// espaço vazio pra compensar — ver drawExplosions).
+function spawnExplosion(x, y, kind = "barrel"){
+  explosions.push({ x, y, frame: 0, timer: 0, kind });
+}
+
+function explosionFramesFor(kind){
+  return kind === "crate" ? CRATE_EXPLOSION_SRC : EXPLOSION_SRC;
 }
 
 function updateExplosions(dt){
-  const frameTime = 1 / EXPLOSION_FPS;
   for(let i = explosions.length - 1; i >= 0; i--){
     const e = explosions[i];
+    const fps = e.kind === "crate" ? CRATE_EXPLOSION_FPS : EXPLOSION_FPS;
+    const frameTime = 1 / fps;
     e.timer += dt;
     while(e.timer >= frameTime){
       e.timer -= frameTime;
       e.frame++;
     }
-    if(e.frame >= EXPLOSION_SRC.length) explosions.splice(i, 1); // 1 ciclo só: acaba e some
+    if(e.frame >= explosionFramesFor(e.kind).length) explosions.splice(i, 1); // 1 ciclo só: acaba e some
   }
 }
 
@@ -3161,13 +3181,19 @@ function drawExplosions(){
   if(explosions.length === 0) return;
   ctx.save();
   for(const e of explosions){
-    const img = explosionImgs[e.frame];
+    const img = (e.kind === "crate" ? crateExplosionImgs : explosionImgs)[e.frame];
     if(!img) continue;
-    // Ancorado pela base (e.y = base do barril), com EXPLOSION_GROUND_OFFSET
-    // deslocando o quadro pra cima até a "linha do chão" do sprite bater
-    // com esse ponto — mesmo esquema de drawSplashes, só que com esse
-    // offset extra por causa do espaço vazio acima na spritesheet.
-    ctx.drawImage(img, e.x - img.width/2, e.y - EXPLOSION_GROUND_OFFSET, img.width, img.height);
+    if(e.kind === "crate"){
+      // Sprite simétrico (60x60, sem espaço vazio sobrando) — desenhado
+      // centralizado no próprio ponto de spawn (centro da caixa).
+      ctx.drawImage(img, e.x - img.width/2, e.y - img.height/2, img.width, img.height);
+    } else {
+      // Ancorado pela base (e.y = base do barril), com EXPLOSION_GROUND_OFFSET
+      // deslocando o quadro pra cima até a "linha do chão" do sprite bater
+      // com esse ponto — mesmo esquema de drawSplashes, só que com esse
+      // offset extra por causa do espaço vazio acima na spritesheet.
+      ctx.drawImage(img, e.x - img.width/2, e.y - EXPLOSION_GROUND_OFFSET, img.width, img.height);
+    }
   }
   ctx.restore();
 }
@@ -3631,7 +3657,7 @@ async function init(){
     const lootKeys = Object.keys(LOOT_DEFS);
     const platformKeys = Object.keys(PLATFORM_DEFS);
     const liquidTileKeys = Object.keys(LIQUID_TILE_DEFS);
-    const [[tileset, door, gun, bullet, ladder, barrel, tiles], , , , , , mapsRaw, laserFrames, barrierFrames, buttonShootFrames, [toggleOn, toggleOff], , splashFrames, explosionFrames] = await Promise.all([
+    const [[tileset, door, gun, bullet, ladder, barrel, tiles], , , , , , mapsRaw, laserFrames, barrierFrames, buttonShootFrames, [toggleOn, toggleOff], , splashFrames, explosionFrames, crateExplosionFrames] = await Promise.all([
       Promise.all([loadImage(TILESET_SRC), loadImage(DOOR_SRC), loadImage(GUN_SRC), loadImage(BULLET_SRC), loadImage(LADDER_SRC), loadImage(BARREL_SRC), loadImage(TILES_SRC)]),
       Promise.all(animKeys.map(async key => { ANIMS[key].img = await loadImage(ANIMS[key].src); })),
       Promise.all(enemyAnimKeys.map(async key => { ENEMY_ANIMS[key].img = await loadImage(ENEMY_ANIMS[key].src); })),
@@ -3645,7 +3671,8 @@ async function init(){
       Promise.all([loadImage(BUTTON_TOGGLE_ON_SRC), loadImage(BUTTON_TOGGLE_OFF_SRC)]),
       Promise.all(liquidTileKeys.map(async key => { LIQUID_TILE_DEFS[key].img = await loadImage(LIQUID_TILE_DEFS[key].src); })),
       Promise.all(SPLASH_SRC.map(src => loadImage(src))),
-      Promise.all(EXPLOSION_SRC.map(src => loadImage(src)))
+      Promise.all(EXPLOSION_SRC.map(src => loadImage(src))),
+      Promise.all(CRATE_EXPLOSION_SRC.map(src => loadImage(src)))
     ]);
     tilesetImg = tileset;
     doorImg = door;
@@ -3662,6 +3689,7 @@ async function init(){
     buttonToggleOffImg = toggleOff;
     splashImgs = splashFrames;
     explosionImgs = explosionFrames;
+    crateExplosionImgs = crateExplosionFrames;
   } catch(err){
     showLoadError(err);
     return;

@@ -177,6 +177,12 @@ const CRATE_DEFS = {
 };
 const CRATE_HIT_FLASH_TIME = 0.08; // segundos de "flash" branco ao levar tiro
 
+// Efeito de explosão ao destruir uma caixa (assets/explosion/00..09.png).
+// Sprite simétrico (60x60), desenhado centralizado no centro da caixa —
+// ver spawnExplosion/drawExplosions.
+const CRATE_EXPLOSION_SRC = ["assets/explosion/00.png","assets/explosion/01.png","assets/explosion/02.png","assets/explosion/03.png","assets/explosion/04.png","assets/explosion/05.png","assets/explosion/06.png","assets/explosion/07.png","assets/explosion/08.png","assets/explosion/09.png"];
+const CRATE_EXPLOSION_FPS = 24; // 10 frames -> ~0.42s de animação
+
 /* --- loot dropado por caixas (propriedade "Loot" do objeto no Tiled) --- */
 const LOOT_DEFS = {
   life: { src: "assets/life.png", w: 12, h: 12, heal: 30, img: null }
@@ -625,6 +631,7 @@ let buttonShootImgs = [];    // frames 0..4 (0=ligado .. 4=apagado de vez)
 let buttonToggleOnImg = null;
 let buttonToggleOffImg = null;
 let splashImgs = [];         // frames 0..5 (ver SPLASH_SRC) — animação de mergulho/saída da água
+let crateExplosionImgs = []; // frames 0..9 (ver CRATE_EXPLOSION_SRC) — animação de explosão da caixa
 let MAPS_RAW = null; // { map1: {width,height,layers,door,enemySpawns}, map2: {...} }
 
 let currentMapId = "map1";
@@ -652,6 +659,7 @@ let liveButtons = [];   // botões vivos do mapa atual (objectgroup "Triggers")
 let nearButton = null;  // botão "toggle" perto do jogador agora (indicador visual "E")
 let liveLiquids = [];   // tiles de líquido vivos do mapa atual (objectgroup "Liquid"), já com a imagem resolvida
 let splashes = [];      // efeitos de splash ativos: {x, y, frame, timer} — ver spawnSplash
+let explosions = [];    // efeitos de explosão de caixa ativos: {x, y, frame, timer} — ver spawnExplosion
 
 const player = {
   x: 0, y: 0,
@@ -902,6 +910,7 @@ function goToMap(destinyId, destinyDoorId){
   nearDoor = null;
   bullets = []; // balas não atravessam a troca de mapa
   loots = [];   // nem itens dropados
+  explosions = []; // nem explosões de caixa em andamento
 }
 
 // Inicia a transição visual: escurece a tela, troca o mapa quando
@@ -1004,7 +1013,10 @@ function damageCrate(crate){
   crate.hp -= 1;
   crate.hitFlash = CRATE_HIT_FLASH_TIME;
   if(crate.hp <= 0){
-    if(crate.loot) spawnLoot(crate.loot, crate.x + crate.w/2, crate.y + crate.h/2);
+    const centerX = crate.x + crate.w/2;
+    const centerY = crate.y + crate.h/2;
+    if(crate.loot) spawnLoot(crate.loot, centerX, centerY);
+    spawnExplosion(centerX, centerY);
     const idx = crates.indexOf(crate);
     if(idx !== -1) crates.splice(idx, 1);
   }
@@ -1176,6 +1188,29 @@ function updateSplashes(dt){
   }
 }
 
+/* ============================================================
+   EXPLOSÃO DE CAIXA (ao destruir uma caixa destrutível)
+   ============================================================ */
+// x/y: centro da caixa destruída (ver damageCrate) — sprite simétrico,
+// desenhado centralizado nesse ponto (diferente do splash, que é
+// ancorado pela base).
+function spawnExplosion(x, y){
+  explosions.push({ x, y, frame: 0, timer: 0 });
+}
+
+function updateExplosions(dt){
+  const frameTime = 1 / CRATE_EXPLOSION_FPS;
+  for(let i = explosions.length - 1; i >= 0; i--){
+    const e = explosions[i];
+    e.timer += dt;
+    while(e.timer >= frameTime){
+      e.timer -= frameTime;
+      e.frame++;
+    }
+    if(e.frame >= CRATE_EXPLOSION_SRC.length) explosions.splice(i, 1); // 1 ciclo só: acaba e some
+  }
+}
+
 // Reinicia a partida sem recarregar a página: volta pro mapa inicial,
 // restaura o jogador e os inimigos do zero, e limpa qualquer estado
 // de transição/game over pendente. Os assets (imagens, .tmx) já
@@ -1214,6 +1249,7 @@ function resetGame(){
   spawnLiquids(currentMap);
   bullets = [];
   loots = [];
+  explosions = [];
   shootCooldown = 0;
 
   doorCooldown = 0;
@@ -2700,6 +2736,19 @@ function drawSplashes(){
   ctx.restore();
 }
 
+function drawExplosions(){
+  if(explosions.length === 0) return;
+  ctx.save();
+  for(const e of explosions){
+    const img = crateExplosionImgs[e.frame];
+    if(!img) continue;
+    // Sprite simétrico (60x60, sem espaço vazio sobrando) — desenhado
+    // centralizado no próprio ponto de spawn (centro da caixa).
+    ctx.drawImage(img, e.x - img.width/2, e.y - img.height/2, img.width, img.height);
+  }
+  ctx.restore();
+}
+
 // Balãozinho "E" flutuante, usado tanto pela porta de transição de
 // mapa quanto pelo botão "toggle" — (centerX, topY) é o topo/centro
 // do objeto sobre o qual o balão deve flutuar.
@@ -2956,6 +3005,7 @@ function render(){
   // dentro" da água), não atrás.
   drawLiquids();
   drawSplashes();
+  drawExplosions();
 
   ctx.restore();
 
@@ -3007,6 +3057,7 @@ function loop(t){
       updateTriggers(dt);
       updateLoots(dt);
       updateSplashes(dt);
+      updateExplosions(dt);
     }
   }
 
@@ -3025,7 +3076,7 @@ async function init(){
     const lootKeys = Object.keys(LOOT_DEFS);
     const platformKeys = Object.keys(PLATFORM_DEFS);
     const liquidTileKeys = Object.keys(LIQUID_TILE_DEFS);
-    const [[tileset, door, gun, bullet, ladder], , , , , , mapsRaw, laserFrames, barrierFrames, buttonShootFrames, [toggleOn, toggleOff], , splashFrames] = await Promise.all([
+    const [[tileset, door, gun, bullet, ladder], , , , , , mapsRaw, laserFrames, barrierFrames, buttonShootFrames, [toggleOn, toggleOff], , splashFrames, crateExplosionFrames] = await Promise.all([
       Promise.all([loadImage(TILESET_SRC), loadImage(DOOR_SRC), loadImage(GUN_SRC), loadImage(BULLET_SRC), loadImage(LADDER_SRC)]),
       Promise.all(animKeys.map(async key => { ANIMS[key].img = await loadImage(ANIMS[key].src); })),
       Promise.all(enemyAnimKeys.map(async key => { ENEMY_ANIMS[key].img = await loadImage(ENEMY_ANIMS[key].src); })),
@@ -3038,7 +3089,8 @@ async function init(){
       Promise.all(BUTTON_SHOOT_SRC.map(src => loadImage(src))),
       Promise.all([loadImage(BUTTON_TOGGLE_ON_SRC), loadImage(BUTTON_TOGGLE_OFF_SRC)]),
       Promise.all(liquidTileKeys.map(async key => { LIQUID_TILE_DEFS[key].img = await loadImage(LIQUID_TILE_DEFS[key].src); })),
-      Promise.all(SPLASH_SRC.map(src => loadImage(src)))
+      Promise.all(SPLASH_SRC.map(src => loadImage(src))),
+      Promise.all(CRATE_EXPLOSION_SRC.map(src => loadImage(src)))
     ]);
     tilesetImg = tileset;
     doorImg = door;
@@ -3052,6 +3104,7 @@ async function init(){
     buttonToggleOnImg = toggleOn;
     buttonToggleOffImg = toggleOff;
     splashImgs = splashFrames;
+    crateExplosionImgs = crateExplosionFrames;
   } catch(err){
     showLoadError(err);
     return;
