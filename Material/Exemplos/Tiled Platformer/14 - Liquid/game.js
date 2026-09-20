@@ -1507,7 +1507,7 @@ function updateClimbing(dt, midX){
   const wantsDown = keys["ArrowDown"] || keys["KeyS"];
   const wantsLeft = keys["ArrowLeft"] || keys["KeyA"];
   const wantsRight = keys["ArrowRight"] || keys["KeyD"];
-  const wantsJumpOff = keys["Space"];
+  const wantsJumpOff = keys["Space"] && !wantsUp && !wantsDown;
 
   if(wantsJumpOff){
     player.climbing = false;
