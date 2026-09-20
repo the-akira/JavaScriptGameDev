@@ -1803,7 +1803,7 @@ function updateClimbing(dt, midX){
   // movimento normal (o próximo frame já anda pro lado). O delay de
   // regarrar evita o mesmo "pisca-pisca" de sair/entrar quando Cima
   // (ou Baixo) continua pressionado junto com Esquerda/Direita.
-  if(wantsLeft || wantsRight){
+  if((wantsLeft || wantsRight) && !wantsUp && !wantsDown){
     player.climbing = false;
     player.vx = 0;
     player.vy = 0;
@@ -2016,6 +2016,7 @@ function updatePlayer(dt){
   const wantsUp = keys["ArrowUp"] || keys["KeyW"];
   const wantsDown = keys["ArrowDown"] || keys["KeyS"];
   const wantsShift = keys["ShiftLeft"] || keys["ShiftRight"];
+  const wantsHorizontal = keys["ArrowLeft"] || keys["KeyA"] || keys["ArrowRight"] || keys["KeyD"];
 
   // Escada logo abaixo de uma plataforma one-way: parado em pé em cima
   // dela, o corpo do jogador ainda não sobrepõe a escada (ela começa só
@@ -2038,7 +2039,7 @@ function updatePlayer(dt){
   // firmar — mas chão sólido nunca tem escada embaixo mesmo, então essa
   // exceção só importa pro caso da plataforma). Shift+Baixo nunca entra
   // na escada por essa via — é reservado pro drop-through.
-  const canEnterLadder = wantsUp || (wantsDown && (!player.onGround || (player.ridingPlatform && !wantsShift)));
+  const canEnterLadder = (wantsUp && !wantsHorizontal) || (wantsDown && (!player.onGround || (player.ridingPlatform && !wantsShift)));
   if(ladderCol !== null && canEnterLadder && player.ladderRegrabTimer <= 0){
     // Se estava em pé numa plataforma bem em cima da escada, guarda qual
     // plataforma era: o primeiro frame descendo por ela ainda vai
