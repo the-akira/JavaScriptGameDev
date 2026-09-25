@@ -1166,7 +1166,7 @@ const CRT = (function(){
     ["scanBright", "Scanline Brightness", 0, 1, 0.01, 0.45],
     ["ntscScan",   "NTSC Scanlines",      0, 1, 0.01, 0.15],
     ["ntscBlend",  "NTSC Blending",       0, 1, 0.01, 1.00],
-    ["sharp",      "Sharpness",           0, 1, 0.01, 0.80],
+    ["sharp",      "Sharpness",           0, 1, 0.01, 0.30],
     ["persist",    "Persistence",         0, 1, 0.01, 0.70],
     ["bleed",      "Bleeding",            0, 1, 0.01, 0.50],
     ["sat",        "Saturation",          0, 2, 0.01, 1.35]
