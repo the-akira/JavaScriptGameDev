@@ -1,0 +1,259 @@
+/* ==========================================================
+   1. VARIÁVEIS (cores e espaçamento)
+   ========================================================== */
+:root {
+  --bg: #1d2530;
+  --board: #2c3745;
+  --cell: #384556;
+  --text: #e9eef4;
+  --muted: #93a1b3;
+  --btn: #3fb6a8;
+  --btn-text: #10231f;
+  --g: 10px; /* espaço entre as casas */
+
+  box-sizing: border-box;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* Tema claro (segue o sistema, ou manual via data-theme) */
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --bg: #eef2f6;
+    --board: #b9c5d3;
+    --cell: #cfd8e3;
+    --text: #1d2530;
+    --muted: #5b6978;
+  }
+}
+
+:root[data-theme="light"] {
+  --bg: #eef2f6;
+  --board: #b9c5d3;
+  --cell: #cfd8e3;
+  --text: #1d2530;
+  --muted: #5b6978;
+}
+
+/* ==========================================================
+   2. BASE
+   ========================================================== */
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: var(--bg);
+  color: var(--text);
+  font-family: "Trebuchet MS", system-ui, sans-serif;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+main {
+  width: min(92vw, 440px);
+}
+
+/* ==========================================================
+   3. CABEÇALHO (título e placar)
+   ========================================================== */
+header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+h1 {
+  margin: 0;
+  font-size: 44px;
+  line-height: 1;
+  letter-spacing: -1px;
+}
+
+.scores {
+  display: flex;
+  gap: 8px;
+}
+
+.score {
+  min-width: 70px;
+  padding: 6px 14px;
+  background: var(--board);
+  border-radius: 8px;
+  text-align: center;
+}
+
+.score small {
+  display: block;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.score b {
+  font-size: 20px;
+}
+
+/* ==========================================================
+   4. BARRA DE INSTRUÇÕES E BOTÕES
+   ========================================================== */
+.bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.bar p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.3;
+  color: var(--muted);
+}
+
+button {
+  padding: 10px 16px;
+  background: var(--btn);
+  color: var(--btn-text);
+  border: 0;
+  border-radius: 8px;
+  font: inherit;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+button:focus-visible {
+  outline: 3px solid var(--text);
+  outline-offset: 2px;
+}
+
+/* ==========================================================
+   5. TABULEIRO E CASAS
+   ========================================================== */
+#board {
+  position: relative;
+  display: grid;
+  grid-template: repeat(4, 1fr) / repeat(4, 1fr);
+  gap: var(--g);
+  width: 100%;
+  aspect-ratio: 1;
+  padding: var(--g);
+  background: var(--board);
+  border-radius: 12px;
+  touch-action: none; /* evita rolar a página ao deslizar */
+}
+
+.cell {
+  background: var(--cell);
+  border-radius: 8px;
+}
+
+/* ==========================================================
+   6. PEÇAS
+   .tile = posição e deslize (muda via --r e --c)
+   .t    = aparência (cor, número, animações)
+   ========================================================== */
+.tile {
+  position: absolute;
+  top: var(--g);
+  left: var(--g);
+  width: calc((100% - 5 * var(--g)) / 4);
+  height: calc((100% - 5 * var(--g)) / 4);
+  transform: translate(
+    calc(var(--c) * (100% + var(--g))),
+    calc(var(--r) * (100% + var(--g)))
+  );
+  transition: transform 0.12s ease-out;
+}
+
+.t {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  border-radius: 8px;
+  font-size: clamp(20px, 8vw, 40px);
+  font-weight: bold;
+}
+
+/* Números grandes ficam com fonte menor para caber */
+.t.big {
+  font-size: clamp(17px, 6.5vw, 32px);
+}
+
+.t.huge {
+  font-size: clamp(14px, 5vw, 26px);
+}
+
+/* ==========================================================
+   7. ANIMAÇÕES
+   ========================================================== */
+.new .t {
+  animation: appear 0.18s 0.1s backwards;
+}
+
+.pop .t {
+  animation: pop 0.18s;
+}
+
+@keyframes appear {
+  from { transform: scale(0); }
+}
+
+@keyframes pop {
+  50% { transform: scale(1.18); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tile {
+    transition: none;
+  }
+
+  .new .t,
+  .pop .t {
+    animation: none;
+  }
+}
+
+/* ==========================================================
+   8. MENSAGEM (vitória / fim de jogo)
+   ========================================================== */
+#msg {
+  position: absolute;
+  inset: 0;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  background: rgba(29, 37, 48, 0.82);
+  border-radius: 12px;
+  color: #e9eef4;
+  text-align: center;
+}
+
+#msg.on {
+  display: flex;
+}
+
+#msg h2 {
+  margin: 0;
+  font-size: 30px;
+}
+
+#msg div {
+  display: flex;
+  gap: 10px;
+}
